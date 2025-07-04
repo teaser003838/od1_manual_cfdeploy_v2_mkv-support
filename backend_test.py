@@ -6,7 +6,7 @@ import os
 from unittest.mock import patch, MagicMock
 
 # Get the backend URL from the frontend .env file
-BACKEND_URL = "https://3471b79d-b311-4f71-859b-6c8530a1def6.preview.emergentagent.com"
+BACKEND_URL = "https://545d199c-7f62-4fb6-9975-68d5dab52b92.preview.emergentagent.com"
 API_URL = f"{BACKEND_URL}/api"
 
 # Mock token for testing endpoints that require authentication
