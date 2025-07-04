@@ -1,32 +1,90 @@
 import React, { useState, useEffect } from 'react';
 import VideoPlayer from './VideoPlayer';
+import FileExplorer from './FileExplorer';
+import PhotoSlideshow from './PhotoSlideshow';
 import './App.css';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL || 'http://localhost:8001';
 
 function App() {
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [isPasswordAuthenticated, setIsPasswordAuthenticated] = useState(false);
+  const [isOneDriveAuthenticated, setIsOneDriveAuthenticated] = useState(false);
+  const [password, setPassword] = useState('');
   const [accessToken, setAccessToken] = useState(null);
-  const [videos, setVideos] = useState([]);
-  const [selectedVideo, setSelectedVideo] = useState(null);
+  const [currentView, setCurrentView] = useState('explorer'); // 'explorer', 'video', 'photo'
+  const [selectedItem, setSelectedItem] = useState(null);
+  const [allPhotos, setAllPhotos] = useState([]);
   const [loading, setLoading] = useState(false);
-  const [loadingMessage, setLoadingMessage] = useState('');
   const [error, setError] = useState('');
-  const [searchQuery, setSearchQuery] = useState('');
-  const [watchHistory, setWatchHistory] = useState([]);
-  const [currentView, setCurrentView] = useState('browse'); // 'browse', 'player', 'history'
 
   useEffect(() => {
-    const token = localStorage.getItem('access_token');
-    if (token) {
-      setAccessToken(token);
-      setIsAuthenticated(true);
-      fetchVideos(token);
-      fetchWatchHistory(token);
+    // Check for existing sessions
+    const savedPasswordAuth = localStorage.getItem('password_authenticated');
+    const savedAccessToken = localStorage.getItem('access_token');
+    
+    if (savedPasswordAuth === 'true') {
+      setIsPasswordAuthenticated(true);
+    }
+    
+    if (savedAccessToken) {
+      setAccessToken(savedAccessToken);
+      setIsOneDriveAuthenticated(true);
     }
   }, []);
 
-  const handleLogin = async () => {
+  // Handle OAuth callback
+  useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const accessTokenFromUrl = urlParams.get('access_token');
+    const authError = urlParams.get('error');
+    
+    if (authError) {
+      console.error('Authentication error:', authError);
+      setError('OneDrive authentication failed. Please try again.');
+      return;
+    }
+    
+    if (accessTokenFromUrl && !isOneDriveAuthenticated) {
+      localStorage.setItem('access_token', accessTokenFromUrl);
+      setAccessToken(accessTokenFromUrl);
+      setIsOneDriveAuthenticated(true);
+      
+      // Clear URL parameters
+      window.history.replaceState({}, document.title, window.location.pathname);
+    }
+  }, [isOneDriveAuthenticated]);
+
+  const handlePasswordLogin = async (e) => {
+    e.preventDefault();
+    setLoading(true);
+    setError('');
+
+    try {
+      const response = await fetch(`${BACKEND_URL}/api/auth/password`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ password }),
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        setIsPasswordAuthenticated(true);
+        localStorage.setItem('password_authenticated', 'true');
+        setPassword('');
+      } else {
+        setError('Invalid password. Please try again.');
+      }
+    } catch (error) {
+      console.error('Password authentication failed:', error);
+      setError('Authentication failed. Please try again.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleOneDriveLogin = async () => {
     try {
       const response = await fetch(`${BACKEND_URL}/api/auth/login`);
       const data = await response.json();
@@ -35,212 +93,100 @@ function App() {
         window.location.href = data.auth_url;
       }
     } catch (error) {
-      console.error('Login failed:', error);
+      console.error('OneDrive login failed:', error);
+      setError('OneDrive login failed. Please try again.');
     }
   };
 
-  const fetchVideos = async (token) => {
-    try {
-      setLoading(true);
-      setError('');
-      setLoadingMessage('Connecting to OneDrive...');
-      
-      console.log('Starting to fetch videos...');
-      
-      // Create a timeout promise
-      const timeoutPromise = new Promise((_, reject) => {
-        setTimeout(() => reject(new Error('Request timeout')), 45000); // 45 second timeout
-      });
-      
-      // First try to get all videos recursively from all folders with timeout
-      let response;
-      try {
-        setLoadingMessage('Scanning all folders for videos...');
-        response = await Promise.race([
-          fetch(`${BACKEND_URL}/api/files/all`, {
-            headers: {
-              'Authorization': `Bearer ${token}`,
-              'Content-Type': 'application/json'
-            }
-          }),
-          timeoutPromise
-        ]);
-      } catch (timeoutError) {
-        console.log('Recursive search timed out, trying root directory only...');
-        setLoadingMessage('Scanning root directory for videos...');
-        response = await fetch(`${BACKEND_URL}/api/files`, {
-          headers: {
-            'Authorization': `Bearer ${token}`,
-            'Content-Type': 'application/json'
-          }
-        });
-      }
-      
-      if (response.ok) {
-        setLoadingMessage('Processing found videos...');
-        const data = await response.json();
-        console.log(`Found ${data.videos?.length || 0} videos`);
-        console.log('First few videos:', data.videos?.slice(0, 3));
-        setVideos(data.videos || []);
-        
-        if (data.videos?.length === 0) {
-          setError('No videos found in your OneDrive. Upload some videos to start streaming!');
-        }
-      } else {
-        console.error('Failed to fetch videos:', response.status, response.statusText);
-        const errorText = await response.text();
-        console.error('Error details:', errorText);
-        
-        if (response.status === 401 || response.status === 403) {
-          setError('Authentication expired. Please log in again.');
-          handleLogout();
-        } else {
-          setError(`Failed to fetch videos: ${response.status} ${response.statusText}`);
-        }
-      }
-    } catch (error) {
-      console.error('Failed to fetch videos:', error);
-      setError(`Error fetching videos: ${error.message}`);
-    } finally {
-      setLoading(false);
-      setLoadingMessage('');
-    }
+  const handlePlayVideo = (video) => {
+    setSelectedItem(video);
+    setCurrentView('video');
   };
 
-  const fetchWatchHistory = async (token) => {
-    try {
-      const response = await fetch(`${BACKEND_URL}/api/watch-history`, {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        }
-      });
-      
-      if (response.ok) {
-        const data = await response.json();
-        setWatchHistory(data.watch_history || []);
-      }
-    } catch (error) {
-      console.error('Failed to fetch watch history:', error);
-    }
-  };
-
-  const handleSearch = async (e) => {
-    e.preventDefault();
-    if (!searchQuery.trim()) {
-      fetchVideos(accessToken);
-      return;
-    }
-
-    try {
-      setLoading(true);
-      const response = await fetch(`${BACKEND_URL}/api/files/search?q=${encodeURIComponent(searchQuery)}`, {
-        headers: {
-          'Authorization': `Bearer ${accessToken}`,
-          'Content-Type': 'application/json'
-        }
-      });
-      
-      if (response.ok) {
-        const data = await response.json();
-        setVideos(data.videos || []);
-      }
-    } catch (error) {
-      console.error('Search failed:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const playVideo = async (video) => {
-    setSelectedVideo(video);
-    setCurrentView('player');
+  const handleViewPhoto = async (photo) => {
+    setSelectedItem(photo);
     
-    // Add to watch history
-    try {
-      await fetch(`${BACKEND_URL}/api/watch-history`, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${accessToken}`,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          item_id: video.id,
-          name: video.name
-        })
-      });
-      
-      // Refresh watch history
-      fetchWatchHistory(accessToken);
-    } catch (error) {
-      console.error('Failed to update watch history:', error);
-    }
+    // Get all photos from the current folder for slideshow
+    // This is a simplified version - in a real app, you'd get this from the file explorer
+    setAllPhotos([photo]); // For now, just the single photo
+    
+    setCurrentView('photo');
   };
 
-  const formatFileSize = (bytes) => {
-    if (bytes === 0) return '0 Bytes';
-    const k = 1024;
-    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
-    const i = Math.floor(Math.log(bytes) / Math.log(k));
-    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+  const handleBackToExplorer = () => {
+    setCurrentView('explorer');
+    setSelectedItem(null);
+    setAllPhotos([]);
   };
-
-  const getVideoThumbnail = (video) => {
-    // First try OneDrive thumbnails
-    if (video.thumbnails && video.thumbnails.length > 0) {
-      const thumbnail = video.thumbnails[0];
-      return thumbnail.large?.url || thumbnail.medium?.url || thumbnail.small?.url;
-    }
-    
-    // Fallback to our thumbnail endpoint
-    return `${BACKEND_URL}/api/thumbnail/${video.id}?token=${accessToken}`;
-  };
-
-  // Handle OAuth callback
-  useEffect(() => {
-    const urlParams = new URLSearchParams(window.location.search);
-    const accessTokenFromUrl = urlParams.get('access_token');
-    const error = urlParams.get('error');
-    
-    if (error) {
-      console.error('Authentication error:', error);
-      alert('Authentication failed. Please try again.');
-      return;
-    }
-    
-    if (accessTokenFromUrl && !isAuthenticated) {
-      localStorage.setItem('access_token', accessTokenFromUrl);
-      setAccessToken(accessTokenFromUrl);
-      setIsAuthenticated(true);
-      
-      // Clear URL parameters
-      window.history.replaceState({}, document.title, window.location.pathname);
-      
-      // Fetch videos
-      fetchVideos(accessTokenFromUrl);
-      fetchWatchHistory(accessTokenFromUrl);
-    }
-  }, [isAuthenticated]);
 
   const handleLogout = () => {
+    localStorage.removeItem('password_authenticated');
     localStorage.removeItem('access_token');
+    setIsPasswordAuthenticated(false);
+    setIsOneDriveAuthenticated(false);
     setAccessToken(null);
-    setIsAuthenticated(false);
-    setVideos([]);
-    setSelectedVideo(null);
-    setWatchHistory([]);
-    setCurrentView('browse');
+    setSelectedItem(null);
+    setCurrentView('explorer');
+    setPassword('');
+    setError('');
   };
 
-  // Login Screen
-  if (!isAuthenticated) {
+  // Password Authentication Screen
+  if (!isPasswordAuthenticated) {
     return (
       <div className="login-container">
         <div className="login-card">
-          <h1>OneDrive Netflix</h1>
-          <p>Stream your OneDrive videos in Netflix style</p>
-          <button onClick={handleLogin} className="login-button">
-            Sign in with Microsoft
+          <h1>🗂️ OneDrive Explorer</h1>
+          <p>Secure access to your OneDrive files</p>
+          
+          {error && (
+            <div className="error-message">
+              ⚠️ {error}
+            </div>
+          )}
+          
+          <form onSubmit={handlePasswordLogin} className="password-form">
+            <input
+              type="password"
+              placeholder="Enter access password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              className="password-input"
+              required
+            />
+            <button 
+              type="submit" 
+              className="login-button"
+              disabled={loading}
+            >
+              {loading ? 'Authenticating...' : 'Access Explorer'}
+            </button>
+          </form>
+        </div>
+      </div>
+    );
+  }
+
+  // OneDrive Authentication Screen
+  if (!isOneDriveAuthenticated) {
+    return (
+      <div className="login-container">
+        <div className="login-card">
+          <h1>🗂️ OneDrive Explorer</h1>
+          <p>Connect to your OneDrive to explore files</p>
+          
+          {error && (
+            <div className="error-message">
+              ⚠️ {error}
+            </div>
+          )}
+          
+          <button onClick={handleOneDriveLogin} className="login-button">
+            Sign in with Microsoft OneDrive
+          </button>
+          
+          <button onClick={handleLogout} className="logout-link">
+            ← Back to Password Login
           </button>
         </div>
       </div>
@@ -248,161 +194,50 @@ function App() {
   }
 
   // Video Player View
-  if (currentView === 'player' && selectedVideo) {
+  if (currentView === 'video' && selectedItem) {
     return (
       <VideoPlayer 
-        video={selectedVideo}
+        video={selectedItem}
         backendUrl={BACKEND_URL}
         accessToken={accessToken}
-        onBack={() => setCurrentView('browse')}
+        onBack={handleBackToExplorer}
       />
     );
   }
 
-  // Watch History View
-  if (currentView === 'history') {
+  // Photo Slideshow View
+  if (currentView === 'photo' && selectedItem) {
     return (
-      <div className="history-container">
-        <div className="header">
-          <button onClick={() => setCurrentView('browse')} className="back-button">
-            ← Back to Browse
-          </button>
-          <h1>Watch History</h1>
-          <button onClick={handleLogout} className="logout-button">
-            Logout
-          </button>
-        </div>
-        <div className="history-grid">
-          {watchHistory.length === 0 ? (
-            <div className="empty-state">
-              <p>No watch history yet. Start watching some videos!</p>
-            </div>
-          ) : (
-            watchHistory.slice().reverse().map((item, index) => (
-              <div key={index} className="history-item">
-                <h3>{item.name}</h3>
-                <p>Watched: {new Date(item.timestamp).toLocaleString()}</p>
-              </div>
-            ))
-          )}
-        </div>
-      </div>
+      <PhotoSlideshow 
+        photo={selectedItem}
+        accessToken={accessToken}
+        onBack={handleBackToExplorer}
+        allPhotos={allPhotos}
+      />
     );
   }
 
-  // Main Browse View
+  // Main File Explorer View
   return (
     <div className="app">
       <header className="app-header">
         <div className="header-content">
-          <h1>OneDrive Netflix</h1>
-          <nav className="nav-menu">
-            <button 
-              className={currentView === 'browse' ? 'active' : ''}
-              onClick={() => setCurrentView('browse')}
-            >
-              Browse
+          <h1>🗂️ OneDrive Explorer</h1>
+          <div className="header-info">
+            <span className="user-info">📁 File Browser & Media Viewer</span>
+            <button onClick={handleLogout} className="logout-button">
+              🚪 Logout
             </button>
-            <button 
-              className={currentView === 'history' ? 'active' : ''}
-              onClick={() => setCurrentView('history')}
-            >
-              History ({watchHistory.length})
-            </button>
-          </nav>
-          <button onClick={handleLogout} className="logout-button">
-            Logout
-          </button>
-        </div>
-        <div className="search-container">
-          <form onSubmit={handleSearch} className="search-form">
-            <input
-              type="text"
-              placeholder="Search videos..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="search-input"
-            />
-            <button type="submit" className="search-button">
-              Search
-            </button>
-          </form>
+          </div>
         </div>
       </header>
 
       <main className="main-content">
-        {loading ? (
-          <div className="loading">
-            <div className="loading-spinner"></div>
-            <p>{loadingMessage || 'Loading videos...'}</p>
-            <div className="loading-progress">
-              <div className="progress-bar">
-                <div className="progress-fill"></div>
-              </div>
-              <p style={{ marginTop: '10px', color: '#888', fontSize: '0.9rem' }}>
-                This may take a while if you have many folders...
-              </p>
-            </div>
-          </div>
-        ) : error ? (
-          <div className="error-state">
-            <div className="error-icon">⚠️</div>
-            <h2>Oops! Something went wrong</h2>
-            <p>{error}</p>
-            <button onClick={() => fetchVideos(accessToken)} className="retry-button">
-              Try Again
-            </button>
-          </div>
-        ) : (
-          <div className="video-grid">
-            {videos.length === 0 ? (
-              <div className="empty-state">
-                <div className="empty-icon">🎬</div>
-                <h2>No videos found</h2>
-                <p>Upload some videos to your OneDrive to start streaming!</p>
-                <button onClick={() => fetchVideos(accessToken)} className="refresh-button">
-                  Refresh
-                </button>
-              </div>
-            ) : (
-              videos.map((video) => (
-                <div key={video.id} className="video-card" onClick={() => playVideo(video)}>
-                  <div className="video-thumbnail">
-                    {getVideoThumbnail(video) ? (
-                      <img 
-                        src={getVideoThumbnail(video)} 
-                        alt={video.name}
-                        onError={(e) => {
-                          // Hide broken thumbnail and show placeholder
-                          e.target.style.display = 'none';
-                          e.target.nextSibling.style.display = 'flex';
-                        }}
-                      />
-                    ) : null}
-                    <div 
-                      className="placeholder-thumbnail" 
-                      style={{ display: getVideoThumbnail(video) ? 'none' : 'flex' }}
-                    >
-                      <div className="play-icon">▶</div>
-                    </div>
-                    <div className="video-overlay">
-                      <div className="play-button">▶</div>
-                    </div>
-                  </div>
-                  <div className="video-info">
-                    <h3>{video.name}</h3>
-                    {video.folder_path && (
-                      <p className="folder-path" style={{ fontSize: '0.8rem', color: '#888', marginBottom: '4px' }}>
-                        📁 {video.folder_path}
-                      </p>
-                    )}
-                    <p>{formatFileSize(video.size)}</p>
-                  </div>
-                </div>
-              ))
-            )}
-          </div>
-        )}
+        <FileExplorer
+          accessToken={accessToken}
+          onPlayVideo={handlePlayVideo}
+          onViewPhoto={handleViewPhoto}
+        />
       </main>
     </div>
   );
