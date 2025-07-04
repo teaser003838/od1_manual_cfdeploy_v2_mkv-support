@@ -783,18 +783,16 @@ async def stream_media(item_id: str, request: Request, authorization: str = Head
             
             # Enhanced MIME type detection and browser compatibility
             def get_compatible_mime_type(filename, original_mime):
-                """Get browser-compatible MIME type"""
+                """Get browser-compatible MIME type with proper MKV handling"""
                 if filename.endswith('.mp4'):
                     return "video/mp4"
                 elif filename.endswith('.webm'):
                     return "video/webm"
                 elif filename.endswith('.mkv'):
-                    # MKV files often contain H.264 video and AAC audio, which browsers can play
-                    # We'll use mp4 container format for better compatibility
-                    return "video/mp4"
+                    # Use proper MKV MIME type - browsers that support MKV will handle it
+                    return "video/x-matroska"
                 elif filename.endswith('.avi'):
-                    # AVI files vary widely, default to mp4 for compatibility
-                    return "video/mp4"
+                    return "video/x-msvideo"
                 elif filename.endswith('.mov'):
                     return "video/quicktime"
                 elif filename.endswith('.wmv'):
