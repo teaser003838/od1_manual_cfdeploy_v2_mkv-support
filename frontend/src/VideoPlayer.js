@@ -54,6 +54,9 @@ const VideoPlayer = ({ video, backendUrl, accessToken, onBack }) => {
 
     const handleLoadedMetadata = () => {
       setDuration(videoElement.duration);
+      // Show controls initially when video loads, then hide
+      setShowControls(true);
+      showControlsTemporarily();
     };
 
     const handleTimeUpdate = () => {
@@ -63,10 +66,14 @@ const VideoPlayer = ({ video, backendUrl, accessToken, onBack }) => {
     const handlePlay = () => {
       setIsPlaying(true);
       setIsBuffering(false);
+      // Hide controls when playing starts
+      showControlsTemporarily();
     };
 
     const handlePause = () => {
       setIsPlaying(false);
+      // Show controls when paused
+      setShowControls(true);
     };
 
     const handleWaiting = () => {
@@ -80,6 +87,8 @@ const VideoPlayer = ({ video, backendUrl, accessToken, onBack }) => {
     const handleEnded = () => {
       setIsPlaying(false);
       setCurrentTime(0);
+      // Show controls when video ends
+      setShowControls(true);
     };
 
     const handleFullscreenChange = () => {
