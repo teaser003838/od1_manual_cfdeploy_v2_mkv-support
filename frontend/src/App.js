@@ -39,16 +39,32 @@ function App() {
   const fetchVideos = async (token) => {
     try {
       setLoading(true);
-      const response = await fetch(`${BACKEND_URL}/api/files`, {
+      
+      // First try to get all videos recursively from all folders
+      let response = await fetch(`${BACKEND_URL}/api/files/all`, {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
         }
       });
       
+      // If that fails, fallback to root directory only
+      if (!response.ok) {
+        console.log('Recursive search failed, trying root directory only...');
+        response = await fetch(`${BACKEND_URL}/api/files`, {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        });
+      }
+      
       if (response.ok) {
         const data = await response.json();
+        console.log(`Found ${data.videos?.length || 0} videos`);
         setVideos(data.videos || []);
+      } else {
+        console.error('Failed to fetch videos:', response.status, response.statusText);
       }
     } catch (error) {
       console.error('Failed to fetch videos:', error);
