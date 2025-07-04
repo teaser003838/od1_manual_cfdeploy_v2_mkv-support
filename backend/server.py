@@ -80,6 +80,7 @@ class FileItem(BaseModel):
     media_type: Optional[str] = None  # 'video', 'photo', 'other'
     thumbnail_url: Optional[str] = None
     download_url: Optional[str] = None
+    folder_stats: Optional[Dict[str, int]] = None  # For folders: file_count, folder_count, total_size
 
 class FolderContents(BaseModel):
     current_folder: str
