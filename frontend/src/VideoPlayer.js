@@ -122,12 +122,20 @@ const VideoPlayer = ({ video, backendUrl, accessToken, onBack }) => {
     };
   }, [video.id, backendUrl, accessToken]);
 
-  const togglePlay = () => {
+  const togglePlay = async () => {
     if (videoRef.current) {
-      if (isPlaying) {
-        videoRef.current.pause();
-      } else {
-        videoRef.current.play();
+      try {
+        if (isPlaying) {
+          videoRef.current.pause();
+        } else {
+          await videoRef.current.play();
+        }
+      } catch (error) {
+        console.error('Video play error:', error);
+        // Show user-friendly error message
+        setError(`Failed to play video: ${error.message}`);
+        // Auto-hide error after 5 seconds
+        setTimeout(() => setError(''), 5000);
       }
     }
   };
