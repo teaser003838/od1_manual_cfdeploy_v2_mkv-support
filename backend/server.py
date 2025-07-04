@@ -32,7 +32,7 @@ CLIENT_ID = os.getenv("AZURE_CLIENT_ID", "37fb551b-33c1-4dd0-8c16-5ead6f0f2b45")
 CLIENT_SECRET = os.getenv("AZURE_CLIENT_SECRET", "_IW8Q~l-15ff~RpMif-PfScDyFbV9rn92Hx5Laz5")
 TENANT_ID = os.getenv("AZURE_TENANT_ID", "f2c9e08f-779f-4dd6-9f7b-da627fd90983")
 MONGO_URL = os.getenv("MONGO_URL", "mongodb://localhost:27017")
-REDIRECT_URI = "http://localhost:8000/api/auth/callback"
+REDIRECT_URI = os.getenv("REDIRECT_URI", "https://545d199c-7f62-4fb6-9975-68d5dab52b92.preview.emergentagent.com/api/auth/callback")
 
 # MSAL Configuration
 AUTHORITY = f"https://login.microsoftonline.com/{TENANT_ID}"
