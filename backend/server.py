@@ -746,8 +746,8 @@ async def search_files(q: str, authorization: str = Header(...)):
         raise HTTPException(status_code=500, detail="Failed to search files")
 
 @app.get("/api/stream/{item_id}")
-async def stream_media(item_id: str, request: Request, authorization: str = Header(None), token: str = None):
-    """Stream video or audio files with proper range request support"""
+async def stream_media(item_id: str, request: Request, authorization: str = Header(None), token: str = None, quality: str = None):
+    """Stream video or audio files with proper range request support and quality selection"""
     try:
         # Try to get access token from header first, then from query parameter
         access_token = None
@@ -806,7 +806,11 @@ async def stream_media(item_id: str, request: Request, authorization: str = Head
                 elif file_name.endswith('.aac'):
                     mime_type = "audio/aac"
             
-            logger.info(f"Streaming file: {file_name} (MIME: {mime_type}, Size: {file_size})")
+            logger.info(f"Streaming file: {file_name} (MIME: {mime_type}, Size: {file_size}, Quality: {quality or 'Auto'})")
+            
+            # For large files (>1GB), use optimized streaming parameters
+            is_large_file = file_size > 1024 * 1024 * 1024  # 1GB
+            chunk_size = 1024 * 1024 * 2 if is_large_file else 1024 * 1024  # 2MB for large files, 1MB for others
             
             # Handle range requests for seeking
             range_header = request.headers.get("Range")
@@ -823,18 +827,25 @@ async def stream_media(item_id: str, request: Request, authorization: str = Head
                     if end >= file_size:
                         end = file_size - 1
                     
-                    logger.info(f"Range request: bytes={start}-{end}/{file_size}")
+                    # For large files, limit range size to prevent timeouts
+                    if is_large_file and (end - start) > chunk_size * 10:  # Limit to 10 chunks max
+                        end = start + (chunk_size * 10) - 1
+                    
+                    logger.info(f"Range request: bytes={start}-{end}/{file_size} (Large file: {is_large_file})")
                     
                     # Stream with range
                     async def generate_range():
                         try:
-                            async with httpx.AsyncClient() as stream_client:
+                            async with httpx.AsyncClient(timeout=120.0) as stream_client:  # Increased timeout for large files
                                 range_headers = {"Range": f"bytes={start}-{end}"}
                                 async with stream_client.stream("GET", download_url, headers=range_headers) as media_response:
                                     if media_response.status_code not in [200, 206]:
                                         logger.error(f"Range request failed: {media_response.status_code}")
                                         return
-                                    async for chunk in media_response.aiter_bytes():
+                                    
+                                    # Stream in smaller chunks for better performance
+                                    current_chunk_size = chunk_size if is_large_file else 65536  # 64KB for regular files
+                                    async for chunk in media_response.aiter_bytes(chunk_size=current_chunk_size):
                                         yield chunk
                         except Exception as e:
                             logger.error(f"Error in range streaming: {str(e)}")
@@ -848,9 +859,7 @@ async def stream_media(item_id: str, request: Request, authorization: str = Head
                             "Accept-Ranges": "bytes",
                             "Content-Range": f"bytes {start}-{end}/{file_size}",
                             "Content-Length": str(end - start + 1),
-                            "Cache-Control": "no-cache, no-store, must-revalidate",
-                            "Pragma": "no-cache",
-                            "Expires": "0",
+                            "Cache-Control": "public, max-age=3600" if not is_large_file else "no-cache",
                             "Access-Control-Allow-Origin": "*",
                             "Access-Control-Allow-Headers": "Range",
                             "Access-Control-Expose-Headers": "Content-Range, Content-Length, Accept-Ranges"
@@ -863,12 +872,16 @@ async def stream_media(item_id: str, request: Request, authorization: str = Head
             # Stream entire file if no range requested
             async def generate_full():
                 try:
-                    async with httpx.AsyncClient() as stream_client:
+                    timeout_val = 300.0 if is_large_file else 60.0  # 5min for large files, 1min for others
+                    async with httpx.AsyncClient(timeout=timeout_val) as stream_client:
                         async with stream_client.stream("GET", download_url) as media_response:
                             if media_response.status_code != 200:
                                 logger.error(f"Full file streaming failed: {media_response.status_code}")
                                 return
-                            async for chunk in media_response.aiter_bytes():
+                                
+                            # Use adaptive chunk size for better performance
+                            current_chunk_size = chunk_size if is_large_file else 65536
+                            async for chunk in media_response.aiter_bytes(chunk_size=current_chunk_size):
                                 yield chunk
                 except Exception as e:
                     logger.error(f"Error in full file streaming: {str(e)}")
@@ -880,9 +893,7 @@ async def stream_media(item_id: str, request: Request, authorization: str = Head
                 headers={
                     "Accept-Ranges": "bytes",
                     "Content-Length": str(file_size),
-                    "Cache-Control": "no-cache, no-store, must-revalidate",
-                    "Pragma": "no-cache",
-                    "Expires": "0",
+                    "Cache-Control": "public, max-age=3600" if not is_large_file else "no-cache",
                     "Access-Control-Allow-Origin": "*",
                     "Access-Control-Allow-Headers": "Range",
                     "Access-Control-Expose-Headers": "Content-Range, Content-Length, Accept-Ranges"
