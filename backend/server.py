@@ -490,20 +490,27 @@ async def list_files(authorization: str = Header(...)):
             files = response.json()
             logger.info(f"Retrieved {len(files.get('value', []))} files from OneDrive")
             
-            # Filter for video files
-            video_files = []
+            # Filter for video and audio files
+            media_files = []
             video_extensions = ['.mp4', '.mkv', '.avi', '.webm', '.mov', '.wmv', '.flv', '.m4v', '.3gp', '.ogv']
+            audio_extensions = ['.mp3', '.wav', '.flac', '.m4a', '.ogg', '.aac', '.wma', '.opus', '.aiff', '.alac']
             video_mime_types = ['video/mp4', 'video/x-msvideo', 'video/quicktime', 'video/x-ms-wmv', 
                               'video/webm', 'video/x-matroska', 'video/x-flv', 'video/3gpp', 'video/ogg']
+            audio_mime_types = ['audio/mpeg', 'audio/wav', 'audio/flac', 'audio/mp4', 'audio/ogg', 
+                              'audio/aac', 'audio/x-ms-wma', 'audio/opus', 'audio/aiff', 'audio/alac']
             
             for file in files.get("value", []):
                 is_video = False
+                is_audio = False
                 file_name = file.get("name", "").lower()
                 
                 # Check by file extension
                 if any(file_name.endswith(ext) for ext in video_extensions):
                     is_video = True
                     logger.info(f"Found video by extension: {file_name}")
+                elif any(file_name.endswith(ext) for ext in audio_extensions):
+                    is_audio = True
+                    logger.info(f"Found audio by extension: {file_name}")
                 
                 # Check by MIME type if available
                 if file.get("file") and file.get("file", {}).get("mimeType"):
@@ -511,23 +518,27 @@ async def list_files(authorization: str = Header(...)):
                     if mime_type in video_mime_types or mime_type.startswith("video/"):
                         is_video = True
                         logger.info(f"Found video by MIME type: {file_name} ({mime_type})")
+                    elif mime_type in audio_mime_types or mime_type.startswith("audio/"):
+                        is_audio = True
+                        logger.info(f"Found audio by MIME type: {file_name} ({mime_type})")
                 
-                if is_video:
-                    video_files.append({
+                if is_video or is_audio:
+                    media_files.append({
                         "id": file["id"],
                         "name": file["name"],
                         "size": file.get("size", 0),
-                        "mimeType": file.get("file", {}).get("mimeType", "video/mp4"),
+                        "mimeType": file.get("file", {}).get("mimeType", "video/mp4" if is_video else "audio/mpeg"),
                         "downloadUrl": file.get("@microsoft.graph.downloadUrl"),
                         "webUrl": file.get("webUrl"),
-                        "thumbnails": file.get("thumbnails", [])
+                        "thumbnails": file.get("thumbnails", []),
+                        "media_type": "video" if is_video else "audio"
                     })
                 else:
-                    # Log non-video files for debugging
-                    logger.info(f"Non-video file: {file_name} (MIME: {file.get('file', {}).get('mimeType', 'N/A')})")
+                    # Log non-media files for debugging
+                    logger.info(f"Non-media file: {file_name} (MIME: {file.get('file', {}).get('mimeType', 'N/A')})")
             
-            logger.info(f"Found {len(video_files)} video files")
-            return {"videos": video_files}
+            logger.info(f"Found {len(media_files)} media files")
+            return {"videos": media_files}  # Keep "videos" key for backward compatibility
             
     except Exception as e:
         logger.error(f"List files error: {str(e)}")
