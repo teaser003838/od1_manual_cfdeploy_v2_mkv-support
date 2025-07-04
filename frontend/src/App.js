@@ -145,10 +145,26 @@ function App() {
   // Handle OAuth callback
   useEffect(() => {
     const urlParams = new URLSearchParams(window.location.search);
-    const code = urlParams.get('code');
+    const accessTokenFromUrl = urlParams.get('access_token');
+    const error = urlParams.get('error');
     
-    if (code && !isAuthenticated) {
-      handleCallback(code);
+    if (error) {
+      console.error('Authentication error:', error);
+      alert('Authentication failed. Please try again.');
+      return;
+    }
+    
+    if (accessTokenFromUrl && !isAuthenticated) {
+      localStorage.setItem('access_token', accessTokenFromUrl);
+      setAccessToken(accessTokenFromUrl);
+      setIsAuthenticated(true);
+      
+      // Clear URL parameters
+      window.history.replaceState({}, document.title, window.location.pathname);
+      
+      // Fetch videos
+      fetchVideos(accessTokenFromUrl);
+      fetchWatchHistory(accessTokenFromUrl);
     }
   }, [isAuthenticated]);
 
