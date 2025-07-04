@@ -190,6 +190,29 @@ async def get_user_info(access_token: str):
             return response.json()
         return {}
 
+async def get_folder_stats(client: httpx.AsyncClient, access_token: str, folder_id: str) -> dict:
+    """Get folder statistics including total size and item counts"""
+    try:
+        # Get folder contents
+        url = f"https://graph.microsoft.com/v1.0/me/drive/items/{folder_id}/children"
+        response = await client.get(url, headers={"Authorization": f"Bearer {access_token}"})
+        
+        if response.status_code != 200:
+            return {"total_size": 0}
+        
+        data = response.json()
+        items = data.get("value", [])
+        total_size = 0
+        
+        for item in items:
+            item_size = item.get("size", 0)
+            total_size += item_size
+        
+        return {"total_size": total_size}
+    except Exception as e:
+        logger.error(f"Error getting folder stats: {str(e)}")
+        return {"total_size": 0}
+
 # File explorer endpoints
 @app.get("/api/explorer/browse")
 async def browse_folder(folder_id: str = "root", authorization: str = Header(...)):
