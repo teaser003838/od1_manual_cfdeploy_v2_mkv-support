@@ -250,38 +250,12 @@ function App() {
   // Video Player View
   if (currentView === 'player' && selectedVideo) {
     return (
-      <div className="player-container">
-        <div className="player-header">
-          <button onClick={() => setCurrentView('browse')} className="back-button">
-            ← Back to Browse
-          </button>
-          <h2>{selectedVideo.name}</h2>
-          <button onClick={handleLogout} className="logout-button">
-            Logout
-          </button>
-        </div>
-        <div className="video-player">
-          <video
-            key={selectedVideo.id}
-            controls
-            autoPlay
-            width="100%"
-            height="auto"
-            style={{ maxHeight: '70vh' }}
-          >
-            <source
-              src={`${BACKEND_URL}/api/stream/${selectedVideo.id}?token=${accessToken}`}
-              type={selectedVideo.mimeType}
-            />
-            Your browser does not support the video tag.
-          </video>
-        </div>
-        <div className="video-info">
-          <h3>{selectedVideo.name}</h3>
-          <p>Size: {formatFileSize(selectedVideo.size)}</p>
-          <p>Type: {selectedVideo.mimeType}</p>
-        </div>
-      </div>
+      <VideoPlayer 
+        video={selectedVideo}
+        backendUrl={BACKEND_URL}
+        accessToken={accessToken}
+        onBack={() => setCurrentView('browse')}
+      />
     );
   }
 
