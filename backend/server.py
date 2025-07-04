@@ -69,8 +69,12 @@ async def shutdown_event():
 @app.get("/api/auth/login")
 async def login():
     try:
+        # Ensure scopes is a list and create a new list to avoid any reference issues
+        scopes_list = ["Files.ReadWrite.All", "User.Read", "offline_access"]
+        logger.info(f"Using scopes: {scopes_list}")
+        
         auth_url = msal_app.get_authorization_request_url(
-            scopes=list(SCOPES),
+            scopes=scopes_list,
             redirect_uri=REDIRECT_URI
         )
         return {"auth_url": auth_url}
