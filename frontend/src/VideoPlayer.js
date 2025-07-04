@@ -635,32 +635,6 @@ const VideoPlayer = ({ video, backendUrl, accessToken, onBack }) => {
                         </div>
                       )}
                     </div>
-
-                    <div className="settings-menu">
-                      <button 
-                        onClick={() => setShowQualityMenu(!showQualityMenu)} 
-                        className="control-button"
-                      >
-                        📺 {selectedQuality}
-                      </button>
-                      {showQualityMenu && (
-                        <div className="quality-menu">
-                          <div className="menu-header">Quality</div>
-                          {videoQualities.map(quality => (
-                            <div 
-                              key={quality}
-                              className={`menu-item ${selectedQuality === quality ? 'active' : ''}`}
-                              onClick={() => {
-                                setSelectedQuality(quality);
-                                setShowQualityMenu(false);
-                              }}
-                            >
-                              {quality}
-                            </div>
-                          ))}
-                        </div>
-                      )}
-                    </div>
                   </>
                 )}
 
