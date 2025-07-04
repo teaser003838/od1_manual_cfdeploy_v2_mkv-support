@@ -13,10 +13,7 @@ const VideoPlayer = ({ video, backendUrl, accessToken, onBack }) => {
   const [showControls, setShowControls] = useState(true);
   const [playbackRate, setPlaybackRate] = useState(1);
   const [showSpeedMenu, setShowSpeedMenu] = useState(false);
-  const [showQualityMenu, setShowQualityMenu] = useState(false);
   const [isBuffering, setIsBuffering] = useState(false);
-  const [videoQualities] = useState(['Auto', '1080p', '720p', '480p', '360p']);
-  const [selectedQuality, setSelectedQuality] = useState('Auto');
   const [showSubtitleMenu, setShowSubtitleMenu] = useState(false);
   const [subtitles, setSubtitles] = useState([]);
   const [selectedSubtitle, setSelectedSubtitle] = useState(null);
