@@ -94,6 +94,9 @@ const FileExplorer = ({ accessToken, currentFolder: parentCurrentFolder, onFolde
 
   const handleBreadcrumbClick = (folderId) => {
     setCurrentFolder(folderId);
+    if (onFolderChange) {
+      onFolderChange(folderId);
+    }
   };
 
   const clearSearch = () => {
