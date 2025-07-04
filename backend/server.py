@@ -548,6 +548,163 @@ async def get_video_thumbnail(item_id: str, authorization: str = Header(None), t
         logger.error(f"Get thumbnail error: {str(e)}")
         raise HTTPException(status_code=500, detail="Failed to get thumbnail")
 
+@app.get("/api/subtitles/{item_id}")
+async def get_subtitles(item_id: str, authorization: str = Header(None), token: str = None):
+    try:
+        # Try to get access token from header first, then from query parameter
+        access_token = None
+        if authorization:
+            access_token = authorization.replace("Bearer ", "")
+        elif token:
+            access_token = token
+        else:
+            raise HTTPException(status_code=401, detail="Authorization required")
+        
+        async with httpx.AsyncClient() as client:
+            # Get file info to find potential subtitle files
+            response = await client.get(
+                f"https://graph.microsoft.com/v1.0/me/drive/items/{item_id}",
+                headers={"Authorization": f"Bearer {access_token}"}
+            )
+            
+            if response.status_code != 200:
+                raise HTTPException(status_code=404, detail="File not found")
+            
+            file_info = response.json()
+            parent_id = file_info.get("parentReference", {}).get("id")
+            
+            if not parent_id:
+                raise HTTPException(status_code=404, detail="No subtitles found")
+            
+            # Search for subtitle files in the same directory
+            folder_response = await client.get(
+                f"https://graph.microsoft.com/v1.0/me/drive/items/{parent_id}/children",
+                headers={"Authorization": f"Bearer {access_token}"}
+            )
+            
+            if folder_response.status_code != 200:
+                raise HTTPException(status_code=404, detail="No subtitles found")
+            
+            files = folder_response.json()
+            video_name = file_info.get("name", "").lower()
+            video_base_name = video_name.rsplit('.', 1)[0] if '.' in video_name else video_name
+            
+            subtitle_extensions = ['.srt', '.vtt', '.ass', '.ssa', '.sub']
+            subtitle_files = []
+            
+            for file in files.get("value", []):
+                file_name = file.get("name", "").lower()
+                
+                # Check if it's a subtitle file for this video
+                if any(file_name.endswith(ext) for ext in subtitle_extensions):
+                    file_base_name = file_name.rsplit('.', 1)[0] if '.' in file_name else file_name
+                    
+                    # Check if subtitle belongs to this video
+                    if video_base_name in file_base_name or file_base_name in video_base_name:
+                        subtitle_files.append({
+                            "id": file["id"],
+                            "name": file["name"],
+                            "language": extract_language_from_filename(file["name"]),
+                            "downloadUrl": file.get("@microsoft.graph.downloadUrl")
+                        })
+            
+            return {"subtitles": subtitle_files}
+            
+    except Exception as e:
+        logger.error(f"Get subtitles error: {str(e)}")
+        raise HTTPException(status_code=404, detail="No subtitles found")
+
+def extract_language_from_filename(filename):
+    """Extract language code from subtitle filename"""
+    filename_lower = filename.lower()
+    
+    # Common language patterns
+    language_patterns = {
+        'en': ['english', 'eng', '.en.'],
+        'es': ['spanish', 'esp', '.es.'],
+        'fr': ['french', 'fra', '.fr.'],
+        'de': ['german', 'ger', '.de.'],
+        'it': ['italian', 'ita', '.it.'],
+        'pt': ['portuguese', 'por', '.pt.'],
+        'ru': ['russian', 'rus', '.ru.'],
+        'ja': ['japanese', 'jpn', '.ja.'],
+        'ko': ['korean', 'kor', '.ko.'],
+        'zh': ['chinese', 'chi', '.zh.'],
+        'ar': ['arabic', 'ara', '.ar.'],
+        'hi': ['hindi', 'hin', '.hi.'],
+    }
+    
+    for lang_code, patterns in language_patterns.items():
+        for pattern in patterns:
+            if pattern in filename_lower:
+                return lang_code
+    
+    return 'unknown'
+
+@app.get("/api/subtitle-content/{item_id}")
+async def get_subtitle_content(item_id: str, authorization: str = Header(None), token: str = None):
+    try:
+        # Try to get access token from header first, then from query parameter
+        access_token = None
+        if authorization:
+            access_token = authorization.replace("Bearer ", "")
+        elif token:
+            access_token = token
+        else:
+            raise HTTPException(status_code=401, detail="Authorization required")
+        
+        async with httpx.AsyncClient() as client:
+            # Get subtitle file info
+            response = await client.get(
+                f"https://graph.microsoft.com/v1.0/me/drive/items/{item_id}",
+                headers={"Authorization": f"Bearer {access_token}"}
+            )
+            
+            if response.status_code != 200:
+                raise HTTPException(status_code=404, detail="Subtitle file not found")
+            
+            file_info = response.json()
+            download_url = file_info.get("@microsoft.graph.downloadUrl")
+            
+            if not download_url:
+                raise HTTPException(status_code=404, detail="Download URL not available")
+            
+            # Download subtitle content
+            subtitle_response = await client.get(download_url)
+            
+            if subtitle_response.status_code == 200:
+                content = subtitle_response.text
+                
+                # Convert SRT to VTT if needed
+                if file_info.get("name", "").lower().endswith('.srt'):
+                    content = convert_srt_to_vtt(content)
+                
+                return Response(
+                    content=content,
+                    media_type="text/vtt",
+                    headers={"Cache-Control": "public, max-age=3600"}
+                )
+            
+            raise HTTPException(status_code=404, detail="Subtitle content not available")
+            
+    except Exception as e:
+        logger.error(f"Get subtitle content error: {str(e)}")
+        raise HTTPException(status_code=500, detail="Failed to get subtitle content")
+
+def convert_srt_to_vtt(srt_content):
+    """Convert SRT subtitle format to VTT format"""
+    lines = srt_content.strip().split('\n')
+    vtt_lines = ['WEBVTT\n']
+    
+    for line in lines:
+        line = line.strip()
+        if '-->' in line:
+            # Convert timestamp format from SRT to VTT
+            line = line.replace(',', '.')
+        vtt_lines.append(line)
+    
+    return '\n'.join(vtt_lines)
+
 # Health check
 @app.get("/api/health")
 async def health_check():
