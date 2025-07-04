@@ -203,42 +203,93 @@ async def list_files(authorization: str = Header(...)):
         logger.error(f"List files error: {str(e)}")
         raise HTTPException(status_code=500, detail="Failed to list files")
 
-@app.get("/api/files/search")
-async def search_files(q: str, authorization: str = Header(...)):
+@app.get("/api/files/all")
+async def list_all_files(authorization: str = Header(...)):
+    """List all video files recursively from all folders"""
     try:
         access_token = authorization.replace("Bearer ", "")
         
-        async with httpx.AsyncClient() as client:
-            response = await client.get(
-                f"https://graph.microsoft.com/v1.0/me/drive/root/search(q='{q}')",
-                headers={"Authorization": f"Bearer {access_token}"}
-            )
+        async def get_files_recursive(client, folder_id="root", folder_path=""):
+            """Recursively get all files from a folder and its subfolders"""
+            all_files = []
+            
+            # Get files from current folder
+            if folder_id == "root":
+                url = "https://graph.microsoft.com/v1.0/me/drive/root/children"
+            else:
+                url = f"https://graph.microsoft.com/v1.0/me/drive/items/{folder_id}/children"
+            
+            response = await client.get(url, headers={"Authorization": f"Bearer {access_token}"})
             
             if response.status_code != 200:
-                raise HTTPException(status_code=400, detail="Search failed")
+                logger.error(f"Failed to fetch files from {folder_path}: {response.status_code}")
+                return all_files
             
             files = response.json()
             
+            for file in files.get("value", []):
+                file_path = f"{folder_path}/{file['name']}" if folder_path else file['name']
+                
+                if file.get("folder"):
+                    # It's a folder, recurse into it
+                    logger.info(f"Exploring folder: {file_path}")
+                    subfolder_files = await get_files_recursive(client, file["id"], file_path)
+                    all_files.extend(subfolder_files)
+                else:
+                    # It's a file, add folder path info
+                    file["folder_path"] = folder_path
+                    all_files.append(file)
+            
+            return all_files
+        
+        async with httpx.AsyncClient() as client:
+            all_files = await get_files_recursive(client)
+            
+            logger.info(f"Retrieved {len(all_files)} total files from OneDrive (including subfolders)")
+            
             # Filter for video files
             video_files = []
-            for file in files.get("value", []):
+            video_extensions = ['.mp4', '.mkv', '.avi', '.webm', '.mov', '.wmv', '.flv', '.m4v', '.3gp', '.ogv']
+            video_mime_types = ['video/mp4', 'video/x-msvideo', 'video/quicktime', 'video/x-ms-wmv', 
+                              'video/webm', 'video/x-matroska', 'video/x-flv', 'video/3gpp', 'video/ogg']
+            
+            for file in all_files:
+                is_video = False
+                file_name = file.get("name", "").lower()
+                folder_path = file.get("folder_path", "")
+                full_path = f"{folder_path}/{file_name}" if folder_path else file_name
+                
+                # Check by file extension
+                if any(file_name.endswith(ext) for ext in video_extensions):
+                    is_video = True
+                    logger.info(f"Found video by extension: {full_path}")
+                
+                # Check by MIME type if available
                 if file.get("file") and file.get("file", {}).get("mimeType"):
                     mime_type = file["file"]["mimeType"]
-                    if mime_type.startswith("video/"):
-                        video_files.append({
-                            "id": file["id"],
-                            "name": file["name"],
-                            "size": file["size"],
-                            "mimeType": mime_type,
-                            "downloadUrl": file.get("@microsoft.graph.downloadUrl"),
-                            "webUrl": file.get("webUrl"),
-                            "thumbnails": file.get("thumbnails", [])
-                        })
+                    if mime_type in video_mime_types or mime_type.startswith("video/"):
+                        is_video = True
+                        logger.info(f"Found video by MIME type: {full_path} ({mime_type})")
+                
+                if is_video:
+                    video_files.append({
+                        "id": file["id"],
+                        "name": file["name"],
+                        "folder_path": folder_path,
+                        "full_path": full_path,
+                        "size": file.get("size", 0),
+                        "mimeType": file.get("file", {}).get("mimeType", "video/mp4"),
+                        "downloadUrl": file.get("@microsoft.graph.downloadUrl"),
+                        "webUrl": file.get("webUrl"),
+                        "thumbnails": file.get("thumbnails", [])
+                    })
             
+            logger.info(f"Found {len(video_files)} video files total")
             return {"videos": video_files}
+            
     except Exception as e:
-        logger.error(f"Search files error: {str(e)}")
-        raise HTTPException(status_code=500, detail="Failed to search files")
+        logger.error(f"List all files error: {str(e)}")
+        raise HTTPException(status_code=500, detail="Failed to list all files")
 
 @app.get("/api/stream/{item_id}")
 async def stream_video(item_id: str, authorization: str = Header(...)):
