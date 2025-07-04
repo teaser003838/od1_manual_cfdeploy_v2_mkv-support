@@ -816,6 +816,7 @@ def run_tests():
     suite.addTest(test_class('test_stream_endpoint_with_mock_auth'))
     suite.addTest(test_class('test_watch_history_endpoints_with_mock_auth'))
     suite.addTest(test_class('test_cors_headers'))
+    suite.addTest(test_class('test_range_request_handling'))
     
     # Run the tests
     runner = unittest.TextTestRunner()
