@@ -4,7 +4,7 @@ import asyncio
 import json
 import os
 import re
-from unittest.mock import patch, MagicMock
+from unittest.mock import patch, MagicMock, AsyncMock
 
 # Get the backend URL from the frontend .env file
 BACKEND_URL = "https://545d199c-7f62-4fb6-9975-68d5dab52b92.preview.emergentagent.com"
@@ -14,6 +14,11 @@ EXPECTED_REDIRECT_URI = f"{API_URL}/auth/callback"
 
 # Mock token for testing endpoints that require authentication
 MOCK_TOKEN = "mock_access_token"
+
+# Video file extensions and MIME types for testing
+VIDEO_EXTENSIONS = ['.mp4', '.mkv', '.webm', '.avi', '.mov', '.wmv', '.flv', '.m4v', '.3gp', '.ogv']
+VIDEO_MIME_TYPES = ['video/mp4', 'video/x-msvideo', 'video/quicktime', 'video/x-ms-wmv', 
+                    'video/webm', 'video/x-matroska', 'video/x-flv', 'video/3gpp', 'video/ogg']
 
 class TestOneDriveNetflixBackend(unittest.TestCase):
     """Test suite for OneDrive Netflix Backend API"""
