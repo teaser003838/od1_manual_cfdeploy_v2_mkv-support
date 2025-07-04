@@ -254,6 +254,7 @@ function App() {
         <FileExplorer
           accessToken={accessToken}
           onPlayVideo={handlePlayVideo}
+          onPlayAudio={handlePlayAudio}
           onViewPhoto={handleViewPhoto}
         />
       </main>
