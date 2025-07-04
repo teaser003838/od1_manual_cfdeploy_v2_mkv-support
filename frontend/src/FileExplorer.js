@@ -198,7 +198,7 @@ const FileExplorer = ({ accessToken, onPlayVideo, onViewPhoto, onPlayAudio }) =>
               {item.is_media && (
                 <div className="media-overlay">
                   <div className="play-button">
-                    {item.media_type === 'video' ? '▶' : '👁️'}
+                    {item.media_type === 'video' ? '▶' : item.media_type === 'audio' ? '🎵' : '👁️'}
                   </div>
                 </div>
               )}
