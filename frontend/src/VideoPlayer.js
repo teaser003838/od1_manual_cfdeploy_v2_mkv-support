@@ -545,7 +545,9 @@ const VideoPlayer = ({ video, backendUrl, accessToken, onBack }) => {
   return (
     <div 
       className="youtube-player-container" 
-      onMouseMove={handleMouseMove} 
+      onMouseMove={handleMouseMove}
+      onMouseEnter={handleMouseEnter}
+      onMouseLeave={handleMouseLeave}
       tabIndex={0}
       ref={containerRef}
     >
@@ -560,7 +562,7 @@ const VideoPlayer = ({ video, backendUrl, accessToken, onBack }) => {
         <video
           ref={videoRef}
           className="video-element"
-          src={`${backendUrl}/api/stream/${video.id}?token=${accessToken}`}
+          src={getQualityUrl(video.id, currentQuality)}
           onClick={handleVideoClick}
           onDoubleClick={handleVideoDoubleClick}
           onTouchStart={handleTouchStart}
