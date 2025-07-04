@@ -476,7 +476,12 @@ const VideoPlayer = ({ video, backendUrl, accessToken, onBack }) => {
   }, [volume, isPlaying, duration]);
 
   return (
-    <div className="youtube-player-container" onMouseMove={handleMouseMove} tabIndex={0}>
+    <div 
+      className="youtube-player-container" 
+      onMouseMove={handleMouseMove} 
+      tabIndex={0}
+      ref={containerRef}
+    >
       <div className="player-header">
         <button onClick={onBack} className="back-button">
           ← Back to Browse
@@ -489,9 +494,41 @@ const VideoPlayer = ({ video, backendUrl, accessToken, onBack }) => {
           ref={videoRef}
           className="video-element"
           src={`${backendUrl}/api/stream/${video.id}?token=${accessToken}`}
-          onClick={togglePlay}
-          onDoubleClick={toggleFullscreen}
+          onClick={handleVideoClick}
+          onDoubleClick={handleVideoDoubleClick}
+          onTouchStart={handleTouchStart}
+          onTouchMove={handleTouchMove}
+          onTouchEnd={handleTouchEnd}
         />
+        
+        {/* Touch indicators for mobile */}
+        {isMobile && (
+          <>
+            <div className="touch-zone touch-zone-left">
+              <div className="touch-hint">⏪ 10s</div>
+            </div>
+            <div className="touch-zone touch-zone-center">
+              <div className="touch-hint">⏯️</div>
+            </div>
+            <div className="touch-zone touch-zone-right">
+              <div className="touch-hint">⏩ 10s</div>
+            </div>
+          </>
+        )}
+        
+        {/* Seek indicator */}
+        {seekIndicator && (
+          <div className="seek-indicator">
+            {seekIndicator}
+          </div>
+        )}
+        
+        {/* Volume indicator */}
+        {volumeIndicator !== null && (
+          <div className="volume-indicator">
+            🔊 {volumeIndicator}%
+          </div>
+        )}
         
         {isBuffering && (
           <div className="buffering-overlay">
@@ -520,27 +557,23 @@ const VideoPlayer = ({ video, backendUrl, accessToken, onBack }) => {
                   {isPlaying ? '⏸️' : '▶️'}
                 </button>
                 
-                <button onClick={() => skipTime(-10)} className="control-button">
-                  ⏪
-                </button>
-                
-                <button onClick={() => skipTime(10)} className="control-button">
-                  ⏩
-                </button>
+                {/* Remove seeking buttons for screen-inbuilt seeking */}
                 
                 <div className="volume-control">
                   <button onClick={toggleMute} className="control-button">
                     {isMuted || volume === 0 ? '🔇' : volume < 0.5 ? '🔉' : '🔊'}
                   </button>
-                  <input
-                    type="range"
-                    min="0"
-                    max="1"
-                    step="0.1"
-                    value={isMuted ? 0 : volume}
-                    onChange={handleVolumeChange}
-                    className="volume-slider"
-                  />
+                  {!isMobile && (
+                    <input
+                      type="range"
+                      min="0"
+                      max="1"
+                      step="0.1"
+                      value={isMuted ? 0 : volume}
+                      onChange={handleVolumeChange}
+                      className="volume-slider"
+                    />
+                  )}
                 </div>
                 
                 <div className="time-display">
@@ -549,54 +582,58 @@ const VideoPlayer = ({ video, backendUrl, accessToken, onBack }) => {
               </div>
 
               <div className="right-controls">
-                <div className="settings-menu">
-                  <button 
-                    onClick={() => setShowSpeedMenu(!showSpeedMenu)} 
-                    className="control-button"
-                  >
-                    ⚙️ {playbackRate}x
-                  </button>
-                  {showSpeedMenu && (
-                    <div className="speed-menu">
-                      <div className="menu-header">Speed</div>
-                      {playbackSpeeds.map(speed => (
-                        <div 
-                          key={speed}
-                          className={`menu-item ${playbackRate === speed ? 'active' : ''}`}
-                          onClick={() => changePlaybackRate(speed)}
-                        >
-                          {speed}x {speed === 1 ? '(Normal)' : ''}
+                {!isFullscreen && (
+                  <>
+                    <div className="settings-menu">
+                      <button 
+                        onClick={() => setShowSpeedMenu(!showSpeedMenu)} 
+                        className="control-button"
+                      >
+                        ⚙️ {playbackRate}x
+                      </button>
+                      {showSpeedMenu && (
+                        <div className="speed-menu">
+                          <div className="menu-header">Speed</div>
+                          {playbackSpeeds.map(speed => (
+                            <div 
+                              key={speed}
+                              className={`menu-item ${playbackRate === speed ? 'active' : ''}`}
+                              onClick={() => changePlaybackRate(speed)}
+                            >
+                              {speed}x {speed === 1 ? '(Normal)' : ''}
+                            </div>
+                          ))}
                         </div>
-                      ))}
+                      )}
                     </div>
-                  )}
-                </div>
 
-                <div className="settings-menu">
-                  <button 
-                    onClick={() => setShowQualityMenu(!showQualityMenu)} 
-                    className="control-button"
-                  >
-                    📺 {selectedQuality}
-                  </button>
-                  {showQualityMenu && (
-                    <div className="quality-menu">
-                      <div className="menu-header">Quality</div>
-                      {videoQualities.map(quality => (
-                        <div 
-                          key={quality}
-                          className={`menu-item ${selectedQuality === quality ? 'active' : ''}`}
-                          onClick={() => {
-                            setSelectedQuality(quality);
-                            setShowQualityMenu(false);
-                          }}
-                        >
-                          {quality}
+                    <div className="settings-menu">
+                      <button 
+                        onClick={() => setShowQualityMenu(!showQualityMenu)} 
+                        className="control-button"
+                      >
+                        📺 {selectedQuality}
+                      </button>
+                      {showQualityMenu && (
+                        <div className="quality-menu">
+                          <div className="menu-header">Quality</div>
+                          {videoQualities.map(quality => (
+                            <div 
+                              key={quality}
+                              className={`menu-item ${selectedQuality === quality ? 'active' : ''}`}
+                              onClick={() => {
+                                setSelectedQuality(quality);
+                                setShowQualityMenu(false);
+                              }}
+                            >
+                              {quality}
+                            </div>
+                          ))}
                         </div>
-                      ))}
+                      )}
                     </div>
-                  )}
-                </div>
+                  </>
+                )}
 
                 <button onClick={toggleFullscreen} className="control-button">
                   {isFullscreen ? '🗗' : '⛶'}
@@ -616,6 +653,32 @@ const VideoPlayer = ({ video, backendUrl, accessToken, onBack }) => {
           <span>Size: {formatFileSize(video.size)}</span>
           <span>Type: {video.mimeType}</span>
         </div>
+        {!isMobile && (
+          <div className="keyboard-shortcuts">
+            <p><strong>Keyboard Shortcuts:</strong></p>
+            <div className="shortcuts-grid">
+              <span>Space/K - Play/Pause</span>
+              <span>J/← - Seek backward 10s</span>
+              <span>L/→ - Seek forward 10s</span>
+              <span>↑/↓ - Volume</span>
+              <span>F - Fullscreen</span>
+              <span>M - Mute</span>
+              <span>0-9 - Jump to %</span>
+            </div>
+          </div>
+        )}
+        {isMobile && (
+          <div className="touch-instructions">
+            <p><strong>Touch Controls:</strong></p>
+            <div className="touch-help">
+              <span>Tap left/right sides to seek</span>
+              <span>Tap center to play/pause</span>
+              <span>Double tap center for fullscreen</span>
+              <span>Swipe left/right to seek</span>
+              <span>Swipe up/down to adjust volume</span>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
