@@ -355,13 +355,35 @@ function App() {
         {loading ? (
           <div className="loading">
             <div className="loading-spinner"></div>
-            <p>Loading videos...</p>
+            <p>{loadingMessage || 'Loading videos...'}</p>
+            <div className="loading-progress">
+              <div className="progress-bar">
+                <div className="progress-fill"></div>
+              </div>
+              <p style={{ marginTop: '10px', color: '#888', fontSize: '0.9rem' }}>
+                This may take a while if you have many folders...
+              </p>
+            </div>
+          </div>
+        ) : error ? (
+          <div className="error-state">
+            <div className="error-icon">⚠️</div>
+            <h2>Oops! Something went wrong</h2>
+            <p>{error}</p>
+            <button onClick={() => fetchVideos(accessToken)} className="retry-button">
+              Try Again
+            </button>
           </div>
         ) : (
           <div className="video-grid">
             {videos.length === 0 ? (
               <div className="empty-state">
-                <p>No videos found. Upload some videos to your OneDrive!</p>
+                <div className="empty-icon">🎬</div>
+                <h2>No videos found</h2>
+                <p>Upload some videos to your OneDrive to start streaming!</p>
+                <button onClick={() => fetchVideos(accessToken)} className="refresh-button">
+                  Refresh
+                </button>
               </div>
             ) : (
               videos.map((video) => (
