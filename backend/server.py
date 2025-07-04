@@ -713,7 +713,8 @@ async def search_files(q: str, authorization: str = Header(...)):
         raise HTTPException(status_code=500, detail="Failed to search files")
 
 @app.get("/api/stream/{item_id}")
-async def stream_video(item_id: str, request: Request, authorization: str = Header(None), token: str = None):
+async def stream_media(item_id: str, request: Request, authorization: str = Header(None), token: str = None):
+    """Stream video or audio files with proper range request support"""
     try:
         # Try to get access token from header first, then from query parameter
         access_token = None
@@ -732,18 +733,49 @@ async def stream_video(item_id: str, request: Request, authorization: str = Head
             )
             
             if response.status_code != 200:
+                logger.error(f"Failed to fetch file info: {response.status_code}")
                 raise HTTPException(status_code=404, detail="File not found")
             
             file_info = response.json()
             download_url = file_info.get("@microsoft.graph.downloadUrl")
             
             if not download_url:
+                logger.error("No download URL available for file")
                 raise HTTPException(status_code=404, detail="Download URL not available")
             
-            # Get file size
+            # Get file size and MIME type
             file_size = file_info.get("size", 0)
+            mime_type = file_info.get("file", {}).get("mimeType", "application/octet-stream")
             
-            # Handle range requests for video seeking
+            # Improve MIME type detection based on file extension
+            file_name = file_info.get("name", "").lower()
+            if not mime_type or mime_type == "application/octet-stream":
+                if file_name.endswith('.mp4'):
+                    mime_type = "video/mp4"
+                elif file_name.endswith('.mkv'):
+                    mime_type = "video/x-matroska"
+                elif file_name.endswith('.avi'):
+                    mime_type = "video/x-msvideo"
+                elif file_name.endswith('.webm'):
+                    mime_type = "video/webm"
+                elif file_name.endswith('.mov'):
+                    mime_type = "video/quicktime"
+                elif file_name.endswith('.mp3'):
+                    mime_type = "audio/mpeg"
+                elif file_name.endswith('.wav'):
+                    mime_type = "audio/wav"
+                elif file_name.endswith('.flac'):
+                    mime_type = "audio/flac"
+                elif file_name.endswith('.m4a'):
+                    mime_type = "audio/mp4"
+                elif file_name.endswith('.ogg'):
+                    mime_type = "audio/ogg"
+                elif file_name.endswith('.aac'):
+                    mime_type = "audio/aac"
+            
+            logger.info(f"Streaming file: {file_name} (MIME: {mime_type}, Size: {file_size})")
+            
+            # Handle range requests for seeking
             range_header = request.headers.get("Range")
             if range_header:
                 # Parse range header
@@ -758,48 +790,78 @@ async def stream_video(item_id: str, request: Request, authorization: str = Head
                     if end >= file_size:
                         end = file_size - 1
                     
-                    # Stream video with range
+                    logger.info(f"Range request: bytes={start}-{end}/{file_size}")
+                    
+                    # Stream with range
                     async def generate_range():
-                        async with httpx.AsyncClient() as stream_client:
-                            range_headers = {"Range": f"bytes={start}-{end}"}
-                            async with stream_client.stream("GET", download_url, headers=range_headers) as video_response:
-                                async for chunk in video_response.aiter_bytes():
-                                    yield chunk
+                        try:
+                            async with httpx.AsyncClient() as stream_client:
+                                range_headers = {"Range": f"bytes={start}-{end}"}
+                                async with stream_client.stream("GET", download_url, headers=range_headers) as media_response:
+                                    if media_response.status_code not in [200, 206]:
+                                        logger.error(f"Range request failed: {media_response.status_code}")
+                                        return
+                                    async for chunk in media_response.aiter_bytes():
+                                        yield chunk
+                        except Exception as e:
+                            logger.error(f"Error in range streaming: {str(e)}")
+                            return
                     
                     return StreamingResponse(
                         generate_range(),
                         status_code=206,  # Partial Content
-                        media_type=file_info.get("file", {}).get("mimeType", "video/mp4"),
+                        media_type=mime_type,
                         headers={
                             "Accept-Ranges": "bytes",
                             "Content-Range": f"bytes {start}-{end}/{file_size}",
                             "Content-Length": str(end - start + 1),
-                            "Cache-Control": "no-cache"
+                            "Cache-Control": "no-cache, no-store, must-revalidate",
+                            "Pragma": "no-cache",
+                            "Expires": "0",
+                            "Access-Control-Allow-Origin": "*",
+                            "Access-Control-Allow-Headers": "Range",
+                            "Access-Control-Expose-Headers": "Content-Range, Content-Length, Accept-Ranges"
                         }
                     )
                 except (ValueError, IndexError) as e:
                     logger.error(f"Invalid range header: {range_header}, error: {e}")
                     # Fall back to full file streaming
             
-            # Stream entire video if no range requested
+            # Stream entire file if no range requested
             async def generate_full():
-                async with httpx.AsyncClient() as stream_client:
-                    async with stream_client.stream("GET", download_url) as video_response:
-                        async for chunk in video_response.aiter_bytes():
-                            yield chunk
+                try:
+                    async with httpx.AsyncClient() as stream_client:
+                        async with stream_client.stream("GET", download_url) as media_response:
+                            if media_response.status_code != 200:
+                                logger.error(f"Full file streaming failed: {media_response.status_code}")
+                                return
+                            async for chunk in media_response.aiter_bytes():
+                                yield chunk
+                except Exception as e:
+                    logger.error(f"Error in full file streaming: {str(e)}")
+                    return
             
             return StreamingResponse(
                 generate_full(),
-                media_type=file_info.get("file", {}).get("mimeType", "video/mp4"),
+                media_type=mime_type,
                 headers={
                     "Accept-Ranges": "bytes",
                     "Content-Length": str(file_size),
-                    "Cache-Control": "no-cache"
+                    "Cache-Control": "no-cache, no-store, must-revalidate",
+                    "Pragma": "no-cache",
+                    "Expires": "0",
+                    "Access-Control-Allow-Origin": "*",
+                    "Access-Control-Allow-Headers": "Range",
+                    "Access-Control-Expose-Headers": "Content-Range, Content-Length, Accept-Ranges"
                 }
             )
+    except HTTPException:
+        raise
     except Exception as e:
-        logger.error(f"Stream video error: {str(e)}")
-        raise HTTPException(status_code=500, detail="Failed to stream video")
+        logger.error(f"Stream media error: {str(e)}")
+        import traceback
+        logger.error(f"Traceback: {traceback.format_exc()}")
+        raise HTTPException(status_code=500, detail=f"Failed to stream media: {str(e)}")
 
 # User data endpoints
 @app.post("/api/watch-history")
