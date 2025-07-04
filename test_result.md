@@ -361,6 +361,18 @@ frontend:
           agent: "main"
           comment: "FIXED VIDEO PLAYER CONTROL ISSUES: 1) Set initial showControls to true so controls show immediately when video player loads, 2) Modified showControlsTemporarily to only hide controls in fullscreen mode (not in regular mode), 3) Enhanced touch handling for mobile - reduced delay for center tap play/pause from 300ms to 50ms for better responsiveness, 4) Added control visibility on video clicks and fullscreen changes, 5) Maintained double-tap for seeking functionality on mobile, 6) Controls now show on single touch in fullscreen and auto-hide after 5 seconds only in fullscreen mode."
 
+  - task: "MKV Video File Streaming Fix"
+    implemented: true
+    working: true
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+        - working: true
+          agent: "main"
+          comment: "FIXED MKV VIDEO STREAMING ISSUES: 1) Changed MKV MIME type from 'video/mp4' to proper 'video/x-matroska' for correct browser handling, 2) Enhanced streaming headers for MKV files with proper compatibility headers, 3) Added specialized chunking for MKV files with optimized chunk sizes, 4) Improved error handling in frontend with specific MKV error messages, 5) Added video element attributes (preload, crossOrigin, playsInline) for better MKV support, 6) Enhanced error detection for MKV files with browser-specific guidance. This should resolve MKV playback issues in supported browsers."
+
 metadata:
   created_by: "main_agent"
   version: "1.1"
