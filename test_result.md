@@ -328,3 +328,5 @@ agent_communication:
       message: "User reported issues with OneDrive content streaming: 'browse button doesn't load files and not stream perfectly'. Need to investigate file loading and streaming issues in the current implementation. Dependencies have been updated and services restarted successfully."
     - agent: "main"
       message: "FIXED MAJOR ISSUES: 1) Implemented proper range request handling for video streaming (HTTP 206 Partial Content), 2) Added timeout and depth limiting for recursive file fetching, 3) Enhanced frontend error handling with better timeouts and retry functionality, 4) Added enhanced loading states and progress indicators. The app should now properly load files and stream videos without hanging or timing out."
+    - agent: "main"
+      message: "CRITICAL VIDEO STREAMING FIX: Modified streaming endpoint to accept authentication via URL parameters (token=) instead of requiring Authorization headers, since HTML5 video elements cannot send custom headers. This fixes the 'No video with supported format and MIME type found' error. Also added dedicated thumbnail endpoint with fallback support."
