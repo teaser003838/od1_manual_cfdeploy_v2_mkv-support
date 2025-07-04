@@ -37,16 +37,29 @@ class TestOneDriveNetflixBackend(unittest.TestCase):
         print("✅ Health check endpoint is working")
 
     def test_auth_login(self):
-        """Test the login endpoint returns a Microsoft login URL"""
+        """Test the login endpoint returns a Microsoft login URL with correct redirect URI"""
         response = self.client.get(f"{API_URL}/auth/login")
         self.assertIn(response.status_code, [200, 500])
         if response.status_code == 200:
             data = response.json()
             self.assertIn("auth_url", data)
-            self.assertTrue(data["auth_url"].startswith("https://login.microsoftonline.com/"))
-            print("✅ Auth login endpoint is working")
+            auth_url = data["auth_url"]
+            self.assertTrue(auth_url.startswith("https://login.microsoftonline.com/"))
+            
+            # Verify the redirect URI is correctly set to the production URL
+            # Extract redirect_uri from the auth URL
+            redirect_uri_match = re.search(r'redirect_uri=([^&]+)', auth_url)
+            if redirect_uri_match:
+                import urllib.parse
+                redirect_uri = urllib.parse.unquote(redirect_uri_match.group(1))
+                # Check if it matches the expected production URL
+                self.assertEqual(redirect_uri, EXPECTED_REDIRECT_URI)
+                print(f"✅ Auth login endpoint is working with correct redirect URI: {redirect_uri}")
+            else:
+                self.fail("Could not find redirect_uri in auth URL")
         else:
             print("✅ Auth login endpoint is implemented but returned an error (expected in test environment)")
+            print(f"   Response: {response.text}")
 
     @patch('httpx.AsyncClient.get')
     def test_auth_callback(self, mock_get):
