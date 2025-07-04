@@ -44,26 +44,12 @@ const VideoPlayer = ({ video, backendUrl, accessToken, onBack }) => {
     return () => window.removeEventListener('resize', checkMobile);
   }, []);
 
-  const loadSubtitles = async () => {
-    try {
-      const response = await fetch(`${backendUrl}/api/subtitles/${video.id}?token=${accessToken}`);
-      if (response.ok) {
-        const data = await response.json();
-        setSubtitles(data.subtitles || []);
-      }
-    } catch (error) {
-      console.error('Failed to load subtitles:', error);
-    }
-  };
-
   useEffect(() => {
     const videoElement = videoRef.current;
     if (!videoElement) return;
 
     const handleLoadedMetadata = () => {
       setDuration(videoElement.duration);
-      // Load subtitles when video metadata is loaded
-      loadSubtitles();
     };
 
     const handleTimeUpdate = () => {
