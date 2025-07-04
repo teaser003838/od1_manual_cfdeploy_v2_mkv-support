@@ -35,17 +35,44 @@ const VideoPlayer = ({ video, backendUrl, accessToken, onBack }) => {
   let volumeIndicatorTimeout = useRef(null);
 
   useEffect(() => {
-    const video = videoRef.current;
-    if (!video) return;
+    // Check if device is mobile
+    const checkMobile = () => {
+      const isMobileDevice = window.innerWidth <= 768 || 
+                            ('ontouchstart' in window) || 
+                            (navigator.maxTouchPoints > 0);
+      setIsMobile(isMobileDevice);
+    };
+    
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
+
+  const loadSubtitles = async () => {
+    try {
+      const response = await fetch(`${backendUrl}/api/subtitles/${video.id}?token=${accessToken}`);
+      if (response.ok) {
+        const data = await response.json();
+        setSubtitles(data.subtitles || []);
+      }
+    } catch (error) {
+      console.error('Failed to load subtitles:', error);
+    }
+  };
+
+  useEffect(() => {
+    const videoElement = videoRef.current;
+    if (!videoElement) return;
 
     const handleLoadedMetadata = () => {
-      setDuration(video.duration);
+      setDuration(videoElement.duration);
       // Load subtitles when video metadata is loaded
       loadSubtitles();
     };
 
     const handleTimeUpdate = () => {
-      setCurrentTime(video.currentTime);
+      setCurrentTime(videoElement.currentTime);
     };
 
     const handlePlay = () => {
@@ -70,24 +97,30 @@ const VideoPlayer = ({ video, backendUrl, accessToken, onBack }) => {
       setCurrentTime(0);
     };
 
-    video.addEventListener('loadedmetadata', handleLoadedMetadata);
-    video.addEventListener('timeupdate', handleTimeUpdate);
-    video.addEventListener('play', handlePlay);
-    video.addEventListener('pause', handlePause);
-    video.addEventListener('waiting', handleWaiting);
-    video.addEventListener('canplay', handleCanPlay);
-    video.addEventListener('ended', handleEnded);
+    const handleFullscreenChange = () => {
+      setIsFullscreen(!!document.fullscreenElement);
+    };
+
+    videoElement.addEventListener('loadedmetadata', handleLoadedMetadata);
+    videoElement.addEventListener('timeupdate', handleTimeUpdate);
+    videoElement.addEventListener('play', handlePlay);
+    videoElement.addEventListener('pause', handlePause);
+    videoElement.addEventListener('waiting', handleWaiting);
+    videoElement.addEventListener('canplay', handleCanPlay);
+    videoElement.addEventListener('ended', handleEnded);
+    document.addEventListener('fullscreenchange', handleFullscreenChange);
 
     return () => {
-      video.removeEventListener('loadedmetadata', handleLoadedMetadata);
-      video.removeEventListener('timeupdate', handleTimeUpdate);
-      video.removeEventListener('play', handlePlay);
-      video.removeEventListener('pause', handlePause);
-      video.removeEventListener('waiting', handleWaiting);
-      video.removeEventListener('canplay', handleCanPlay);
-      video.removeEventListener('ended', handleEnded);
+      videoElement.removeEventListener('loadedmetadata', handleLoadedMetadata);
+      videoElement.removeEventListener('timeupdate', handleTimeUpdate);
+      videoElement.removeEventListener('play', handlePlay);
+      videoElement.removeEventListener('pause', handlePause);
+      videoElement.removeEventListener('waiting', handleWaiting);
+      videoElement.removeEventListener('canplay', handleCanPlay);
+      videoElement.removeEventListener('ended', handleEnded);
+      document.removeEventListener('fullscreenchange', handleFullscreenChange);
     };
-  }, []);
+  }, [video.id, backendUrl, accessToken]);
 
   const togglePlay = () => {
     if (videoRef.current) {
