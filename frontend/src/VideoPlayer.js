@@ -144,6 +144,10 @@ const VideoPlayer = ({ video, backendUrl, accessToken, onBack }) => {
     videoElement.addEventListener('waiting', handleWaiting);
     videoElement.addEventListener('canplay', handleCanPlay);
     videoElement.addEventListener('ended', handleEnded);
+    videoElement.addEventListener('error', handleError);
+    videoElement.addEventListener('loadstart', () => setIsBuffering(true));
+    videoElement.addEventListener('loadeddata', () => setIsBuffering(false));
+    videoElement.addEventListener('stalled', handleLoadError);
     document.addEventListener('fullscreenchange', handleFullscreenChange);
 
     return () => {
