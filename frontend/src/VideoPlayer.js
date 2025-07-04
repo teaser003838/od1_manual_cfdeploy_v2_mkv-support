@@ -205,18 +205,31 @@ const VideoPlayer = ({ video, backendUrl, accessToken, onBack }) => {
     if (hideControlsTimeout.current) {
       clearTimeout(hideControlsTimeout.current);
     }
-    // Use 5 seconds as requested for fullscreen auto-hide
-    const hideDelay = isFullscreen ? 5000 : 3000;
+    
+    // Always hide after 5 seconds as requested
     hideControlsTimeout.current = setTimeout(() => {
-      if (isPlaying) {
+      if (isPlaying && !isControlsLocked) {
         setShowControls(false);
         setShowSpeedMenu(false);
+        setShowQualityMenu(false);
       }
-    }, hideDelay);
+    }, 5000);
   };
 
   const handleMouseMove = () => {
     if (!isMobile) {
+      showControlsTemporarily();
+    }
+  };
+
+  const handleMouseEnter = () => {
+    if (!isMobile) {
+      setShowControls(true);
+    }
+  };
+
+  const handleMouseLeave = () => {
+    if (!isMobile && !isControlsLocked && isPlaying) {
       showControlsTemporarily();
     }
   };
