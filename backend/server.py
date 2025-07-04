@@ -72,14 +72,21 @@ async def login():
         # Ensure scopes is a list and create a new list to avoid any reference issues
         scopes_list = ["Files.ReadWrite.All", "User.Read", "offline_access"]
         logger.info(f"Using scopes: {scopes_list}")
+        logger.info(f"Using redirect URI: {REDIRECT_URI}")
+        logger.info(f"Using authority: {AUTHORITY}")
         
         auth_url = msal_app.get_authorization_request_url(
             scopes=scopes_list,
             redirect_uri=REDIRECT_URI
         )
+        
+        logger.info(f"Generated auth URL: {auth_url}")
         return {"auth_url": auth_url}
     except Exception as e:
         logger.error(f"Login error: {str(e)}")
+        logger.error(f"Exception type: {type(e)}")
+        import traceback
+        logger.error(f"Traceback: {traceback.format_exc()}")
         raise HTTPException(status_code=500, detail="Authentication failed")
 
 @app.get("/api/auth/callback")
