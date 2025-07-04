@@ -158,6 +158,10 @@ const VideoPlayer = ({ video, backendUrl, accessToken, onBack }) => {
       videoElement.removeEventListener('waiting', handleWaiting);
       videoElement.removeEventListener('canplay', handleCanPlay);
       videoElement.removeEventListener('ended', handleEnded);
+      videoElement.removeEventListener('error', handleError);
+      videoElement.removeEventListener('loadstart', () => setIsBuffering(true));
+      videoElement.removeEventListener('loadeddata', () => setIsBuffering(false));
+      videoElement.removeEventListener('stalled', handleLoadError);
       document.removeEventListener('fullscreenchange', handleFullscreenChange);
     };
   }, [video.id, backendUrl, accessToken]);
