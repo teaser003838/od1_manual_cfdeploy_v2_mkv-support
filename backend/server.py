@@ -70,7 +70,7 @@ async def shutdown_event():
 async def login():
     try:
         auth_url = msal_app.get_authorization_request_url(
-            scopes=SCOPES,
+            scopes=list(SCOPES),
             redirect_uri=REDIRECT_URI
         )
         return {"auth_url": auth_url}
