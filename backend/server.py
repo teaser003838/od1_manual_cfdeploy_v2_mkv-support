@@ -495,10 +495,58 @@ async def get_watch_history(authorization: str = Header(...)):
         logger.error(f"Get watch history error: {str(e)}")
         raise HTTPException(status_code=500, detail="Failed to get watch history")
 
-# Health check
-@app.get("/api/health")
-async def health_check():
-    return {"status": "healthy", "service": "OneDrive Netflix API"}
+@app.get("/api/thumbnail/{item_id}")
+async def get_video_thumbnail(item_id: str, authorization: str = Header(None), token: str = None):
+    try:
+        # Try to get access token from header first, then from query parameter
+        access_token = None
+        if authorization:
+            access_token = authorization.replace("Bearer ", "")
+        elif token:
+            access_token = token
+        else:
+            raise HTTPException(status_code=401, detail="Authorization required")
+        
+        async with httpx.AsyncClient() as client:
+            # Get file info to check for thumbnails
+            response = await client.get(
+                f"https://graph.microsoft.com/v1.0/me/drive/items/{item_id}?expand=thumbnails",
+                headers={"Authorization": f"Bearer {access_token}"}
+            )
+            
+            if response.status_code != 200:
+                raise HTTPException(status_code=404, detail="File not found")
+            
+            file_info = response.json()
+            
+            # Check if thumbnails exist
+            thumbnails = file_info.get("thumbnails", [])
+            if thumbnails and len(thumbnails) > 0:
+                # Return the largest available thumbnail
+                thumbnail_sizes = thumbnails[0]
+                if "large" in thumbnail_sizes:
+                    thumbnail_url = thumbnail_sizes["large"]["url"]
+                elif "medium" in thumbnail_sizes:
+                    thumbnail_url = thumbnail_sizes["medium"]["url"]
+                elif "small" in thumbnail_sizes:
+                    thumbnail_url = thumbnail_sizes["small"]["url"]
+                else:
+                    raise HTTPException(status_code=404, detail="No thumbnail available")
+                
+                # Fetch and return the thumbnail
+                thumb_response = await client.get(thumbnail_url)
+                if thumb_response.status_code == 200:
+                    return StreamingResponse(
+                        iter([thumb_response.content]),
+                        media_type="image/jpeg",
+                        headers={"Cache-Control": "public, max-age=3600"}
+                    )
+            
+            raise HTTPException(status_code=404, detail="No thumbnail available")
+            
+    except Exception as e:
+        logger.error(f"Get thumbnail error: {str(e)}")
+        raise HTTPException(status_code=500, detail="Failed to get thumbnail")
 
 if __name__ == "__main__":
     import uvicorn
