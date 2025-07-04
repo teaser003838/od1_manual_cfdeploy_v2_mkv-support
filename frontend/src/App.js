@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import VideoPlayer from './VideoPlayer';
+import AudioPlayer from './AudioPlayer';
 import FileExplorer from './FileExplorer';
 import PhotoSlideshow from './PhotoSlideshow';
 import './App.css';
