@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import VideoPlayer from './VideoPlayer';
 import './App.css';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL || 'http://localhost:8001';
