@@ -89,7 +89,9 @@ async def auth_callback(code: str, state: Optional[str] = None):
         
         if "access_token" not in result:
             logger.error(f"Token acquisition failed: {result}")
-            raise HTTPException(status_code=400, detail="Authentication failed")
+            # Redirect to frontend with error
+            frontend_url = os.getenv("FRONTEND_URL", "https://545d199c-7f62-4fb6-9975-68d5dab52b92.preview.emergentagent.com")
+            return RedirectResponse(url=f"{frontend_url}?error=authentication_failed")
         
         # Store user info in database
         user_info = await get_user_info(result["access_token"])
@@ -109,14 +111,14 @@ async def auth_callback(code: str, state: Optional[str] = None):
                 upsert=True
             )
         
-        return {
-            "access_token": result["access_token"],
-            "refresh_token": result.get("refresh_token"),
-            "user_info": user_info
-        }
+        # Redirect to frontend with access token
+        frontend_url = os.getenv("FRONTEND_URL", "https://545d199c-7f62-4fb6-9975-68d5dab52b92.preview.emergentagent.com")
+        return RedirectResponse(url=f"{frontend_url}?access_token={result['access_token']}")
+        
     except Exception as e:
         logger.error(f"Callback error: {str(e)}")
-        raise HTTPException(status_code=500, detail="Authentication callback failed")
+        frontend_url = os.getenv("FRONTEND_URL", "https://545d199c-7f62-4fb6-9975-68d5dab52b92.preview.emergentagent.com")
+        return RedirectResponse(url=f"{frontend_url}?error=callback_failed")
 
 async def get_user_info(access_token: str):
     async with httpx.AsyncClient() as client:
