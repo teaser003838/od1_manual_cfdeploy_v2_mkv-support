@@ -198,20 +198,77 @@ async def get_folder_stats(client: httpx.AsyncClient, access_token: str, folder_
         response = await client.get(url, headers={"Authorization": f"Bearer {access_token}"})
         
         if response.status_code != 200:
-            return {"total_size": 0}
+            return {"total_size": 0, "file_count": 0, "folder_count": 0}
         
         data = response.json()
         items = data.get("value", [])
         total_size = 0
+        file_count = 0
+        folder_count = 0
         
         for item in items:
-            item_size = item.get("size", 0)
-            total_size += item_size
+            if item.get("folder"):
+                folder_count += 1
+                # For folders, we'll count the items recursively up to a depth limit
+                try:
+                    subfolder_stats = await get_folder_stats_recursive(client, access_token, item["id"], depth=1, max_depth=2)
+                    total_size += subfolder_stats.get("total_size", 0)
+                except:
+                    # If we can't get subfolder stats, just skip
+                    pass
+            else:
+                file_count += 1
+                item_size = item.get("size", 0)
+                total_size += item_size
         
-        return {"total_size": total_size}
+        return {
+            "total_size": total_size,
+            "file_count": file_count,
+            "folder_count": folder_count
+        }
     except Exception as e:
         logger.error(f"Error getting folder stats: {str(e)}")
-        return {"total_size": 0}
+        return {"total_size": 0, "file_count": 0, "folder_count": 0}
+
+async def get_folder_stats_recursive(client: httpx.AsyncClient, access_token: str, folder_id: str, depth: int = 0, max_depth: int = 2) -> dict:
+    """Get folder statistics recursively with depth limit"""
+    if depth > max_depth:
+        return {"total_size": 0, "file_count": 0, "folder_count": 0}
+    
+    try:
+        url = f"https://graph.microsoft.com/v1.0/me/drive/items/{folder_id}/children"
+        response = await client.get(url, headers={"Authorization": f"Bearer {access_token}"})
+        
+        if response.status_code != 200:
+            return {"total_size": 0, "file_count": 0, "folder_count": 0}
+        
+        data = response.json()
+        items = data.get("value", [])
+        total_size = 0
+        file_count = 0
+        folder_count = 0
+        
+        for item in items:
+            if item.get("folder"):
+                folder_count += 1
+                if depth < max_depth:
+                    subfolder_stats = await get_folder_stats_recursive(client, access_token, item["id"], depth + 1, max_depth)
+                    total_size += subfolder_stats.get("total_size", 0)
+                    file_count += subfolder_stats.get("file_count", 0)
+                    folder_count += subfolder_stats.get("folder_count", 0)
+            else:
+                file_count += 1
+                item_size = item.get("size", 0)
+                total_size += item_size
+        
+        return {
+            "total_size": total_size,
+            "file_count": file_count,
+            "folder_count": folder_count
+        }
+    except Exception as e:
+        logger.error(f"Error getting recursive folder stats: {str(e)}")
+        return {"total_size": 0, "file_count": 0, "folder_count": 0}
 
 # File explorer endpoints
 @app.get("/api/explorer/browse")
