@@ -213,6 +213,21 @@ const FileExplorer = ({ accessToken, onPlayVideo, onViewPhoto, onPlayAudio }) =>
                 {item.type === 'file' && (
                   <span className="file-size">{formatFileSize(item.size)}</span>
                 )}
+                {item.type === 'folder' && item.folder_stats && (
+                  <div className="folder-stats">
+                    <span className="folder-stat">
+                      📁 {item.folder_stats.folder_count} folders
+                    </span>
+                    <span className="folder-stat">
+                      📄 {item.folder_stats.file_count} files
+                    </span>
+                    {item.folder_stats.total_size > 0 && (
+                      <span className="folder-stat">
+                        💾 {formatFileSize(item.folder_stats.total_size)}
+                      </span>
+                    )}
+                  </div>
+                )}
                 {item.modified && (
                   <span className="modified-date">Modified: {formatDate(item.modified)}</span>
                 )}
