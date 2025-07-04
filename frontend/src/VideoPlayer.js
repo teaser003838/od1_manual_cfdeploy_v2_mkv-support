@@ -639,6 +639,9 @@ const VideoPlayer = ({ video, backendUrl, accessToken, onBack }) => {
           onTouchStart={handleTouchStart}
           onTouchMove={handleTouchMove}
           onTouchEnd={handleTouchEnd}
+          preload="metadata"
+          crossOrigin="anonymous"
+          playsInline
         />
         
         {/* Touch indicators for mobile */}
