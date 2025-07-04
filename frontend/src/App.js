@@ -40,17 +40,27 @@ function App() {
     try {
       setLoading(true);
       
-      // First try to get all videos recursively from all folders
-      let response = await fetch(`${BACKEND_URL}/api/files/all`, {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        }
+      console.log('Starting to fetch videos...');
+      
+      // Create a timeout promise
+      const timeoutPromise = new Promise((_, reject) => {
+        setTimeout(() => reject(new Error('Request timeout')), 30000); // 30 second timeout
       });
       
-      // If that fails, fallback to root directory only
-      if (!response.ok) {
-        console.log('Recursive search failed, trying root directory only...');
+      // First try to get all videos recursively from all folders with timeout
+      let response;
+      try {
+        response = await Promise.race([
+          fetch(`${BACKEND_URL}/api/files/all`, {
+            headers: {
+              'Authorization': `Bearer ${token}`,
+              'Content-Type': 'application/json'
+            }
+          }),
+          timeoutPromise
+        ]);
+      } catch (timeoutError) {
+        console.log('Recursive search timed out, trying root directory only...');
         response = await fetch(`${BACKEND_URL}/api/files`, {
           headers: {
             'Authorization': `Bearer ${token}`,
@@ -62,12 +72,23 @@ function App() {
       if (response.ok) {
         const data = await response.json();
         console.log(`Found ${data.videos?.length || 0} videos`);
+        console.log('First few videos:', data.videos?.slice(0, 3));
         setVideos(data.videos || []);
+        
+        if (data.videos?.length === 0) {
+          console.log('No videos found, you might need to upload some videos to your OneDrive');
+        }
       } else {
         console.error('Failed to fetch videos:', response.status, response.statusText);
+        const errorText = await response.text();
+        console.error('Error details:', errorText);
+        
+        // Show error message to user
+        alert(`Failed to fetch videos: ${response.status} ${response.statusText}`);
       }
     } catch (error) {
       console.error('Failed to fetch videos:', error);
+      alert(`Error fetching videos: ${error.message}`);
     } finally {
       setLoading(false);
     }
