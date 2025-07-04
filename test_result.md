@@ -102,7 +102,7 @@
 # Testing Data - Main Agent and testing sub agent both should log testing data below this section
 #====================================================================================================
 
-user_problem_statement: "Test the OneDrive Netflix streaming platform backend that I just created. The 'sign in with Microsoft' doesn't work, fix and test the code."
+user_problem_statement: "this repo code doesn't properly load the onedrive content streaming files into the onedrive netflix app, browse button doesn't load files and not stream perfectly"
 
 backend:
   - task: "Health Check Endpoint"
