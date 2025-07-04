@@ -352,9 +352,16 @@ async def search_files(q: str, authorization: str = Header(...)):
         raise HTTPException(status_code=500, detail="Failed to search files")
 
 @app.get("/api/stream/{item_id}")
-async def stream_video(item_id: str, request: Request, authorization: str = Header(...)):
+async def stream_video(item_id: str, request: Request, authorization: str = Header(None), token: str = None):
     try:
-        access_token = authorization.replace("Bearer ", "")
+        # Try to get access token from header first, then from query parameter
+        access_token = None
+        if authorization:
+            access_token = authorization.replace("Bearer ", "")
+        elif token:
+            access_token = token
+        else:
+            raise HTTPException(status_code=401, detail="Authorization required")
         
         async with httpx.AsyncClient() as client:
             # Get download URL
