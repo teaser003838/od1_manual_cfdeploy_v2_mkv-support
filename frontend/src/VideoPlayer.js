@@ -525,6 +525,13 @@ const VideoPlayer = ({ video, backendUrl, accessToken, onBack }) => {
           </>
         )}
         
+        {/* Error indicator */}
+        {error && (
+          <div className="error-indicator">
+            ⚠️ {error}
+          </div>
+        )}
+        
         {/* Seek indicator */}
         {seekIndicator && (
           <div className="seek-indicator">
