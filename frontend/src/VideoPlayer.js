@@ -30,6 +30,8 @@ const VideoPlayer = ({ video, backendUrl, accessToken, onBack }) => {
 
     const handleLoadedMetadata = () => {
       setDuration(video.duration);
+      // Load subtitles when video metadata is loaded
+      loadSubtitles();
     };
 
     const handleTimeUpdate = () => {
