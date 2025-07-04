@@ -106,8 +106,8 @@
   background: rgba(0, 0, 0, 0.5);
 }
 
-/* Seek and volume indicators */
-.seek-indicator, .volume-indicator {
+/* Seek, volume, and error indicators */
+.seek-indicator, .volume-indicator, .error-indicator {
   position: absolute;
   top: 50%;
   left: 50%;
@@ -121,6 +121,26 @@
   z-index: 15;
   pointer-events: none;
   animation: indicatorPulse 1s ease-out;
+}
+
+.error-indicator {
+  background: rgba(220, 38, 38, 0.9);
+  animation: errorPulse 1s ease-out;
+}
+
+@keyframes errorPulse {
+  0% {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(0.8);
+  }
+  20% {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1.1);
+  }
+  100% {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1);
+  }
 }
 
 @keyframes indicatorPulse {
