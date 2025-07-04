@@ -92,7 +92,16 @@ const VideoPlayer = ({ video, backendUrl, accessToken, onBack }) => {
     };
 
     const handleFullscreenChange = () => {
-      setIsFullscreen(!!document.fullscreenElement);
+      const isFullscreenNow = !!document.fullscreenElement;
+      setIsFullscreen(isFullscreenNow);
+      
+      // Always show controls when entering/exiting fullscreen
+      setShowControls(true);
+      
+      // If entering fullscreen and video is playing, start the auto-hide timer
+      if (isFullscreenNow && isPlaying) {
+        showControlsTemporarily();
+      }
     };
 
     videoElement.addEventListener('loadedmetadata', handleLoadedMetadata);
