@@ -211,6 +211,18 @@ function App() {
     );
   }
 
+  // Audio Player View
+  if (currentView === 'audio' && selectedItem) {
+    return (
+      <AudioPlayer 
+        audio={selectedItem}
+        backendUrl={BACKEND_URL}
+        accessToken={accessToken}
+        onBack={handleBackToExplorer}
+      />
+    );
+  }
+
   // Photo Slideshow View
   if (currentView === 'photo' && selectedItem) {
     return (
