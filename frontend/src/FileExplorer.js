@@ -126,6 +126,8 @@ const FileExplorer = ({ accessToken, onPlayVideo, onViewPhoto, onPlayAudio }) =>
       onPlayVideo(item);
     } else if (item.media_type === 'photo') {
       onViewPhoto(item);
+    } else if (item.media_type === 'audio') {
+      onPlayAudio(item);
     } else {
       // Handle other file types (download, etc.)
       if (item.download_url) {
