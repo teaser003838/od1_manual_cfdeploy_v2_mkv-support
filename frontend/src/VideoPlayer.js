@@ -433,6 +433,10 @@ const VideoPlayer = ({ video, backendUrl, accessToken, onBack }) => {
   const handleVideoClick = (e) => {
     if (isMobile) return; // Handle touch events separately for mobile
     
+    // Always show controls when clicking on video
+    setShowControls(true);
+    showControlsTemporarily();
+    
     const rect = e.currentTarget.getBoundingClientRect();
     const clickX = e.clientX - rect.left;
     const screenWidth = rect.width;
