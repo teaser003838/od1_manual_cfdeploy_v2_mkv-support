@@ -318,6 +318,7 @@ const VideoPlayer = ({ video, backendUrl, accessToken, onBack }) => {
     touchStartX.current = touch.clientX;
     touchStartY.current = touch.clientY;
     
+    setShowControls(true);
     showControlsTemporarily();
   };
 
