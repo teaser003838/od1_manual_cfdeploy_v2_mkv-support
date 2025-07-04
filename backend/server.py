@@ -101,6 +101,17 @@ async def shutdown_event():
     app.mongodb_client.close()
 
 # Authentication endpoints
+@app.post("/api/auth/password")
+async def authenticate_password(auth: PasswordAuth):
+    """Simple password authentication"""
+    if pwd_context.verify(auth.password, HASHED_PASSWORD):
+        # Generate a simple session token
+        session_token = secrets.token_urlsafe(32)
+        # In production, store this in a database or cache
+        return {"authenticated": True, "session_token": session_token}
+    else:
+        raise HTTPException(status_code=401, detail="Invalid password")
+
 @app.get("/api/auth/login")
 async def login():
     try:
