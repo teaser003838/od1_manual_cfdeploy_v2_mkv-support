@@ -228,17 +228,29 @@ backend:
           agent: "main"
           comment: "Enhanced frontend error handling with better timeout management (45s), progress messages, detailed error states, and proper authentication error handling. Added retry functionality and better user feedback."
 
-  - task: "Enhanced Loading States"
+  - task: "Video Player Authentication Fix"
     implemented: true
     working: true
-    file: "/app/frontend/src/App.css"
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+        - working: true
+          agent: "main"
+          comment: "CRITICAL FIX: Modified streaming endpoint to accept authentication via URL parameters instead of headers, since HTML5 video elements cannot send custom headers. This fixes the 'No video with supported format and MIME type found' error."
+
+  - task: "Video Thumbnail Enhancement"
+    implemented: true
+    working: true
+    file: "/app/backend/server.py"
     stuck_count: 0
     priority: "medium"
     needs_retesting: false
     status_history:
         - working: true
           agent: "main"
-          comment: "Added enhanced loading states with progress bars, error states with retry buttons, and improved empty states. This provides better user experience during file loading."
+          comment: "Added dedicated thumbnail endpoint (/api/thumbnail/{item_id}) with fallback support and improved frontend thumbnail handling with error recovery."
 
   - task: "Watch History POST Endpoint"
     implemented: true
