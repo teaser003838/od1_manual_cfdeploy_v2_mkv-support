@@ -221,8 +221,6 @@ const VideoPlayer = ({ video, backendUrl, accessToken, onBack }) => {
       if (isPlaying) {
         setShowControls(false);
         setShowSpeedMenu(false);
-        setShowQualityMenu(false);
-        setShowSubtitleMenu(false);
       }
     }, hideDelay);
   };
