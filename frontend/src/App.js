@@ -9,6 +9,8 @@ function App() {
   const [videos, setVideos] = useState([]);
   const [selectedVideo, setSelectedVideo] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [loadingMessage, setLoadingMessage] = useState('');
+  const [error, setError] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
   const [watchHistory, setWatchHistory] = useState([]);
   const [currentView, setCurrentView] = useState('browse'); // 'browse', 'player', 'history'
