@@ -29,17 +29,10 @@ This document outlines all the improvements and fixes made to the OneDrive video
   - Quality changes properly preserve current time and playback state
   - Enhanced streaming URL generation to include quality parameters
 
-### 4. Enhanced File Explorer with Folder Statistics ✅
-- **Files Modified**: 
-  - `/app/backend/server.py`
-  - `/app/frontend/src/FileExplorer.js`
-  - `/app/frontend/src/FileExplorer.css`
-- **Changes**:
-  - Enhanced `get_folder_stats` function to include file and folder counts
-  - Added recursive folder statistics calculation with depth limiting
-  - Updated `FileItem` model to include `folder_stats` field
-  - Added display of folder statistics (number of files, folders, and total size)
-  - Enhanced CSS styling for folder statistics display
+### 4. ~~Enhanced File Explorer with Folder Statistics~~ (REMOVED) ❌
+- **Status**: Removed due to performance issues causing slow loading
+- **Reason**: The recursive folder statistics calculation was taking too long to load
+- **Reverted**: All folder statistics functionality has been removed
 
 ### 5. Optimized Large MKV File Streaming ✅
 - **File Modified**: `/app/backend/server.py`
@@ -58,10 +51,11 @@ This document outlines all the improvements and fixes made to the OneDrive video
 - **Changes**:
   - Set controls to be hidden by default (`showControls: false`)
   - Implemented 5-second auto-hide timer for all interactions
-  - Added proper mouse enter/leave handling
-  - Added controls lock mechanism for menu interactions
-  - Enhanced CSS for better control visibility management
   - Controls only show on hover/touch and auto-hide after 5 seconds
+  - Added proper visibility management with CSS transitions
+  - Enhanced control locking mechanism for menu interactions
+  - Improved fullscreen mode control behavior
+  - Controls show when video loads, pauses, or ends, but auto-hide during playback
 
 ### 7. Enhanced User Experience Improvements ✅
 - **Additional Improvements**:
@@ -70,6 +64,7 @@ This document outlines all the improvements and fixes made to the OneDrive video
   - Enhanced touch controls for mobile devices
   - Better error handling and user feedback
   - Improved buffering indicators during quality changes
+  - Better visibility control with opacity and visibility CSS properties
 
 ## Technical Details
 
@@ -89,29 +84,41 @@ For files over 1GB:
 
 ### Controls Auto-Hide Logic
 - Controls start hidden by default
-- Show on any mouse movement or touch
-- Auto-hide after 5 seconds of inactivity
+- Show on video load, pause, end, or any mouse/touch interaction
+- Auto-hide after 5 seconds of inactivity during playback
 - Menu interactions lock controls visible until menu closes
 - Consistent behavior in both windowed and fullscreen modes
+- Enhanced CSS with both opacity and visibility transitions
 
 ## Files Modified Summary
 1. `/app/frontend/public/index.html` - Removed Emergent branding
 2. `/app/frontend/src/VideoPlayer.js` - Enhanced video player functionality
-3. `/app/frontend/src/VideoPlayer.css` - Improved control styling
-4. `/app/backend/server.py` - Enhanced streaming and folder statistics
-5. `/app/frontend/src/FileExplorer.js` - Added folder statistics display
-6. `/app/frontend/src/FileExplorer.css` - Styled folder statistics
+3. `/app/frontend/src/VideoPlayer.css` - Improved control styling and visibility
+4. `/app/backend/server.py` - Enhanced streaming with quality support and large file optimization
+5. `/app/frontend/src/FileExplorer.js` - ~~Enhanced folder statistics~~ (reverted)
+6. `/app/frontend/src/FileExplorer.css` - ~~Folder statistics styling~~ (reverted)
+
+## Performance Improvements
+- **Removed**: Folder statistics calculation that was causing slow loading times
+- **Optimized**: Large file streaming for better performance
+- **Enhanced**: Control visibility with proper CSS transitions
 
 ## Testing Recommendations
 1. Test video quality switching with various file formats
 2. Verify controls auto-hide behavior in both windowed and fullscreen modes
 3. Test large file streaming (>1GB) with MKV format
-4. Verify folder statistics accuracy across different folder structures
-5. Test seekbar accuracy during playback
-6. Confirm removal of Emergent branding in production build
+4. Test seekbar accuracy during playback
+5. Confirm removal of Emergent branding in production build
+6. Verify controls are hidden by default and only show on interaction
+
+## User Experience Focus
+- **Quality Selection**: Working quality selector with 480p, 720p, 1080p, and Auto options
+- **Control Visibility**: Controls hidden by default, show on interaction, auto-hide after 5 seconds
+- **Performance**: Fast loading without slow folder statistics calculations
+- **Large Files**: Optimized streaming for files over 1GB (especially MKV format)
 
 ## Future Enhancements
 - Add support for subtitle quality selection
 - Implement bandwidth-based automatic quality selection
 - Add video resolution detection and display
-- Enhance folder statistics with media file type breakdown
+- Consider optional folder statistics toggle for users who want detailed info
