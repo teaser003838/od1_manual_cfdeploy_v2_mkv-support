@@ -69,8 +69,8 @@ async def shutdown_event():
 @app.get("/api/auth/login")
 async def login():
     try:
-        # Ensure scopes is a list and create a new list to avoid any reference issues
-        scopes_list = ["Files.ReadWrite.All", "User.Read", "offline_access"]
+        # Use minimal scopes to avoid the frozenset issue
+        scopes_list = ["Files.ReadWrite.All", "User.Read"]
         logger.info(f"Using scopes: {scopes_list}")
         logger.info(f"Using redirect URI: {REDIRECT_URI}")
         logger.info(f"Using authority: {AUTHORITY}")
