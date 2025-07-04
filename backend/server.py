@@ -343,6 +343,46 @@ async def search_files(q: str, authorization: str = Header(...)):
         logger.error(f"Search files error: {str(e)}")
         raise HTTPException(status_code=500, detail="Failed to search files")
 
+@app.get("/api/stream/{item_id}")
+async def stream_video(item_id: str, authorization: str = Header(...)):
+    try:
+        access_token = authorization.replace("Bearer ", "")
+        
+        async with httpx.AsyncClient() as client:
+            # Get download URL
+            response = await client.get(
+                f"https://graph.microsoft.com/v1.0/me/drive/items/{item_id}",
+                headers={"Authorization": f"Bearer {access_token}"}
+            )
+            
+            if response.status_code != 200:
+                raise HTTPException(status_code=404, detail="File not found")
+            
+            file_info = response.json()
+            download_url = file_info.get("@microsoft.graph.downloadUrl")
+            
+            if not download_url:
+                raise HTTPException(status_code=404, detail="Download URL not available")
+            
+            # Stream video directly
+            async def generate():
+                async with httpx.AsyncClient() as stream_client:
+                    async with stream_client.stream("GET", download_url) as video_response:
+                        async for chunk in video_response.aiter_bytes():
+                            yield chunk
+            
+            return StreamingResponse(
+                generate(),
+                media_type=file_info.get("file", {}).get("mimeType", "video/mp4"),
+                headers={
+                    "Accept-Ranges": "bytes",
+                    "Content-Length": str(file_info.get("size", 0))
+                }
+            )
+    except Exception as e:
+        logger.error(f"Stream video error: {str(e)}")
+        raise HTTPException(status_code=500, detail="Failed to stream video")
+
 # User data endpoints
 @app.post("/api/watch-history")
 async def add_watch_history(
