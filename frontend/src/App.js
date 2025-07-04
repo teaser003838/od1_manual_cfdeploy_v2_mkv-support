@@ -259,6 +259,8 @@ function App() {
       <main className="main-content">
         <FileExplorer
           accessToken={accessToken}
+          currentFolder={currentFolder}
+          onFolderChange={handleFolderChange}
           onPlayVideo={handlePlayVideo}
           onPlayAudio={handlePlayAudio}
           onViewPhoto={handleViewPhoto}
