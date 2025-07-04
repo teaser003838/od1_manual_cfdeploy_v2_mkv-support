@@ -7,10 +7,13 @@ from msal import ConfidentialClientApplication
 import httpx
 import os
 from datetime import datetime
-from typing import Optional, List
+from typing import Optional, List, Dict, Any
 import json
 import asyncio
 import logging
+import hashlib
+import secrets
+from passlib.context import CryptContext
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
