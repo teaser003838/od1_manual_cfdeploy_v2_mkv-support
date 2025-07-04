@@ -147,9 +147,20 @@ const VideoPlayer = ({ video, backendUrl, accessToken, onBack }) => {
         const rect = e.currentTarget.getBoundingClientRect();
         const percent = (e.clientX - rect.left) / rect.width;
         const newTime = percent * duration;
-        videoRef.current.currentTime = newTime;
-        setCurrentTime(newTime);
+        
+        // Ensure the new time is within bounds
+        const clampedTime = Math.max(0, Math.min(duration, newTime));
+        
+        videoRef.current.currentTime = clampedTime;
+        setCurrentTime(clampedTime);
         setError(''); // Clear any previous errors
+        
+        // Force a time update to ensure UI sync
+        setTimeout(() => {
+          if (videoRef.current) {
+            setCurrentTime(videoRef.current.currentTime);
+          }
+        }, 100);
       } catch (error) {
         console.error('Seeking error:', error);
         setError('Failed to seek video');
