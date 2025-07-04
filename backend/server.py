@@ -291,45 +291,57 @@ async def list_all_files(authorization: str = Header(...)):
         logger.error(f"List all files error: {str(e)}")
         raise HTTPException(status_code=500, detail="Failed to list all files")
 
-@app.get("/api/stream/{item_id}")
-async def stream_video(item_id: str, authorization: str = Header(...)):
+@app.get("/api/files/search")
+async def search_files(q: str, authorization: str = Header(...)):
     try:
         access_token = authorization.replace("Bearer ", "")
         
         async with httpx.AsyncClient() as client:
-            # Get download URL
             response = await client.get(
-                f"https://graph.microsoft.com/v1.0/me/drive/items/{item_id}",
+                f"https://graph.microsoft.com/v1.0/me/drive/root/search(q='{q}')",
                 headers={"Authorization": f"Bearer {access_token}"}
             )
             
             if response.status_code != 200:
-                raise HTTPException(status_code=404, detail="File not found")
+                raise HTTPException(status_code=400, detail="Search failed")
             
-            file_info = response.json()
-            download_url = file_info.get("@microsoft.graph.downloadUrl")
+            files = response.json()
             
-            if not download_url:
-                raise HTTPException(status_code=404, detail="Download URL not available")
+            # Filter for video files
+            video_files = []
+            video_extensions = ['.mp4', '.mkv', '.avi', '.webm', '.mov', '.wmv', '.flv', '.m4v', '.3gp', '.ogv']
+            video_mime_types = ['video/mp4', 'video/x-msvideo', 'video/quicktime', 'video/x-ms-wmv', 
+                              'video/webm', 'video/x-matroska', 'video/x-flv', 'video/3gpp', 'video/ogg']
             
-            # Stream video directly
-            async def generate():
-                async with httpx.AsyncClient() as stream_client:
-                    async with stream_client.stream("GET", download_url) as video_response:
-                        async for chunk in video_response.aiter_bytes():
-                            yield chunk
+            for file in files.get("value", []):
+                is_video = False
+                file_name = file.get("name", "").lower()
+                
+                # Check by file extension
+                if any(file_name.endswith(ext) for ext in video_extensions):
+                    is_video = True
+                
+                # Check by MIME type if available
+                if file.get("file") and file.get("file", {}).get("mimeType"):
+                    mime_type = file["file"]["mimeType"]
+                    if mime_type in video_mime_types or mime_type.startswith("video/"):
+                        is_video = True
+                
+                if is_video:
+                    video_files.append({
+                        "id": file["id"],
+                        "name": file["name"],
+                        "size": file.get("size", 0),
+                        "mimeType": file.get("file", {}).get("mimeType", "video/mp4"),
+                        "downloadUrl": file.get("@microsoft.graph.downloadUrl"),
+                        "webUrl": file.get("webUrl"),
+                        "thumbnails": file.get("thumbnails", [])
+                    })
             
-            return StreamingResponse(
-                generate(),
-                media_type=file_info.get("file", {}).get("mimeType", "video/mp4"),
-                headers={
-                    "Accept-Ranges": "bytes",
-                    "Content-Length": str(file_info.get("size", 0))
-                }
-            )
+            return {"videos": video_files}
     except Exception as e:
-        logger.error(f"Stream video error: {str(e)}")
-        raise HTTPException(status_code=500, detail="Failed to stream video")
+        logger.error(f"Search files error: {str(e)}")
+        raise HTTPException(status_code=500, detail="Failed to search files")
 
 # User data endpoints
 @app.post("/api/watch-history")
