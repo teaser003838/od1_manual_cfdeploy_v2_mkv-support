@@ -243,7 +243,124 @@ const VideoPlayer = ({ video, backendUrl, accessToken, onBack }) => {
     }, 1000);
   };
 
-  const handleKeyPress = (e) => {
+  // Touch event handlers for mobile gestures
+  const handleTouchStart = (e) => {
+    if (!isMobile) return;
+    
+    const touch = e.touches[0];
+    touchStartTime.current = Date.now();
+    touchStartX.current = touch.clientX;
+    touchStartY.current = touch.clientY;
+    
+    showControlsTemporarily();
+  };
+
+  const handleTouchMove = (e) => {
+    if (!isMobile) return;
+    e.preventDefault(); // Prevent scrolling
+  };
+
+  const handleTouchEnd = (e) => {
+    if (!isMobile) return;
+    
+    const touch = e.changedTouches[0];
+    const touchEndTime = Date.now();
+    const touchDuration = touchEndTime - touchStartTime.current;
+    const touchEndX = touch.clientX;
+    const touchEndY = touch.clientY;
+    
+    const deltaX = touchEndX - touchStartX.current;
+    const deltaY = touchEndY - touchStartY.current;
+    const absDeltaX = Math.abs(deltaX);
+    const absDeltaY = Math.abs(deltaY);
+    
+    const rect = e.currentTarget.getBoundingClientRect();
+    const screenWidth = rect.width;
+    const screenHeight = rect.height;
+    
+    // Check for swipe gestures
+    if (touchDuration < 500 && (absDeltaX > 50 || absDeltaY > 50)) {
+      if (absDeltaX > absDeltaY) {
+        // Horizontal swipe - seeking
+        const seekAmount = deltaX > 0 ? 10 : -10;
+        skipTime(seekAmount);
+      } else {
+        // Vertical swipe - volume
+        const volumeChange = deltaY > 0 ? -0.1 : 0.1;
+        adjustVolume(volumeChange);
+      }
+      return;
+    }
+    
+    // Check for tap gestures
+    if (touchDuration < 300 && absDeltaX < 10 && absDeltaY < 10) {
+      const tapX = touchEndX - rect.left;
+      const tapY = touchEndY - rect.top;
+      
+      // Check for double tap
+      const now = Date.now();
+      if (lastTap.current && now - lastTap.current < 300) {
+        // Double tap detected
+        if (tapX < screenWidth / 3) {
+          // Left side double tap - seek backward
+          skipTime(-10);
+        } else if (tapX > (screenWidth * 2) / 3) {
+          // Right side double tap - seek forward
+          skipTime(10);
+        } else {
+          // Center double tap - toggle fullscreen
+          toggleFullscreen();
+        }
+        lastTap.current = null;
+        return;
+      }
+      
+      lastTap.current = now;
+      
+      // Single tap after delay
+      setTimeout(() => {
+        if (lastTap.current === now) {
+          // Single tap based on screen zones
+          if (tapX < screenWidth / 3) {
+            // Left side tap - seek backward
+            skipTime(-10);
+          } else if (tapX > (screenWidth * 2) / 3) {
+            // Right side tap - seek forward
+            skipTime(10);
+          } else {
+            // Center tap - toggle play/pause
+            togglePlay();
+          }
+          lastTap.current = null;
+        }
+      }, 300);
+    }
+  };
+
+  const handleVideoClick = (e) => {
+    if (isMobile) return; // Handle touch events separately for mobile
+    
+    const rect = e.currentTarget.getBoundingClientRect();
+    const clickX = e.clientX - rect.left;
+    const screenWidth = rect.width;
+    
+    // Screen-based seeking for PC (no seeking icons)
+    if (clickX < screenWidth / 3) {
+      // Left side click - seek backward
+      skipTime(-10);
+    } else if (clickX > (screenWidth * 2) / 3) {
+      // Right side click - seek forward
+      skipTime(10);
+    } else {
+      // Center click - toggle play/pause
+      togglePlay();
+    }
+  };
+
+  const handleVideoDoubleClick = (e) => {
+    if (isMobile) return; // Handle touch events separately for mobile
+    toggleFullscreen();
+  };
     switch (e.code) {
       case 'Space':
         e.preventDefault();
