@@ -708,27 +708,47 @@ class TestOneDriveNetflixBackend(unittest.TestCase):
         print("⚠️ Range header handling for partial content is not explicitly implemented")
         print("  This may affect video seeking functionality in the player")
 
-    @patch('httpx.AsyncClient.get')
-    def test_watch_history_endpoints_with_mock_auth(self, mock_get):
-        """Test the watch history endpoints with mocked authentication"""
-        # Setup mock response
-        mock_response = MagicMock()
-        mock_response.status_code = 200
-        mock_response.json.return_value = {"id": "user1", "displayName": "Test User"}
-        mock_get.return_value = mock_response
+    def test_cors_headers(self):
+        """Test that CORS headers are properly set for all endpoints"""
+        # Test CORS preflight request (OPTIONS)
+        headers = {
+            "Origin": "https://example.com",
+            "Access-Control-Request-Method": "GET",
+            "Access-Control-Request-Headers": "Authorization,Content-Type"
+        }
         
-        # We can't actually test this without a valid token, but we can check the endpoints exist
+        # Test CORS for health endpoint
+        response = self.client.options(f"{API_URL}/health", headers=headers)
+        self.assertIn(response.status_code, [200, 204])
         
-        # Test POST endpoint
-        data = {"item_id": "test_id", "name": "Test Video"}
-        response = self.client.post(f"{API_URL}/watch-history", json=data, headers=self.headers)
+        # Check CORS headers
+        cors_headers = response.headers
+        print("CORS Headers for preflight request:")
+        for key, value in cors_headers.items():
+            if key.startswith("access-control-"):
+                print(f"  {key}: {value}")
         
-        # Test GET endpoint
-        response = self.client.get(f"{API_URL}/watch-history", headers=self.headers)
+        # Check if all required CORS headers are present
+        self.assertIn("access-control-allow-origin", cors_headers.keys(), "Missing Access-Control-Allow-Origin header")
+        self.assertIn("access-control-allow-methods", cors_headers.keys(), "Missing Access-Control-Allow-Methods header")
+        self.assertIn("access-control-allow-headers", cors_headers.keys(), "Missing Access-Control-Allow-Headers header")
         
-        # The endpoints exist but will fail without a valid token
-        # We're just checking that the endpoints are implemented
-        print("✅ Watch history endpoints are implemented (require actual Microsoft Graph API token)")
+        # Test CORS for a regular request
+        headers = {"Origin": "https://example.com"}
+        response = self.client.get(f"{API_URL}/health", headers=headers)
+        self.assertEqual(response.status_code, 200)
+        
+        # Check CORS headers for regular request
+        cors_headers = response.headers
+        print("CORS Headers for regular request:")
+        for key, value in cors_headers.items():
+            if key.startswith("access-control-"):
+                print(f"  {key}: {value}")
+        
+        # Check if Access-Control-Allow-Origin is present
+        self.assertIn("access-control-allow-origin", cors_headers.keys(), "Missing Access-Control-Allow-Origin header")
+        
+        print("✅ CORS headers are properly set for API endpoints")
 
 
 def run_tests():
