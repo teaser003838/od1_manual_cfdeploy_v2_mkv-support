@@ -3,7 +3,7 @@ import './FileExplorer.css';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL || 'http://localhost:8001';
 
-const FileExplorer = ({ accessToken, onPlayVideo, onViewPhoto }) => {
+const FileExplorer = ({ accessToken, onPlayVideo, onViewPhoto, onPlayAudio }) => {
   const [currentFolder, setCurrentFolder] = useState('root');
   const [folderContents, setFolderContents] = useState(null);
   const [loading, setLoading] = useState(false);
