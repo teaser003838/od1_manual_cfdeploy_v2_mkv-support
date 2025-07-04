@@ -83,7 +83,7 @@ async def auth_callback(code: str, state: Optional[str] = None):
     try:
         result = msal_app.acquire_token_by_authorization_code(
             code=code,
-            scopes=SCOPES,
+            scopes=list(SCOPES),
             redirect_uri=REDIRECT_URI
         )
         
