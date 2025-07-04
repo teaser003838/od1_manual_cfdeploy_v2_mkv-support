@@ -373,6 +373,18 @@ frontend:
           agent: "main"
           comment: "FIXED MKV VIDEO STREAMING ISSUES: 1) Changed MKV MIME type from 'video/mp4' to proper 'video/x-matroska' for correct browser handling, 2) Enhanced streaming headers for MKV files with proper compatibility headers, 3) Added specialized chunking for MKV files with optimized chunk sizes, 4) Improved error handling in frontend with specific MKV error messages, 5) Added video element attributes (preload, crossOrigin, playsInline) for better MKV support, 6) Enhanced error detection for MKV files with browser-specific guidance. This should resolve MKV playback issues in supported browsers."
 
+  - task: "Video Player Navigation Fix - Return to Current Directory"
+    implemented: true
+    working: true
+    file: "/app/frontend/src/App.js"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+        - working: true
+          agent: "main"
+          comment: "FIXED VIDEO PLAYER NAVIGATION ISSUE: 1) Added currentFolder state to App component to track current directory, 2) Modified FileExplorer to accept currentFolder and onFolderChange props, 3) Updated navigation functions to sync folder state between App and FileExplorer, 4) Modified handleBackToExplorer to preserve currentFolder so users return to the same directory instead of home, 5) Added proper state synchronization between parent and child components. This fixes the issue where going back from video player would incorrectly navigate to home directory instead of the current folder."
+
 metadata:
   created_by: "main_agent"
   version: "1.1"
