@@ -361,6 +361,7 @@ const VideoPlayer = ({ video, backendUrl, accessToken, onBack }) => {
     if (isMobile) return; // Handle touch events separately for mobile
     toggleFullscreen();
   };
+  const handleKeyPress = (e) => {
     switch (e.code) {
       case 'Space':
         e.preventDefault();
@@ -376,11 +377,11 @@ const VideoPlayer = ({ video, backendUrl, accessToken, onBack }) => {
         break;
       case 'ArrowUp':
         e.preventDefault();
-        setVolume(Math.min(1, volume + 0.1));
+        adjustVolume(0.1);
         break;
       case 'ArrowDown':
         e.preventDefault();
-        setVolume(Math.max(0, volume - 0.1));
+        adjustVolume(-0.1);
         break;
       case 'KeyF':
         e.preventDefault();
@@ -389,6 +390,78 @@ const VideoPlayer = ({ video, backendUrl, accessToken, onBack }) => {
       case 'KeyM':
         e.preventDefault();
         toggleMute();
+        break;
+      case 'KeyJ':
+        e.preventDefault();
+        skipTime(-10);
+        break;
+      case 'KeyL':
+        e.preventDefault();
+        skipTime(10);
+        break;
+      case 'KeyK':
+        e.preventDefault();
+        togglePlay();
+        break;
+      case 'Digit1':
+        e.preventDefault();
+        if (videoRef.current && duration) {
+          videoRef.current.currentTime = duration * 0.1;
+        }
+        break;
+      case 'Digit2':
+        e.preventDefault();
+        if (videoRef.current && duration) {
+          videoRef.current.currentTime = duration * 0.2;
+        }
+        break;
+      case 'Digit3':
+        e.preventDefault();
+        if (videoRef.current && duration) {
+          videoRef.current.currentTime = duration * 0.3;
+        }
+        break;
+      case 'Digit4':
+        e.preventDefault();
+        if (videoRef.current && duration) {
+          videoRef.current.currentTime = duration * 0.4;
+        }
+        break;
+      case 'Digit5':
+        e.preventDefault();
+        if (videoRef.current && duration) {
+          videoRef.current.currentTime = duration * 0.5;
+        }
+        break;
+      case 'Digit6':
+        e.preventDefault();
+        if (videoRef.current && duration) {
+          videoRef.current.currentTime = duration * 0.6;
+        }
+        break;
+      case 'Digit7':
+        e.preventDefault();
+        if (videoRef.current && duration) {
+          videoRef.current.currentTime = duration * 0.7;
+        }
+        break;
+      case 'Digit8':
+        e.preventDefault();
+        if (videoRef.current && duration) {
+          videoRef.current.currentTime = duration * 0.8;
+        }
+        break;
+      case 'Digit9':
+        e.preventDefault();
+        if (videoRef.current && duration) {
+          videoRef.current.currentTime = duration * 0.9;
+        }
+        break;
+      case 'Digit0':
+        e.preventDefault();
+        if (videoRef.current) {
+          videoRef.current.currentTime = 0;
+        }
         break;
       default:
         break;
@@ -400,7 +473,7 @@ const VideoPlayer = ({ video, backendUrl, accessToken, onBack }) => {
     return () => {
       document.removeEventListener('keydown', handleKeyPress);
     };
-  }, [volume, isPlaying]);
+  }, [volume, isPlaying, duration]);
 
   return (
     <div className="youtube-player-container" onMouseMove={handleMouseMove} tabIndex={0}>
