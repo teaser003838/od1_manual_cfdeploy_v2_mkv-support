@@ -209,9 +209,14 @@ async def list_all_files(authorization: str = Header(...)):
     try:
         access_token = authorization.replace("Bearer ", "")
         
-        async def get_files_recursive(client, folder_id="root", folder_path=""):
-            """Recursively get all files from a folder and its subfolders"""
+        async def get_files_recursive(client, folder_id="root", folder_path="", max_depth=5, current_depth=0):
+            """Recursively get all files from a folder and its subfolders with depth limit"""
             all_files = []
+            
+            # Prevent infinite recursion
+            if current_depth > max_depth:
+                logger.warning(f"Max depth reached for folder: {folder_path}")
+                return all_files
             
             # Get files from current folder
             if folder_id == "root":
@@ -232,8 +237,8 @@ async def list_all_files(authorization: str = Header(...)):
                 
                 if file.get("folder"):
                     # It's a folder, recurse into it
-                    logger.info(f"Exploring folder: {file_path}")
-                    subfolder_files = await get_files_recursive(client, file["id"], file_path)
+                    logger.info(f"Exploring folder: {file_path} (depth: {current_depth + 1})")
+                    subfolder_files = await get_files_recursive(client, file["id"], file_path, max_depth, current_depth + 1)
                     all_files.extend(subfolder_files)
                 else:
                     # It's a file, add folder path info
@@ -242,7 +247,7 @@ async def list_all_files(authorization: str = Header(...)):
             
             return all_files
         
-        async with httpx.AsyncClient() as client:
+        async with httpx.AsyncClient(timeout=30.0) as client:  # Add timeout
             all_files = await get_files_recursive(client)
             
             logger.info(f"Retrieved {len(all_files)} total files from OneDrive (including subfolders)")
@@ -287,6 +292,9 @@ async def list_all_files(authorization: str = Header(...)):
             logger.info(f"Found {len(video_files)} video files total")
             return {"videos": video_files}
             
+    except asyncio.TimeoutError:
+        logger.error("Timeout while fetching files from OneDrive")
+        raise HTTPException(status_code=504, detail="Request timeout - OneDrive has too many files to process")
     except Exception as e:
         logger.error(f"List all files error: {str(e)}")
         raise HTTPException(status_code=500, detail="Failed to list all files")
