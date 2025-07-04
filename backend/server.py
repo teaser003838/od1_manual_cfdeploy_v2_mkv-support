@@ -747,7 +747,7 @@ async def search_files(q: str, authorization: str = Header(...)):
 
 @app.get("/api/stream/{item_id}")
 async def stream_media(item_id: str, request: Request, authorization: str = Header(None), token: str = None, quality: str = None):
-    """Stream video or audio files with proper range request support and quality selection"""
+    """Stream video or audio files with proper format compatibility and range request support"""
     try:
         # Try to get access token from header first, then from query parameter
         access_token = None
@@ -776,37 +776,67 @@ async def stream_media(item_id: str, request: Request, authorization: str = Head
                 logger.error("No download URL available for file")
                 raise HTTPException(status_code=404, detail="Download URL not available")
             
-            # Get file size and MIME type
+            # Get file size and detect format
             file_size = file_info.get("size", 0)
+            file_name = file_info.get("name", "").lower()
             mime_type = file_info.get("file", {}).get("mimeType", "application/octet-stream")
             
-            # Improve MIME type detection based on file extension
-            file_name = file_info.get("name", "").lower()
-            if not mime_type or mime_type == "application/octet-stream":
-                if file_name.endswith('.mp4'):
-                    mime_type = "video/mp4"
-                elif file_name.endswith('.mkv'):
-                    mime_type = "video/x-matroska"
-                elif file_name.endswith('.avi'):
-                    mime_type = "video/x-msvideo"
-                elif file_name.endswith('.webm'):
-                    mime_type = "video/webm"
-                elif file_name.endswith('.mov'):
-                    mime_type = "video/quicktime"
-                elif file_name.endswith('.mp3'):
-                    mime_type = "audio/mpeg"
-                elif file_name.endswith('.wav'):
-                    mime_type = "audio/wav"
-                elif file_name.endswith('.flac'):
-                    mime_type = "audio/flac"
-                elif file_name.endswith('.m4a'):
-                    mime_type = "audio/mp4"
-                elif file_name.endswith('.ogg'):
-                    mime_type = "audio/ogg"
-                elif file_name.endswith('.aac'):
-                    mime_type = "audio/aac"
+            # Enhanced MIME type detection and browser compatibility
+            def get_compatible_mime_type(filename, original_mime):
+                """Get browser-compatible MIME type"""
+                if filename.endswith('.mp4'):
+                    return "video/mp4"
+                elif filename.endswith('.webm'):
+                    return "video/webm"
+                elif filename.endswith('.mkv'):
+                    # MKV files often contain H.264 video and AAC audio, which browsers can play
+                    # We'll use mp4 container format for better compatibility
+                    return "video/mp4"
+                elif filename.endswith('.avi'):
+                    # AVI files vary widely, default to mp4 for compatibility
+                    return "video/mp4"
+                elif filename.endswith('.mov'):
+                    return "video/quicktime"
+                elif filename.endswith('.wmv'):
+                    return "video/x-ms-wmv"
+                elif filename.endswith('.flv'):
+                    return "video/x-flv"
+                elif filename.endswith('.m4v'):
+                    return "video/mp4"
+                elif filename.endswith('.3gp'):
+                    return "video/3gpp"
+                elif filename.endswith('.ogv'):
+                    return "video/ogg"
+                elif filename.endswith('.mp3'):
+                    return "audio/mpeg"
+                elif filename.endswith('.wav'):
+                    return "audio/wav"
+                elif filename.endswith('.flac'):
+                    return "audio/flac"
+                elif filename.endswith('.m4a'):
+                    return "audio/mp4"
+                elif filename.endswith('.ogg'):
+                    return "audio/ogg"
+                elif filename.endswith('.aac'):
+                    return "audio/aac"
+                elif filename.endswith('.wma'):
+                    return "audio/x-ms-wma"
+                elif filename.endswith('.opus'):
+                    return "audio/opus"
+                elif filename.endswith('.aiff'):
+                    return "audio/aiff"
+                elif filename.endswith('.alac'):
+                    return "audio/alac"
+                else:
+                    return original_mime or "application/octet-stream"
             
-            logger.info(f"Streaming file: {file_name} (MIME: {mime_type}, Size: {file_size}, Quality: {quality or 'Auto'})")
+            # Get compatible MIME type
+            compatible_mime = get_compatible_mime_type(file_name, mime_type)
+            
+            # For MKV files, add special headers to help browser compatibility
+            is_mkv = file_name.endswith('.mkv')
+            
+            logger.info(f"Streaming file: {file_name} (Original MIME: {mime_type}, Compatible MIME: {compatible_mime}, Size: {file_size}, Quality: {quality or 'Auto'})")
             
             # For large files (>1GB), use optimized streaming parameters
             is_large_file = file_size > 1024 * 1024 * 1024  # 1GB
@@ -836,7 +866,8 @@ async def stream_media(item_id: str, request: Request, authorization: str = Head
                     # Stream with range
                     async def generate_range():
                         try:
-                            async with httpx.AsyncClient(timeout=120.0) as stream_client:  # Increased timeout for large files
+                            timeout_val = 180.0 if is_large_file else 60.0  # 3min for large files
+                            async with httpx.AsyncClient(timeout=timeout_val) as stream_client:
                                 range_headers = {"Range": f"bytes={start}-{end}"}
                                 async with stream_client.stream("GET", download_url, headers=range_headers) as media_response:
                                     if media_response.status_code not in [200, 206]:
@@ -844,26 +875,36 @@ async def stream_media(item_id: str, request: Request, authorization: str = Head
                                         return
                                     
                                     # Stream in smaller chunks for better performance
-                                    current_chunk_size = chunk_size if is_large_file else 65536  # 64KB for regular files
+                                    current_chunk_size = 65536 if is_mkv else (chunk_size if is_large_file else 32768)
                                     async for chunk in media_response.aiter_bytes(chunk_size=current_chunk_size):
                                         yield chunk
                         except Exception as e:
                             logger.error(f"Error in range streaming: {str(e)}")
                             return
                     
+                    # Enhanced headers for better compatibility
+                    response_headers = {
+                        "Accept-Ranges": "bytes",
+                        "Content-Range": f"bytes {start}-{end}/{file_size}",
+                        "Content-Length": str(end - start + 1),
+                        "Access-Control-Allow-Origin": "*",
+                        "Access-Control-Allow-Headers": "Range, Content-Type",
+                        "Access-Control-Expose-Headers": "Content-Range, Content-Length, Accept-Ranges",
+                        "Cache-Control": "public, max-age=3600" if not is_large_file else "no-cache, no-store",
+                    }
+                    
+                    # Add special headers for MKV files
+                    if is_mkv:
+                        response_headers.update({
+                            "X-Content-Type-Options": "nosniff",
+                            "Content-Disposition": "inline",
+                        })
+                    
                     return StreamingResponse(
                         generate_range(),
                         status_code=206,  # Partial Content
-                        media_type=mime_type,
-                        headers={
-                            "Accept-Ranges": "bytes",
-                            "Content-Range": f"bytes {start}-{end}/{file_size}",
-                            "Content-Length": str(end - start + 1),
-                            "Cache-Control": "public, max-age=3600" if not is_large_file else "no-cache",
-                            "Access-Control-Allow-Origin": "*",
-                            "Access-Control-Allow-Headers": "Range",
-                            "Access-Control-Expose-Headers": "Content-Range, Content-Length, Accept-Ranges"
-                        }
+                        media_type=compatible_mime,
+                        headers=response_headers
                     )
                 except (ValueError, IndexError) as e:
                     logger.error(f"Invalid range header: {range_header}, error: {e}")
@@ -872,7 +913,7 @@ async def stream_media(item_id: str, request: Request, authorization: str = Head
             # Stream entire file if no range requested
             async def generate_full():
                 try:
-                    timeout_val = 300.0 if is_large_file else 60.0  # 5min for large files, 1min for others
+                    timeout_val = 300.0 if is_large_file else 120.0  # 5min for large files, 2min for others
                     async with httpx.AsyncClient(timeout=timeout_val) as stream_client:
                         async with stream_client.stream("GET", download_url) as media_response:
                             if media_response.status_code != 200:
@@ -880,24 +921,34 @@ async def stream_media(item_id: str, request: Request, authorization: str = Head
                                 return
                                 
                             # Use adaptive chunk size for better performance
-                            current_chunk_size = chunk_size if is_large_file else 65536
+                            current_chunk_size = 32768 if is_mkv else (chunk_size if is_large_file else 65536)
                             async for chunk in media_response.aiter_bytes(chunk_size=current_chunk_size):
                                 yield chunk
                 except Exception as e:
                     logger.error(f"Error in full file streaming: {str(e)}")
                     return
             
+            # Enhanced headers for full file streaming
+            response_headers = {
+                "Accept-Ranges": "bytes",
+                "Content-Length": str(file_size),
+                "Access-Control-Allow-Origin": "*",
+                "Access-Control-Allow-Headers": "Range, Content-Type",
+                "Access-Control-Expose-Headers": "Content-Range, Content-Length, Accept-Ranges",
+                "Cache-Control": "public, max-age=3600" if not is_large_file else "no-cache, no-store",
+            }
+            
+            # Add special headers for MKV files
+            if is_mkv:
+                response_headers.update({
+                    "X-Content-Type-Options": "nosniff",
+                    "Content-Disposition": "inline",
+                })
+            
             return StreamingResponse(
                 generate_full(),
-                media_type=mime_type,
-                headers={
-                    "Accept-Ranges": "bytes",
-                    "Content-Length": str(file_size),
-                    "Cache-Control": "public, max-age=3600" if not is_large_file else "no-cache",
-                    "Access-Control-Allow-Origin": "*",
-                    "Access-Control-Allow-Headers": "Range",
-                    "Access-Control-Expose-Headers": "Content-Range, Content-Length, Accept-Ranges"
-                }
+                media_type=compatible_mime,
+                headers=response_headers
             )
     except HTTPException:
         raise
