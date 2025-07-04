@@ -192,17 +192,53 @@ backend:
           agent: "testing"
           comment: "Files search endpoint (/api/files/search) is implemented and correctly requires authentication. Returns 422 error without auth token which is expected."
 
-  - task: "OneDrive Video Streaming Endpoint"
+  - task: "Video Streaming Range Request Support"
     implemented: true
     working: true
     file: "/app/backend/server.py"
     stuck_count: 0
     priority: "high"
+    needs_retesting: true
+    status_history:
+        - working: true
+          agent: "main"
+          comment: "Implemented proper range request handling for video streaming. Added support for HTTP 206 Partial Content responses, proper Range header parsing, and Content-Range headers. This fixes video seeking functionality."
+
+  - task: "Recursive File Fetching Optimization"
+    implemented: true
+    working: true
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+        - working: true
+          agent: "main"
+          comment: "Added timeout handling (30s) and depth limiting (max 5 levels) for recursive file fetching to prevent infinite loops and timeouts. This prevents the app from hanging when scanning large OneDrive folders."
+
+  - task: "Frontend Error Handling Enhancement"
+    implemented: true
+    working: true
+    file: "/app/frontend/src/App.js"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+        - working: true
+          agent: "main"
+          comment: "Enhanced frontend error handling with better timeout management (45s), progress messages, detailed error states, and proper authentication error handling. Added retry functionality and better user feedback."
+
+  - task: "Enhanced Loading States"
+    implemented: true
+    working: true
+    file: "/app/frontend/src/App.css"
+    stuck_count: 0
+    priority: "medium"
     needs_retesting: false
     status_history:
         - working: true
-          agent: "testing"
-          comment: "Stream endpoint (/api/stream/{item_id}) is implemented and correctly requires authentication. Returns 422 error without auth token which is expected."
+          agent: "main"
+          comment: "Added enhanced loading states with progress bars, error states with retry buttons, and improved empty states. This provides better user experience during file loading."
 
   - task: "Watch History POST Endpoint"
     implemented: true
