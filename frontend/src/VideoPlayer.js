@@ -143,11 +143,18 @@ const VideoPlayer = ({ video, backendUrl, accessToken, onBack }) => {
 
   const handleSeek = (e) => {
     if (videoRef.current && duration) {
-      const rect = e.currentTarget.getBoundingClientRect();
-      const percent = (e.clientX - rect.left) / rect.width;
-      const newTime = percent * duration;
-      videoRef.current.currentTime = newTime;
-      setCurrentTime(newTime);
+      try {
+        const rect = e.currentTarget.getBoundingClientRect();
+        const percent = (e.clientX - rect.left) / rect.width;
+        const newTime = percent * duration;
+        videoRef.current.currentTime = newTime;
+        setCurrentTime(newTime);
+        setError(''); // Clear any previous errors
+      } catch (error) {
+        console.error('Seeking error:', error);
+        setError('Failed to seek video');
+        setTimeout(() => setError(''), 3000);
+      }
     }
   };
 
