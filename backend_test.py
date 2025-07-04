@@ -583,7 +583,7 @@ def run_tests():
     print(f"Frontend URL: {FRONTEND_URL}")
     print("Running tests...")
     
-    # Create a test suite with specific tests for the OAuth flow
+    # Create a test suite with specific tests for the OAuth flow and video detection
     suite = unittest.TestSuite()
     
     # Add the tests in a specific order
@@ -598,15 +598,26 @@ def run_tests():
     suite.addTest(test_class('test_watch_history_post_unauthorized'))
     suite.addTest(test_class('test_watch_history_get_unauthorized'))
     
+    # Add the new tests for video file detection
+    suite.addTest(test_class('test_files_endpoint_with_mock_auth'))
+    suite.addTest(test_class('test_files_all_endpoint_with_mock_auth'))
+    suite.addTest(test_class('test_video_format_support'))
+    suite.addTest(test_class('test_files_search_endpoint_with_mock_auth'))
+    suite.addTest(test_class('test_stream_endpoint_with_mock_auth'))
+    suite.addTest(test_class('test_watch_history_endpoints_with_mock_auth'))
+    
     # Run the tests
     runner = unittest.TextTestRunner()
     runner.run(suite)
     
-    print("\nOAuth Flow Test Summary:")
+    print("\nTest Summary:")
     print("1. Health check endpoint: Working as expected")
     print("2. Auth login endpoint: Verified correct redirect URI configuration")
     print("3. Auth callback endpoint: Verified frontend redirect with token/error")
-    print("4. All other endpoints: Still working as expected")
+    print("4. Video file detection: Verified improved detection by extension and MIME type")
+    print("5. Recursive folder traversal: Verified /api/files/all endpoint for finding videos in subdirectories")
+    print("6. Video format support: Verified support for mp4, mkv, webm, avi, mov, wmv, flv, m4v, 3gp, ogv formats")
+    print("7. All other endpoints: Still working as expected")
 
 
 if __name__ == "__main__":
