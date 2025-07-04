@@ -352,7 +352,7 @@ async def search_files(q: str, authorization: str = Header(...)):
         raise HTTPException(status_code=500, detail="Failed to search files")
 
 @app.get("/api/stream/{item_id}")
-async def stream_video(item_id: str, authorization: str = Header(...)):
+async def stream_video(item_id: str, request: Request, authorization: str = Header(...)):
     try:
         access_token = authorization.replace("Bearer ", "")
         
@@ -372,19 +372,61 @@ async def stream_video(item_id: str, authorization: str = Header(...)):
             if not download_url:
                 raise HTTPException(status_code=404, detail="Download URL not available")
             
-            # Stream video directly
-            async def generate():
+            # Get file size
+            file_size = file_info.get("size", 0)
+            
+            # Handle range requests for video seeking
+            range_header = request.headers.get("Range")
+            if range_header:
+                # Parse range header
+                try:
+                    range_match = range_header.replace("bytes=", "").split("-")
+                    start = int(range_match[0]) if range_match[0] else 0
+                    end = int(range_match[1]) if range_match[1] else file_size - 1
+                    
+                    # Ensure valid range
+                    if start >= file_size:
+                        start = 0
+                    if end >= file_size:
+                        end = file_size - 1
+                    
+                    # Stream video with range
+                    async def generate_range():
+                        async with httpx.AsyncClient() as stream_client:
+                            range_headers = {"Range": f"bytes={start}-{end}"}
+                            async with stream_client.stream("GET", download_url, headers=range_headers) as video_response:
+                                async for chunk in video_response.aiter_bytes():
+                                    yield chunk
+                    
+                    return StreamingResponse(
+                        generate_range(),
+                        status_code=206,  # Partial Content
+                        media_type=file_info.get("file", {}).get("mimeType", "video/mp4"),
+                        headers={
+                            "Accept-Ranges": "bytes",
+                            "Content-Range": f"bytes {start}-{end}/{file_size}",
+                            "Content-Length": str(end - start + 1),
+                            "Cache-Control": "no-cache"
+                        }
+                    )
+                except (ValueError, IndexError) as e:
+                    logger.error(f"Invalid range header: {range_header}, error: {e}")
+                    # Fall back to full file streaming
+            
+            # Stream entire video if no range requested
+            async def generate_full():
                 async with httpx.AsyncClient() as stream_client:
                     async with stream_client.stream("GET", download_url) as video_response:
                         async for chunk in video_response.aiter_bytes():
                             yield chunk
             
             return StreamingResponse(
-                generate(),
+                generate_full(),
                 media_type=file_info.get("file", {}).get("mimeType", "video/mp4"),
                 headers={
                     "Accept-Ranges": "bytes",
-                    "Content-Length": str(file_info.get("size", 0))
+                    "Content-Length": str(file_size),
+                    "Cache-Control": "no-cache"
                 }
             )
     except Exception as e:
