@@ -522,13 +522,14 @@
 /* Hide controls when not hovered in fullscreen */
 .youtube-player-container:fullscreen .video-controls {
   opacity: 0;
-  transition: opacity 0.3s ease;
+  visibility: hidden;
+  transition: opacity 0.3s ease, visibility 0.3s ease;
   pointer-events: none;
 }
 
-.youtube-player-container:fullscreen:hover .video-controls,
-.youtube-player-container:fullscreen.controls-visible .video-controls {
+.youtube-player-container:fullscreen .video-controls.show {
   opacity: 1;
+  visibility: visible;
   pointer-events: auto;
 }
 
