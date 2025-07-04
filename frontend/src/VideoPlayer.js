@@ -136,15 +136,18 @@ const VideoPlayer = ({ video, backendUrl, accessToken, onBack }) => {
         const clampedTime = Math.max(0, Math.min(duration, newTime));
         
         videoRef.current.currentTime = clampedTime;
-        setCurrentTime(clampedTime);
+        
+        // Show controls when seeking
+        showControlsTemporarily();
         setError(''); // Clear any previous errors
         
-        // Force a time update to ensure UI sync
-        setTimeout(() => {
+        // Use requestAnimationFrame for more accurate time updates
+        const updateTime = () => {
           if (videoRef.current) {
             setCurrentTime(videoRef.current.currentTime);
           }
-        }, 100);
+        };
+        requestAnimationFrame(updateTime);
       } catch (error) {
         console.error('Seeking error:', error);
         setError('Failed to seek video');
