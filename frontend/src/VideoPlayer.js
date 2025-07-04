@@ -165,11 +165,9 @@ const VideoPlayer = ({ video, backendUrl, accessToken, onBack }) => {
 
   const toggleFullscreen = () => {
     if (!document.fullscreenElement) {
-      document.documentElement.requestFullscreen();
-      setIsFullscreen(true);
+      containerRef.current?.requestFullscreen();
     } else {
       document.exitFullscreen();
-      setIsFullscreen(false);
     }
   };
 
@@ -193,21 +191,56 @@ const VideoPlayer = ({ video, backendUrl, accessToken, onBack }) => {
     if (hideControlsTimeout.current) {
       clearTimeout(hideControlsTimeout.current);
     }
+    // Use 5 seconds as requested for fullscreen auto-hide
+    const hideDelay = isFullscreen ? 5000 : 3000;
     hideControlsTimeout.current = setTimeout(() => {
       if (isPlaying) {
         setShowControls(false);
+        setShowSpeedMenu(false);
+        setShowQualityMenu(false);
+        setShowSubtitleMenu(false);
       }
-    }, 3000);
+    }, hideDelay);
   };
 
   const handleMouseMove = () => {
-    showControlsTemporarily();
+    if (!isMobile) {
+      showControlsTemporarily();
+    }
   };
 
   const skipTime = (seconds) => {
     if (videoRef.current) {
-      videoRef.current.currentTime += seconds;
+      const newTime = Math.max(0, Math.min(duration, videoRef.current.currentTime + seconds));
+      videoRef.current.currentTime = newTime;
+      
+      // Show seek indicator
+      setSeekIndicator(seconds > 0 ? `+${seconds}s` : `${seconds}s`);
+      if (seekIndicatorTimeout.current) {
+        clearTimeout(seekIndicatorTimeout.current);
+      }
+      seekIndicatorTimeout.current = setTimeout(() => {
+        setSeekIndicator(null);
+      }, 1000);
     }
+  };
+
+  const adjustVolume = (delta) => {
+    const newVolume = Math.max(0, Math.min(1, volume + delta));
+    setVolume(newVolume);
+    if (videoRef.current) {
+      videoRef.current.volume = newVolume;
+      setIsMuted(newVolume === 0);
+    }
+    
+    // Show volume indicator
+    setVolumeIndicator(Math.round(newVolume * 100));
+    if (volumeIndicatorTimeout.current) {
+      clearTimeout(volumeIndicatorTimeout.current);
+    }
+    volumeIndicatorTimeout.current = setTimeout(() => {
+      setVolumeIndicator(null);
+    }, 1000);
   };
 
   const handleKeyPress = (e) => {
