@@ -393,23 +393,31 @@ const VideoPlayer = ({ video, backendUrl, accessToken, onBack }) => {
       
       lastTap.current = now;
       
-      // Single tap after delay
-      setTimeout(() => {
-        if (lastTap.current === now) {
-          // Single tap based on screen zones
-          if (tapX < screenWidth / 3) {
-            // Left side tap - seek backward
-            skipTime(-10);
-          } else if (tapX > (screenWidth * 2) / 3) {
-            // Right side tap - seek forward
-            skipTime(10);
-          } else {
-            // Center tap - toggle play/pause
+      // For center tap (play/pause), execute immediately without delay
+      if (tapX >= screenWidth / 3 && tapX <= (screenWidth * 2) / 3) {
+        // Center tap - toggle play/pause immediately
+        setTimeout(() => {
+          if (lastTap.current === now) {
             togglePlay();
+            lastTap.current = null;
           }
-          lastTap.current = null;
-        }
-      }, 300);
+        }, 50); // Very short delay to allow double tap detection
+      } else {
+        // Side taps have longer delay for better UX
+        setTimeout(() => {
+          if (lastTap.current === now) {
+            // Single tap based on screen zones
+            if (tapX < screenWidth / 3) {
+              // Left side tap - seek backward
+              skipTime(-10);
+            } else if (tapX > (screenWidth * 2) / 3) {
+              // Right side tap - seek forward
+              skipTime(10);
+            }
+            lastTap.current = null;
+          }
+        }, 300);
+      }
     }
   };
 
