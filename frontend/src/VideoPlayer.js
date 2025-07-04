@@ -23,6 +23,7 @@ const VideoPlayer = ({ video, backendUrl, accessToken, onBack }) => {
   const [isMobile, setIsMobile] = useState(false);
   const [seekIndicator, setSeekIndicator] = useState(null);
   const [volumeIndicator, setVolumeIndicator] = useState(null);
+  const [error, setError] = useState('');
 
   const playbackSpeeds = [0.25, 0.5, 0.75, 1, 1.25, 1.5, 1.75, 2];
   
