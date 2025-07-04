@@ -265,7 +265,7 @@ function App() {
             style={{ maxHeight: '70vh' }}
           >
             <source
-              src={`${BACKEND_URL}/api/stream/${selectedVideo.id}`}
+              src={`${BACKEND_URL}/api/stream/${selectedVideo.id}?token=${accessToken}`}
               type={selectedVideo.mimeType}
             />
             Your browser does not support the video tag.
