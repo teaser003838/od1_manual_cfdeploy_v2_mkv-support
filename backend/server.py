@@ -350,6 +350,116 @@ def get_thumbnail_url(item: dict) -> Optional[str]:
         elif "small" in thumbnail:
             return thumbnail["small"]["url"]
     return None
+@app.get("/api/explorer/search")
+async def search_files(q: str, authorization: str = Header(...)):
+    """Search files across entire OneDrive with full path results"""
+    try:
+        access_token = authorization.replace("Bearer ", "")
+        
+        async with httpx.AsyncClient() as client:
+            # Use Microsoft Graph search
+            response = await client.get(
+                f"https://graph.microsoft.com/v1.0/me/drive/root/search(q='{q}')",
+                headers={"Authorization": f"Bearer {access_token}"}
+            )
+            
+            if response.status_code != 200:
+                raise HTTPException(status_code=400, detail="Search failed")
+            
+            data = response.json()
+            items = data.get("value", [])
+            
+            # Process search results
+            results = []
+            video_extensions = ['.mp4', '.mkv', '.avi', '.webm', '.mov', '.wmv', '.flv', '.m4v', '.3gp', '.ogv']
+            photo_extensions = ['.jpg', '.jpeg', '.png', '.gif', '.webp', '.bmp', '.tiff', '.svg']
+            video_mime_types = ['video/mp4', 'video/x-msvideo', 'video/quicktime', 'video/x-ms-wmv', 
+                              'video/webm', 'video/x-matroska', 'video/x-flv', 'video/3gpp', 'video/ogg']
+            photo_mime_types = ['image/jpeg', 'image/png', 'image/gif', 'image/webp', 'image/bmp', 
+                              'image/tiff', 'image/svg+xml']
+            
+            for item in items:
+                item_name = item.get("name", "").lower()
+                
+                # Get full path
+                full_path = await get_full_path(client, access_token, item)
+                
+                if item.get("folder"):
+                    # It's a folder
+                    results.append(FileItem(
+                        id=item["id"],
+                        name=item["name"],
+                        type="folder",
+                        size=item.get("size", 0),
+                        modified=item.get("lastModifiedDateTime"),
+                        created=item.get("createdDateTime"),
+                        full_path=full_path,
+                        is_media=False
+                    ))
+                else:
+                    # It's a file
+                    mime_type = item.get("file", {}).get("mimeType", "")
+                    is_video = any(item_name.endswith(ext) for ext in video_extensions) or mime_type in video_mime_types
+                    is_photo = any(item_name.endswith(ext) for ext in photo_extensions) or mime_type in photo_mime_types
+                    
+                    media_type = None
+                    if is_video:
+                        media_type = "video"
+                    elif is_photo:
+                        media_type = "photo"
+                    else:
+                        media_type = "other"
+                    
+                    results.append(FileItem(
+                        id=item["id"],
+                        name=item["name"],
+                        type="file",
+                        size=item.get("size", 0),
+                        modified=item.get("lastModifiedDateTime"),
+                        created=item.get("createdDateTime"),
+                        mime_type=mime_type,
+                        full_path=full_path,
+                        is_media=is_video or is_photo,
+                        media_type=media_type,
+                        thumbnail_url=get_thumbnail_url(item),
+                        download_url=item.get("@microsoft.graph.downloadUrl")
+                    ))
+            
+            # Sort by name
+            results.sort(key=lambda x: x.name.lower())
+            
+            return {"results": results, "total": len(results)}
+            
+    except Exception as e:
+        logger.error(f"Search error: {str(e)}")
+        raise HTTPException(status_code=500, detail="Search failed")
+
+async def get_full_path(client: httpx.AsyncClient, access_token: str, item: dict) -> str:
+    """Get full path for an item"""
+    try:
+        path_parts = [item["name"]]
+        current = item
+        
+        while current.get("parentReference") and current["parentReference"].get("id") != "root":
+            parent_id = current["parentReference"]["id"]
+            parent_response = await client.get(
+                f"https://graph.microsoft.com/v1.0/me/drive/items/{parent_id}",
+                headers={"Authorization": f"Bearer {access_token}"}
+            )
+            
+            if parent_response.status_code == 200:
+                parent = parent_response.json()
+                path_parts.append(parent["name"])
+                current = parent
+            else:
+                break
+        
+        path_parts.reverse()
+        return "/".join(path_parts)
+    except:
+        return item["name"]
+
+# Legacy endpoints for compatibility
 @app.get("/api/files")
 async def list_files(authorization: str = Header(...)):
     try:
