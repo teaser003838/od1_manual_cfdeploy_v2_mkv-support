@@ -94,7 +94,7 @@ async def auth_callback(code: str, state: Optional[str] = None):
     try:
         result = msal_app.acquire_token_by_authorization_code(
             code=code,
-            scopes=list(SCOPES),
+            scopes=["Files.ReadWrite.All", "User.Read"],
             redirect_uri=REDIRECT_URI
         )
         
