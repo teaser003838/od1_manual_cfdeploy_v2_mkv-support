@@ -143,6 +143,17 @@ body {
   font-weight: 700;
 }
 
+.header-info {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.user-info {
+  color: #ccc;
+  font-size: 0.9rem;
+}
+
 .nav-menu {
   display: flex;
   gap: 2rem;
