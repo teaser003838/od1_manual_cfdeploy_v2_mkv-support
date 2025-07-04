@@ -3,6 +3,7 @@ import './VideoPlayer.css';
 
 const VideoPlayer = ({ video, backendUrl, accessToken, onBack }) => {
   const videoRef = useRef(null);
+  const containerRef = useRef(null);
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
@@ -19,10 +20,19 @@ const VideoPlayer = ({ video, backendUrl, accessToken, onBack }) => {
   const [showSubtitleMenu, setShowSubtitleMenu] = useState(false);
   const [subtitles, setSubtitles] = useState([]);
   const [selectedSubtitle, setSelectedSubtitle] = useState(null);
+  const [isMobile, setIsMobile] = useState(false);
+  const [seekIndicator, setSeekIndicator] = useState(null);
+  const [volumeIndicator, setVolumeIndicator] = useState(null);
 
   const playbackSpeeds = [0.25, 0.5, 0.75, 1, 1.25, 1.5, 1.75, 2];
   
   let hideControlsTimeout = useRef(null);
+  let touchStartTime = useRef(null);
+  let touchStartX = useRef(null);
+  let touchStartY = useRef(null);
+  let lastTap = useRef(null);
+  let seekIndicatorTimeout = useRef(null);
+  let volumeIndicatorTimeout = useRef(null);
 
   useEffect(() => {
     const video = videoRef.current;
