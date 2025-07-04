@@ -168,28 +168,6 @@ function App() {
     }
   }, [isAuthenticated]);
 
-  const handleCallback = async (code) => {
-    try {
-      const response = await fetch(`${BACKEND_URL}/api/auth/callback?code=${code}`);
-      const data = await response.json();
-      
-      if (data.access_token) {
-        localStorage.setItem('access_token', data.access_token);
-        setAccessToken(data.access_token);
-        setIsAuthenticated(true);
-        
-        // Clear URL parameters
-        window.history.replaceState({}, document.title, window.location.pathname);
-        
-        // Fetch videos
-        fetchVideos(data.access_token);
-        fetchWatchHistory(data.access_token);
-      }
-    } catch (error) {
-      console.error('Callback failed:', error);
-    }
-  };
-
   const handleLogout = () => {
     localStorage.removeItem('access_token');
     setAccessToken(null);
