@@ -104,6 +104,11 @@ function App() {
     setCurrentView('video');
   };
 
+  const handlePlayAudio = (audio) => {
+    setSelectedItem(audio);
+    setCurrentView('audio');
+  };
+
   const handleViewPhoto = async (photo) => {
     setSelectedItem(photo);
     
