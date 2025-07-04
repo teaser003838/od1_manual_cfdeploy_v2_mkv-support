@@ -349,6 +349,31 @@
   font-size: 0.85rem;
 }
 
+/* Folder Statistics */
+.folder-stats {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.items-container.list .folder-stats {
+  flex-direction: row;
+  gap: 15px;
+  flex-wrap: wrap;
+}
+
+.folder-stat {
+  color: #ccc;
+  font-size: 0.75rem;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.items-container.list .folder-stat {
+  font-size: 0.8rem;
+}
+
 /* Loading and Error States */
 .loading {
   display: flex;
