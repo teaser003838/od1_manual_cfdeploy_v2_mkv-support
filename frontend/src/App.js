@@ -41,17 +41,20 @@ function App() {
   const fetchVideos = async (token) => {
     try {
       setLoading(true);
+      setError('');
+      setLoadingMessage('Connecting to OneDrive...');
       
       console.log('Starting to fetch videos...');
       
       // Create a timeout promise
       const timeoutPromise = new Promise((_, reject) => {
-        setTimeout(() => reject(new Error('Request timeout')), 30000); // 30 second timeout
+        setTimeout(() => reject(new Error('Request timeout')), 45000); // 45 second timeout
       });
       
       // First try to get all videos recursively from all folders with timeout
       let response;
       try {
+        setLoadingMessage('Scanning all folders for videos...');
         response = await Promise.race([
           fetch(`${BACKEND_URL}/api/files/all`, {
             headers: {
@@ -63,6 +66,7 @@ function App() {
         ]);
       } catch (timeoutError) {
         console.log('Recursive search timed out, trying root directory only...');
+        setLoadingMessage('Scanning root directory for videos...');
         response = await fetch(`${BACKEND_URL}/api/files`, {
           headers: {
             'Authorization': `Bearer ${token}`,
@@ -72,27 +76,33 @@ function App() {
       }
       
       if (response.ok) {
+        setLoadingMessage('Processing found videos...');
         const data = await response.json();
         console.log(`Found ${data.videos?.length || 0} videos`);
         console.log('First few videos:', data.videos?.slice(0, 3));
         setVideos(data.videos || []);
         
         if (data.videos?.length === 0) {
-          console.log('No videos found, you might need to upload some videos to your OneDrive');
+          setError('No videos found in your OneDrive. Upload some videos to start streaming!');
         }
       } else {
         console.error('Failed to fetch videos:', response.status, response.statusText);
         const errorText = await response.text();
         console.error('Error details:', errorText);
         
-        // Show error message to user
-        alert(`Failed to fetch videos: ${response.status} ${response.statusText}`);
+        if (response.status === 401 || response.status === 403) {
+          setError('Authentication expired. Please log in again.');
+          handleLogout();
+        } else {
+          setError(`Failed to fetch videos: ${response.status} ${response.statusText}`);
+        }
       }
     } catch (error) {
       console.error('Failed to fetch videos:', error);
-      alert(`Error fetching videos: ${error.message}`);
+      setError(`Error fetching videos: ${error.message}`);
     } finally {
       setLoading(false);
+      setLoadingMessage('');
     }
   };
 
