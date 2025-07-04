@@ -256,9 +256,9 @@ const VideoPlayer = ({ video, backendUrl, accessToken, onBack }) => {
       clearTimeout(hideControlsTimeout.current);
     }
     
-    // Always hide after 5 seconds as requested
+    // Only hide controls in fullscreen mode after 5 seconds
     hideControlsTimeout.current = setTimeout(() => {
-      if (isPlaying && !isControlsLocked) {
+      if (isFullscreen && isPlaying && !isControlsLocked) {
         setShowControls(false);
         setShowSpeedMenu(false);
         setShowQualityMenu(false);
