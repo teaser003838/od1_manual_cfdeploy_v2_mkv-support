@@ -120,10 +120,15 @@ function App() {
     setCurrentView('photo');
   };
 
+  const handleFolderChange = (folderId) => {
+    setCurrentFolder(folderId);
+  };
+
   const handleBackToExplorer = () => {
     setCurrentView('explorer');
     setSelectedItem(null);
     setAllPhotos([]);
+    // Note: We keep currentFolder unchanged so user returns to the same directory
   };
 
   const handleLogout = () => {
