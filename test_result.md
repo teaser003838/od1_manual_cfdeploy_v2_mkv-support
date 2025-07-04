@@ -141,7 +141,7 @@ backend:
     file: "/app/backend/server.py"
     stuck_count: 0
     priority: "high"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
         - working: true
           agent: "testing"
@@ -149,6 +149,9 @@ backend:
         - working: "modified"
           agent: "main"
           comment: "Modified callback endpoint to redirect to frontend with access token instead of returning JSON. This fixes the OAuth flow for web applications."
+        - working: true
+          agent: "testing"
+          comment: "Verified that the callback endpoint now correctly redirects to the frontend with the access token (or error message in case of failure). The endpoint returns a 307 redirect to the frontend URL with appropriate parameters."
 
   - task: "OAuth Flow Fix"
     implemented: true
