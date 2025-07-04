@@ -13,6 +13,12 @@ const FileExplorer = ({ accessToken, currentFolder: parentCurrentFolder, onFolde
   const [viewMode, setViewMode] = useState('grid'); // 'grid' or 'list'
 
   useEffect(() => {
+    if (parentCurrentFolder && parentCurrentFolder !== currentFolder) {
+      setCurrentFolder(parentCurrentFolder);
+    }
+  }, [parentCurrentFolder]);
+
+  useEffect(() => {
     if (accessToken) {
       fetchFolderContents(currentFolder);
     }
