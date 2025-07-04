@@ -264,12 +264,15 @@ async def browse_folder(folder_id: str = "root", authorization: str = Header(...
                     mime_type = item.get("file", {}).get("mimeType", "")
                     is_video = any(item_name.endswith(ext) for ext in video_extensions) or mime_type in video_mime_types
                     is_photo = any(item_name.endswith(ext) for ext in photo_extensions) or mime_type in photo_mime_types
+                    is_audio = any(item_name.endswith(ext) for ext in audio_extensions) or mime_type in audio_mime_types
                     
                     media_type = None
                     if is_video:
                         media_type = "video"
                     elif is_photo:
                         media_type = "photo"
+                    elif is_audio:
+                        media_type = "audio"
                     else:
                         media_type = "other"
                     
