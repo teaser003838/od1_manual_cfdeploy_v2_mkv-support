@@ -4,6 +4,7 @@ import asyncio
 import json
 import os
 import re
+import time
 from unittest.mock import patch, MagicMock, AsyncMock
 
 # Get the backend URL from the frontend .env file
@@ -19,6 +20,14 @@ MOCK_TOKEN = "mock_access_token"
 VIDEO_EXTENSIONS = ['.mp4', '.mkv', '.webm', '.avi', '.mov', '.wmv', '.flv', '.m4v', '.3gp', '.ogv']
 VIDEO_MIME_TYPES = ['video/mp4', 'video/x-msvideo', 'video/quicktime', 'video/x-ms-wmv', 
                     'video/webm', 'video/x-matroska', 'video/x-flv', 'video/3gpp', 'video/ogg']
+
+# Audio file extensions and MIME types for testing
+AUDIO_EXTENSIONS = ['.mp3', '.wav', '.flac', '.m4a', '.ogg', '.aac', '.wma', '.opus', '.aiff', '.alac']
+AUDIO_MIME_TYPES = ['audio/mpeg', 'audio/wav', 'audio/flac', 'audio/mp4', 'audio/ogg', 
+                    'audio/aac', 'audio/x-ms-wma', 'audio/opus', 'audio/aiff', 'audio/alac']
+
+# Quality parameters for streaming
+QUALITY_OPTIONS = ['480p', '720p', '1080p', 'Auto']
 
 class TestOneDriveNetflixBackend(unittest.TestCase):
     """Test suite for OneDrive Netflix Backend API"""
