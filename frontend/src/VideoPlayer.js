@@ -544,7 +544,7 @@ const VideoPlayer = ({ video, backendUrl, accessToken, onBack }) => {
 
   return (
     <div 
-      className="youtube-player-container" 
+      className={`youtube-player-container ${showControls ? 'controls-visible' : ''}`}
       onMouseMove={handleMouseMove}
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
