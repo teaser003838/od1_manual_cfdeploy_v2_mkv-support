@@ -14,9 +14,6 @@ const VideoPlayer = ({ video, backendUrl, accessToken, onBack }) => {
   const [playbackRate, setPlaybackRate] = useState(1);
   const [showSpeedMenu, setShowSpeedMenu] = useState(false);
   const [isBuffering, setIsBuffering] = useState(false);
-  const [showSubtitleMenu, setShowSubtitleMenu] = useState(false);
-  const [subtitles, setSubtitles] = useState([]);
-  const [selectedSubtitle, setSelectedSubtitle] = useState(null);
   const [isMobile, setIsMobile] = useState(false);
   const [seekIndicator, setSeekIndicator] = useState(null);
   const [volumeIndicator, setVolumeIndicator] = useState(null);
