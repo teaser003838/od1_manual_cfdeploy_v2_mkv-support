@@ -229,6 +229,9 @@ async def browse_folder(folder_id: str = "root", authorization: str = Header(...
             folders = []
             files = []
             total_size = 0
+            folder_count = 0
+            file_count = 0
+            media_count = 0
             
             # Define supported media types
             video_extensions = ['.mp4', '.mkv', '.avi', '.webm', '.mov', '.wmv', '.flv', '.m4v', '.3gp', '.ogv']
