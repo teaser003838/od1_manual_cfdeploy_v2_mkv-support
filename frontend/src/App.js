@@ -12,7 +12,7 @@ function App() {
   const [isOneDriveAuthenticated, setIsOneDriveAuthenticated] = useState(false);
   const [password, setPassword] = useState('');
   const [accessToken, setAccessToken] = useState(null);
-  const [currentView, setCurrentView] = useState('explorer'); // 'explorer', 'video', 'photo'
+  const [currentView, setCurrentView] = useState('explorer'); // 'explorer', 'video', 'audio', 'photo'
   const [selectedItem, setSelectedItem] = useState(null);
   const [allPhotos, setAllPhotos] = useState([]);
   const [loading, setLoading] = useState(false);
