@@ -285,7 +285,7 @@ async def browse_folder(folder_id: str = "root", authorization: str = Header(...
                         created=item.get("createdDateTime"),
                         mime_type=mime_type,
                         full_path=full_path,
-                        is_media=is_video or is_photo,
+                        is_media=is_video or is_photo or is_audio,
                         media_type=media_type,
                         thumbnail_url=get_thumbnail_url(item),
                         download_url=item.get("@microsoft.graph.downloadUrl")
