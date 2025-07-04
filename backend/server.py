@@ -63,6 +63,32 @@ class UserPreferences(BaseModel):
     theme: str = "dark"
     quality: str = "auto"
 
+class PasswordAuth(BaseModel):
+    password: str
+
+class FileItem(BaseModel):
+    id: str
+    name: str
+    type: str  # 'file' or 'folder'
+    size: Optional[int] = None
+    modified: Optional[datetime] = None
+    created: Optional[datetime] = None
+    mime_type: Optional[str] = None
+    parent_path: Optional[str] = None
+    full_path: str
+    is_media: bool = False
+    media_type: Optional[str] = None  # 'video', 'photo', 'other'
+    thumbnail_url: Optional[str] = None
+    download_url: Optional[str] = None
+
+class FolderContents(BaseModel):
+    current_folder: str
+    parent_folder: Optional[str] = None
+    breadcrumbs: List[Dict[str, str]] = []
+    folders: List[FileItem] = []
+    files: List[FileItem] = []
+    total_size: int = 0
+
 # Database connection
 @app.on_event("startup")
 async def startup_event():
