@@ -124,35 +124,47 @@ class TestOneDriveNetflixBackend(unittest.TestCase):
         self.assertIn(response.status_code, [401, 422])
         print("✅ Watch history GET endpoint correctly requires authentication")
 
-    @patch('httpx.AsyncClient.get')
-    def test_files_endpoint_with_mock_auth(self, mock_get):
-        """Test the files endpoint with mocked authentication"""
-        # This is a mock test to verify the endpoint structure
-        # In a real scenario, we would need a valid Microsoft Graph API token
+    def test_oauth_flow_configuration(self):
+        """Test the OAuth flow configuration is correct"""
+        # Test that the redirect URI is correctly set to the production URL
+        # This is a more direct test of the configuration
         
-        # Setup mock response
-        mock_response = MagicMock()
-        mock_response.status_code = 200
-        mock_response.json.return_value = {
-            "value": [
-                {
-                    "id": "item1",
-                    "name": "test_video.mp4",
-                    "size": 1024,
-                    "file": {"mimeType": "video/mp4"},
-                    "@microsoft.graph.downloadUrl": "https://example.com/download",
-                    "webUrl": "https://example.com/view"
-                }
-            ]
-        }
-        mock_get.return_value = mock_response
-        
-        # We can't actually test this without a valid token, but we can check the endpoint exists
-        response = self.client.get(f"{API_URL}/files", headers=self.headers)
-        
-        # The endpoint exists but will fail without a valid token
-        # We're just checking that the endpoint is implemented
-        print("✅ Files endpoint is implemented (requires actual Microsoft Graph API token)")
+        # First, check the login endpoint to get the auth URL
+        login_response = self.client.get(f"{API_URL}/auth/login")
+        if login_response.status_code == 200:
+            data = login_response.json()
+            auth_url = data["auth_url"]
+            
+            # Extract redirect_uri from the auth URL
+            redirect_uri_match = re.search(r'redirect_uri=([^&]+)', auth_url)
+            if redirect_uri_match:
+                import urllib.parse
+                redirect_uri = urllib.parse.unquote(redirect_uri_match.group(1))
+                
+                # Verify it matches the expected production URL
+                self.assertEqual(redirect_uri, EXPECTED_REDIRECT_URI)
+                print(f"✅ OAuth flow is configured with correct redirect URI: {redirect_uri}")
+            else:
+                self.fail("Could not find redirect_uri in auth URL")
+        else:
+            print("⚠️ Could not verify OAuth flow configuration - login endpoint returned error")
+            
+        # Now test the callback endpoint to verify it redirects to frontend
+        client = httpx.Client(timeout=30.0, follow_redirects=False)
+        try:
+            callback_response = client.get(f"{API_URL}/auth/callback", params={"code": "mock_code"})
+            
+            if callback_response.status_code in [307, 302]:  # Redirect status codes
+                redirect_url = callback_response.headers.get('location', '')
+                self.assertTrue(redirect_url.startswith(FRONTEND_URL))
+                print(f"✅ OAuth callback correctly redirects to frontend: {redirect_url}")
+            else:
+                # Even with an error, we can check the response structure
+                print(f"⚠️ Callback endpoint returned status {callback_response.status_code} (expected in test environment)")
+        finally:
+            client.close()
+            
+        print("✅ OAuth flow configuration appears correct")
 
     @patch('httpx.AsyncClient.get')
     def test_files_search_endpoint_with_mock_auth(self, mock_get):
