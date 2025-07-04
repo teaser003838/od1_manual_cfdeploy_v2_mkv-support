@@ -278,11 +278,15 @@ async def browse_folder(folder_id: str = "root", authorization: str = Header(...
                 
                 if item.get("folder"):
                     # It's a folder
+                    folder_count += 1
+                    # Get folder statistics
+                    folder_stats = await get_folder_stats(client, access_token, item["id"])
+                    
                     folders.append(FileItem(
                         id=item["id"],
                         name=item["name"],
                         type="folder",
-                        size=item_size,
+                        size=folder_stats["total_size"],
                         modified=item.get("lastModifiedDateTime"),
                         created=item.get("createdDateTime"),
                         full_path=full_path,
