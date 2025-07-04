@@ -613,7 +613,7 @@ const VideoPlayer = ({ video, backendUrl, accessToken, onBack }) => {
         )}
 
         {showControls && (
-          <div className="video-controls">
+          <div className={`video-controls ${showControls ? 'show' : ''}`}>
             <div className="progress-container" onClick={handleSeek}>
               <div className="progress-bar">
                 <div 
