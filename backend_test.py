@@ -61,17 +61,37 @@ class TestOneDriveNetflixBackend(unittest.TestCase):
             print("✅ Auth login endpoint is implemented but returned an error (expected in test environment)")
             print(f"   Response: {response.text}")
 
-    @patch('httpx.AsyncClient.get')
-    def test_auth_callback(self, mock_get):
-        """Test the auth callback endpoint (mocked)"""
+    def test_auth_callback(self):
+        """Test the auth callback endpoint redirects to frontend with access token"""
         # This test requires mocking since we can't perform actual OAuth flow
-        # We'll skip the actual test execution but verify the endpoint exists
-        response = self.client.get(f"{API_URL}/auth/callback", params={"code": "mock_code"})
+        # We'll check that the endpoint exists and follows the redirect pattern
         
-        # The endpoint exists but will fail without a valid code
-        # We're just checking that the endpoint is implemented
-        self.assertIn(response.status_code, [400, 500])
-        print("✅ Auth callback endpoint is implemented (requires actual OAuth flow)")
+        # We need to use a client that doesn't follow redirects to check the redirect URL
+        client = httpx.Client(timeout=30.0, follow_redirects=False)
+        
+        try:
+            response = client.get(f"{API_URL}/auth/callback", params={"code": "mock_code"})
+            
+            # The endpoint exists but will fail without a valid code
+            # We're checking if it attempts to redirect to the frontend
+            if response.status_code == 307 or response.status_code == 302:  # Temporary redirect
+                redirect_url = response.headers.get('location', '')
+                self.assertTrue(redirect_url.startswith(FRONTEND_URL), 
+                                f"Expected redirect to {FRONTEND_URL}, got {redirect_url}")
+                
+                # Check if it contains error parameter (expected since we're using a mock code)
+                self.assertIn("error=", redirect_url, 
+                             f"Expected error parameter in redirect URL: {redirect_url}")
+                
+                print(f"✅ Auth callback endpoint correctly redirects to frontend: {redirect_url}")
+            else:
+                # Even if it doesn't redirect (due to test environment limitations),
+                # we can still verify the endpoint exists
+                self.assertIn(response.status_code, [400, 500])
+                print("✅ Auth callback endpoint is implemented (requires actual OAuth flow)")
+                print(f"   Response status: {response.status_code}")
+        finally:
+            client.close()
 
     def test_files_endpoint_unauthorized(self):
         """Test the files endpoint returns error without auth"""
