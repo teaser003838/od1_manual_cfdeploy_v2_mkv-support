@@ -187,7 +187,169 @@ async def get_user_info(access_token: str):
             return response.json()
         return {}
 
-# OneDrive endpoints
+# File explorer endpoints
+@app.get("/api/explorer/browse")
+async def browse_folder(folder_id: str = "root", authorization: str = Header(...)):
+    """Browse OneDrive folder with file explorer interface"""
+    try:
+        access_token = authorization.replace("Bearer ", "")
+        
+        async with httpx.AsyncClient() as client:
+            # Get folder contents
+            if folder_id == "root":
+                url = "https://graph.microsoft.com/v1.0/me/drive/root/children"
+            else:
+                url = f"https://graph.microsoft.com/v1.0/me/drive/items/{folder_id}/children"
+            
+            response = await client.get(url, headers={"Authorization": f"Bearer {access_token}"})
+            
+            if response.status_code != 200:
+                raise HTTPException(status_code=400, detail="Failed to browse folder")
+            
+            data = response.json()
+            items = data.get("value", [])
+            
+            # Get folder information for breadcrumbs
+            current_folder_info = {}
+            if folder_id != "root":
+                folder_response = await client.get(
+                    f"https://graph.microsoft.com/v1.0/me/drive/items/{folder_id}",
+                    headers={"Authorization": f"Bearer {access_token}"}
+                )
+                if folder_response.status_code == 200:
+                    current_folder_info = folder_response.json()
+            
+            # Build breadcrumbs
+            breadcrumbs = await build_breadcrumbs(client, access_token, current_folder_info)
+            
+            # Process items
+            folders = []
+            files = []
+            total_size = 0
+            
+            # Define supported media types
+            video_extensions = ['.mp4', '.mkv', '.avi', '.webm', '.mov', '.wmv', '.flv', '.m4v', '.3gp', '.ogv']
+            photo_extensions = ['.jpg', '.jpeg', '.png', '.gif', '.webp', '.bmp', '.tiff', '.svg']
+            video_mime_types = ['video/mp4', 'video/x-msvideo', 'video/quicktime', 'video/x-ms-wmv', 
+                              'video/webm', 'video/x-matroska', 'video/x-flv', 'video/3gpp', 'video/ogg']
+            photo_mime_types = ['image/jpeg', 'image/png', 'image/gif', 'image/webp', 'image/bmp', 
+                              'image/tiff', 'image/svg+xml']
+            
+            for item in items:
+                item_name = item.get("name", "").lower()
+                item_size = item.get("size", 0)
+                total_size += item_size
+                
+                # Build full path
+                current_path = current_folder_info.get("name", "Root") if folder_id != "root" else "Root"
+                full_path = f"{current_path}/{item['name']}" if current_path != "Root" else item['name']
+                
+                if item.get("folder"):
+                    # It's a folder
+                    folders.append(FileItem(
+                        id=item["id"],
+                        name=item["name"],
+                        type="folder",
+                        size=item_size,
+                        modified=item.get("lastModifiedDateTime"),
+                        created=item.get("createdDateTime"),
+                        full_path=full_path,
+                        is_media=False
+                    ))
+                else:
+                    # It's a file
+                    mime_type = item.get("file", {}).get("mimeType", "")
+                    is_video = any(item_name.endswith(ext) for ext in video_extensions) or mime_type in video_mime_types
+                    is_photo = any(item_name.endswith(ext) for ext in photo_extensions) or mime_type in photo_mime_types
+                    
+                    media_type = None
+                    if is_video:
+                        media_type = "video"
+                    elif is_photo:
+                        media_type = "photo"
+                    else:
+                        media_type = "other"
+                    
+                    files.append(FileItem(
+                        id=item["id"],
+                        name=item["name"],
+                        type="file",
+                        size=item_size,
+                        modified=item.get("lastModifiedDateTime"),
+                        created=item.get("createdDateTime"),
+                        mime_type=mime_type,
+                        full_path=full_path,
+                        is_media=is_video or is_photo,
+                        media_type=media_type,
+                        thumbnail_url=get_thumbnail_url(item),
+                        download_url=item.get("@microsoft.graph.downloadUrl")
+                    ))
+            
+            # Sort folders and files by name
+            folders.sort(key=lambda x: x.name.lower())
+            files.sort(key=lambda x: x.name.lower())
+            
+            return FolderContents(
+                current_folder=current_folder_info.get("name", "Root"),
+                parent_folder=current_folder_info.get("parentReference", {}).get("id"),
+                breadcrumbs=breadcrumbs,
+                folders=folders,
+                files=files,
+                total_size=total_size
+            )
+            
+    except Exception as e:
+        logger.error(f"Browse folder error: {str(e)}")
+        raise HTTPException(status_code=500, detail="Failed to browse folder")
+
+async def build_breadcrumbs(client: httpx.AsyncClient, access_token: str, folder_info: dict) -> List[Dict[str, str]]:
+    """Build breadcrumb navigation"""
+    breadcrumbs = [{"name": "Root", "id": "root"}]
+    
+    if not folder_info:
+        return breadcrumbs
+    
+    # Get parent chain
+    current = folder_info
+    path_items = []
+    
+    while current and current.get("parentReference"):
+        path_items.append({"name": current["name"], "id": current["id"]})
+        parent_id = current["parentReference"].get("id")
+        
+        if parent_id and parent_id != "root":
+            try:
+                parent_response = await client.get(
+                    f"https://graph.microsoft.com/v1.0/me/drive/items/{parent_id}",
+                    headers={"Authorization": f"Bearer {access_token}"}
+                )
+                if parent_response.status_code == 200:
+                    current = parent_response.json()
+                else:
+                    break
+            except:
+                break
+        else:
+            break
+    
+    # Reverse to get correct order
+    path_items.reverse()
+    breadcrumbs.extend(path_items)
+    
+    return breadcrumbs
+
+def get_thumbnail_url(item: dict) -> Optional[str]:
+    """Extract thumbnail URL from OneDrive item"""
+    thumbnails = item.get("thumbnails", [])
+    if thumbnails and len(thumbnails) > 0:
+        thumbnail = thumbnails[0]
+        if "large" in thumbnail:
+            return thumbnail["large"]["url"]
+        elif "medium" in thumbnail:
+            return thumbnail["medium"]["url"]
+        elif "small" in thumbnail:
+            return thumbnail["small"]["url"]
+    return None
 @app.get("/api/files")
 async def list_files(authorization: str = Header(...)):
     try:
