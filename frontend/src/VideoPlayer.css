@@ -182,8 +182,22 @@
   right: 0;
   background: linear-gradient(transparent, rgba(0, 0, 0, 0.8));
   padding: 40px 20px 20px;
+  opacity: 0;
   transition: opacity 0.3s ease;
   z-index: 20;
+  pointer-events: none;
+}
+
+.video-controls.show {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+/* Show controls on hover/touch */
+.youtube-player-container:hover .video-controls,
+.youtube-player-container.controls-visible .video-controls {
+  opacity: 1;
+  pointer-events: auto;
 }
 
 .progress-container {
