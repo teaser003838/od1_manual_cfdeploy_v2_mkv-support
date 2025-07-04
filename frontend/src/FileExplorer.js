@@ -87,6 +87,9 @@ const FileExplorer = ({ accessToken, currentFolder: parentCurrentFolder, onFolde
 
   const navigateToFolder = (folderId) => {
     setCurrentFolder(folderId);
+    if (onFolderChange) {
+      onFolderChange(folderId);
+    }
   };
 
   const handleBreadcrumbClick = (folderId) => {
