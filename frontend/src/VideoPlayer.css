@@ -5,6 +5,8 @@
   color: #fff;
   min-height: 100vh;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  position: relative;
+  overflow: hidden;
 }
 
 .player-header {
@@ -50,6 +52,7 @@
   aspect-ratio: 16/9;
   max-height: 80vh;
   margin: 0 auto;
+  overflow: hidden;
 }
 
 .video-element {
@@ -57,6 +60,82 @@
   height: 100%;
   object-fit: contain;
   cursor: pointer;
+  user-select: none;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+}
+
+/* Touch zones for mobile */
+.touch-zone {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 33.33%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 5;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  background: rgba(0, 0, 0, 0.1);
+}
+
+.touch-zone-left {
+  left: 0;
+}
+
+.touch-zone-center {
+  left: 33.33%;
+}
+
+.touch-zone-right {
+  right: 0;
+}
+
+.touch-zone:active {
+  opacity: 1;
+}
+
+.touch-hint {
+  font-size: 2rem;
+  color: white;
+  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.8);
+  padding: 10px;
+  border-radius: 10px;
+  background: rgba(0, 0, 0, 0.5);
+}
+
+/* Seek and volume indicators */
+.seek-indicator, .volume-indicator {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: rgba(0, 0, 0, 0.8);
+  color: white;
+  padding: 15px 25px;
+  border-radius: 25px;
+  font-size: 1.5rem;
+  font-weight: bold;
+  z-index: 15;
+  pointer-events: none;
+  animation: indicatorPulse 1s ease-out;
+}
+
+@keyframes indicatorPulse {
+  0% {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(0.8);
+  }
+  50% {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1.1);
+  }
+  100% {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(1);
+  }
 }
 
 .buffering-overlay {
@@ -84,11 +163,13 @@
   background: linear-gradient(transparent, rgba(0, 0, 0, 0.8));
   padding: 40px 20px 20px;
   transition: opacity 0.3s ease;
+  z-index: 20;
 }
 
 .progress-container {
   margin-bottom: 15px;
   cursor: pointer;
+  padding: 5px 0;
 }
 
 .progress-bar {
@@ -153,11 +234,16 @@
   justify-content: center;
   min-width: 40px;
   height: 40px;
+  touch-action: manipulation;
 }
 
 .control-button:hover {
   background: rgba(255, 255, 255, 0.1);
   transform: scale(1.1);
+}
+
+.control-button:active {
+  transform: scale(0.95);
 }
 
 .volume-control {
@@ -234,6 +320,7 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
+  touch-action: manipulation;
 }
 
 .menu-item:hover {
@@ -273,6 +360,7 @@
   margin-top: 15px;
   color: rgba(255, 255, 255, 0.8);
   font-size: 0.9rem;
+  flex-wrap: wrap;
 }
 
 .video-details span {
@@ -280,6 +368,48 @@
   background: rgba(255, 255, 255, 0.1);
   border-radius: 20px;
   font-size: 0.85rem;
+}
+
+/* Keyboard shortcuts display */
+.keyboard-shortcuts {
+  margin-top: 20px;
+  padding: 15px;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 8px;
+}
+
+.keyboard-shortcuts p {
+  margin-bottom: 10px;
+  color: #fff;
+}
+
+.shortcuts-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 8px;
+  font-size: 0.85rem;
+  color: rgba(255, 255, 255, 0.8);
+}
+
+/* Touch instructions for mobile */
+.touch-instructions {
+  margin-top: 20px;
+  padding: 15px;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 8px;
+}
+
+.touch-instructions p {
+  margin-bottom: 10px;
+  color: #fff;
+}
+
+.touch-help {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  font-size: 0.85rem;
+  color: rgba(255, 255, 255, 0.8);
 }
 
 /* Responsive Design */
@@ -291,18 +421,39 @@
   
   .left-controls, .right-controls {
     justify-content: center;
+    flex-wrap: wrap;
   }
   
   .video-title {
     font-size: 1rem;
   }
   
-  .volume-control {
-    display: none;
-  }
-  
   .time-display {
     font-size: 12px;
+  }
+  
+  .control-button {
+    min-width: 44px;
+    height: 44px;
+    font-size: 20px;
+  }
+  
+  .progress-bar {
+    height: 6px;
+  }
+  
+  .progress-handle {
+    width: 16px;
+    height: 16px;
+  }
+  
+  .video-details {
+    flex-direction: column;
+    gap: 10px;
+  }
+  
+  .shortcuts-grid {
+    grid-template-columns: 1fr;
   }
 }
 
@@ -311,6 +462,35 @@
   .video-container {
     max-height: 100vh;
   }
+  
+  .player-header {
+    display: none;
+  }
+}
+
+.youtube-player-container:fullscreen {
+  .video-container {
+    max-height: 100vh;
+    aspect-ratio: unset;
+  }
+  
+  .player-header {
+    display: none;
+  }
+  
+  .video-info {
+    display: none;
+  }
+}
+
+/* Hide controls when not hovered in fullscreen */
+.youtube-player-container:fullscreen .video-controls {
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.youtube-player-container:fullscreen:hover .video-controls {
+  opacity: 1;
 }
 
 /* Focus styles for accessibility */
@@ -323,14 +503,4 @@
 @keyframes spin {
   0% { transform: rotate(0deg); }
   100% { transform: rotate(360deg); }
-}
-
-/* Hide controls when not hovered in fullscreen */
-.youtube-player-container:fullscreen .video-controls {
-  opacity: 0;
-  transition: opacity 0.3s ease;
-}
-
-.youtube-player-container:fullscreen:hover .video-controls {
-  opacity: 1;
 }
