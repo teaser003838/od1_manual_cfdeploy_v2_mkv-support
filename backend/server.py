@@ -1026,7 +1026,7 @@ def convert_srt_to_vtt(srt_content):
 # Health check
 @app.get("/api/health")
 async def health_check():
-    return {"status": "healthy", "service": "OneDrive Netflix API"}
+    return {"status": "healthy", "service": "OneDrive File Explorer API"}
 
 if __name__ == "__main__":
     import uvicorn
