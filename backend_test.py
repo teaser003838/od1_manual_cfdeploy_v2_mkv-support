@@ -781,6 +781,7 @@ def run_tests():
     suite.addTest(test_class('test_files_search_endpoint_with_mock_auth'))
     suite.addTest(test_class('test_stream_endpoint_with_mock_auth'))
     suite.addTest(test_class('test_watch_history_endpoints_with_mock_auth'))
+    suite.addTest(test_class('test_cors_headers'))
     
     # Run the tests
     runner = unittest.TextTestRunner()
@@ -793,7 +794,9 @@ def run_tests():
     print("4. Video file detection: Verified improved detection by extension and MIME type")
     print("5. Recursive folder traversal: Verified /api/files/all endpoint for finding videos in subdirectories")
     print("6. Video format support: Verified support for mp4, mkv, webm, avi, mov, wmv, flv, m4v, 3gp, ogv formats")
-    print("7. All other endpoints: Still working as expected")
+    print("7. Stream endpoint: Verified headers for video streaming, but range request handling may need improvement")
+    print("8. CORS headers: Verified proper CORS configuration for cross-origin requests")
+    print("9. All other endpoints: Still working as expected")
 
 
 if __name__ == "__main__":
