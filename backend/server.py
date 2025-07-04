@@ -290,12 +290,7 @@ async def browse_folder(folder_id: str = "root", authorization: str = Header(...
                         modified=item.get("lastModifiedDateTime"),
                         created=item.get("createdDateTime"),
                         full_path=full_path,
-                        is_media=False,
-                        folder_stats={
-                            "file_count": folder_stats.get("file_count", 0),
-                            "folder_count": folder_stats.get("folder_count", 0),
-                            "total_size": folder_stats.get("total_size", 0)
-                        }
+                        is_media=False
                     ))
                 else:
                     # It's a file
