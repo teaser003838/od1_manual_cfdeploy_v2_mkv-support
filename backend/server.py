@@ -25,7 +25,7 @@ app = FastAPI(title="OneDrive File Explorer API", version="1.0.0")
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 # Hash the password (66244?BOy.)
-HASHED_PASSWORD = "$2b$12$EixZxYFuOEaL8KKfBKCnN.J/fKDJGSMJjZ8YK3qOmZUHGfJVfGhJa"  # 66244?BOy.
+HASHED_PASSWORD = "$2b$12$rnOwRwpeR0h4J/SDXJcYAeAPGix3FlCfZCoy4vroTgYQLNCQfgg1a"  # 66244?BOy.
 
 # CORS middleware
 app.add_middleware(
