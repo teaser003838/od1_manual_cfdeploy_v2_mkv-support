@@ -185,10 +185,14 @@ function App() {
   };
 
   const getVideoThumbnail = (video) => {
+    // First try OneDrive thumbnails
     if (video.thumbnails && video.thumbnails.length > 0) {
-      return video.thumbnails[0].large?.url || video.thumbnails[0].medium?.url || video.thumbnails[0].small?.url;
+      const thumbnail = video.thumbnails[0];
+      return thumbnail.large?.url || thumbnail.medium?.url || thumbnail.small?.url;
     }
-    return null;
+    
+    // Fallback to our thumbnail endpoint
+    return `${BACKEND_URL}/api/thumbnail/${video.id}?token=${accessToken}`;
   };
 
   // Handle OAuth callback
