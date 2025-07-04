@@ -23,6 +23,7 @@ const VideoPlayer = ({ video, backendUrl, accessToken, onBack }) => {
   const [isControlsLocked, setIsControlsLocked] = useState(false);
 
   const playbackSpeeds = [0.25, 0.5, 0.75, 1, 1.25, 1.5, 1.75, 2];
+  const qualityOptions = ['Auto', '1080p', '720p', '480p'];
   
   let hideControlsTimeout = useRef(null);
   let touchStartTime = useRef(null);
