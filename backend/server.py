@@ -891,11 +891,14 @@ async def stream_media(item_id: str, request: Request, authorization: str = Head
                         "Cache-Control": "public, max-age=3600" if not is_large_file else "no-cache, no-store",
                     }
                     
-                    # Add special headers for MKV files
+                    # Add special headers for MKV files to improve browser compatibility
                     if is_mkv:
                         response_headers.update({
                             "X-Content-Type-Options": "nosniff",
                             "Content-Disposition": "inline",
+                            # Additional headers for MKV range requests
+                            "X-Frame-Options": "SAMEORIGIN",
+                            "Vary": "Accept-Encoding, Range",
                         })
                     
                     return StreamingResponse(
