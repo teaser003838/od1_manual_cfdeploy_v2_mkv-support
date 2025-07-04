@@ -347,6 +347,11 @@ function App() {
                   </div>
                   <div className="video-info">
                     <h3>{video.name}</h3>
+                    {video.folder_path && (
+                      <p className="folder-path" style={{ fontSize: '0.8rem', color: '#888', marginBottom: '4px' }}>
+                        📁 {video.folder_path}
+                      </p>
+                    )}
                     <p>{formatFileSize(video.size)}</p>
                   </div>
                 </div>
