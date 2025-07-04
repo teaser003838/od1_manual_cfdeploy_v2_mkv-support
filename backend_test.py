@@ -38,7 +38,7 @@ class TestOneDriveNetflixBackend(unittest.TestCase):
         self.assertEqual(response.status_code, 200)
         data = response.json()
         self.assertEqual(data["status"], "healthy")
-        self.assertEqual(data["service"], "OneDrive Netflix API")
+        self.assertEqual(data["service"], "OneDrive File Explorer API")
         print("✅ Health check endpoint is working")
 
     def test_auth_login(self):
