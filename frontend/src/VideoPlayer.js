@@ -662,10 +662,41 @@ const VideoPlayer = ({ video, backendUrl, accessToken, onBack }) => {
                   <>
                     <div className="settings-menu">
                       <button 
-                        onClick={() => setShowSpeedMenu(!showSpeedMenu)} 
+                        onClick={() => {
+                          setShowQualityMenu(!showQualityMenu);
+                          setShowSpeedMenu(false);
+                          setIsControlsLocked(showQualityMenu ? false : true);
+                        }} 
                         className="control-button"
                       >
-                        ⚙️ {playbackRate}x
+                        ⚙️ {currentQuality}
+                      </button>
+                      {showQualityMenu && (
+                        <div className="quality-menu">
+                          <div className="menu-header">Quality</div>
+                          {qualityOptions.map(quality => (
+                            <div 
+                              key={quality}
+                              className={`menu-item ${currentQuality === quality ? 'active' : ''}`}
+                              onClick={() => changeQuality(quality)}
+                            >
+                              {quality}
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                    
+                    <div className="settings-menu">
+                      <button 
+                        onClick={() => {
+                          setShowSpeedMenu(!showSpeedMenu);
+                          setShowQualityMenu(false);
+                          setIsControlsLocked(showSpeedMenu ? false : true);
+                        }} 
+                        className="control-button"
+                      >
+                        🚀 {playbackRate}x
                       </button>
                       {showSpeedMenu && (
                         <div className="speed-menu">
