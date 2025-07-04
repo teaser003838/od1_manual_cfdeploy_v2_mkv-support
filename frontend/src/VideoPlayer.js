@@ -190,7 +190,48 @@ const VideoPlayer = ({ video, backendUrl, accessToken, onBack }) => {
       videoRef.current.playbackRate = rate;
       setPlaybackRate(rate);
       setShowSpeedMenu(false);
+      showControlsTemporarily();
     }
+  };
+
+  const changeQuality = (quality) => {
+    if (videoRef.current && quality !== currentQuality) {
+      const wasPlaying = !videoRef.current.paused;
+      const currentTimeStamp = videoRef.current.currentTime;
+      
+      setCurrentQuality(quality);
+      setShowQualityMenu(false);
+      setIsBuffering(true);
+      
+      // In a real implementation, you would change the video source here
+      // For now, we'll simulate quality change
+      const newSrc = getQualityUrl(video.id, quality);
+      
+      videoRef.current.src = newSrc;
+      videoRef.current.currentTime = currentTimeStamp;
+      
+      if (wasPlaying) {
+        videoRef.current.play().then(() => {
+          setIsBuffering(false);
+        }).catch((error) => {
+          console.error('Error resuming playback after quality change:', error);
+          setIsBuffering(false);
+        });
+      } else {
+        setIsBuffering(false);
+      }
+      
+      showControlsTemporarily();
+    }
+  };
+
+  const getQualityUrl = (videoId, quality) => {
+    // Add quality parameter to the streaming URL
+    const baseUrl = `${backendUrl}/api/stream/${videoId}?token=${accessToken}`;
+    if (quality === 'Auto') {
+      return baseUrl;
+    }
+    return `${baseUrl}&quality=${quality.toLowerCase()}`;
   };
 
   const formatTime = (time) => {
