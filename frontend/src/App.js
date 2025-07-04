@@ -14,6 +14,7 @@ function App() {
   const [accessToken, setAccessToken] = useState(null);
   const [currentView, setCurrentView] = useState('explorer'); // 'explorer', 'video', 'audio', 'photo'
   const [selectedItem, setSelectedItem] = useState(null);
+  const [currentFolder, setCurrentFolder] = useState('root'); // Track current folder for navigation
   const [allPhotos, setAllPhotos] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
