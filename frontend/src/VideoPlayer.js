@@ -13,11 +13,14 @@ const VideoPlayer = ({ video, backendUrl, accessToken, onBack }) => {
   const [showControls, setShowControls] = useState(true);
   const [playbackRate, setPlaybackRate] = useState(1);
   const [showSpeedMenu, setShowSpeedMenu] = useState(false);
+  const [showQualityMenu, setShowQualityMenu] = useState(false);
+  const [currentQuality, setCurrentQuality] = useState('Auto');
   const [isBuffering, setIsBuffering] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
   const [seekIndicator, setSeekIndicator] = useState(null);
   const [volumeIndicator, setVolumeIndicator] = useState(null);
   const [error, setError] = useState('');
+  const [isControlsLocked, setIsControlsLocked] = useState(false);
 
   const playbackSpeeds = [0.25, 0.5, 0.75, 1, 1.25, 1.5, 1.75, 2];
   
