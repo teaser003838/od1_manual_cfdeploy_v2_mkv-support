@@ -112,6 +112,8 @@ const FileExplorer = ({ accessToken, onPlayVideo, onViewPhoto }) => {
       return '🎬';
     } else if (item.media_type === 'photo') {
       return '🖼️';
+    } else if (item.media_type === 'audio') {
+      return '🎵';
     } else {
       return '📄';
     }
