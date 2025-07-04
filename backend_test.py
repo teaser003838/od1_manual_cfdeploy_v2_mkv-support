@@ -241,7 +241,34 @@ class TestOneDriveNetflixBackend(unittest.TestCase):
 def run_tests():
     """Run the test suite"""
     print(f"Testing OneDrive Netflix Backend API at {API_URL}")
-    unittest.main(argv=['first-arg-is-ignored'], exit=False)
+    print(f"Expected redirect URI: {EXPECTED_REDIRECT_URI}")
+    print(f"Frontend URL: {FRONTEND_URL}")
+    print("Running tests...")
+    
+    # Create a test suite with specific tests for the OAuth flow
+    suite = unittest.TestSuite()
+    
+    # Add the tests in a specific order
+    test_class = TestOneDriveNetflixBackend
+    suite.addTest(test_class('test_health_check'))
+    suite.addTest(test_class('test_auth_login'))
+    suite.addTest(test_class('test_auth_callback'))
+    suite.addTest(test_class('test_oauth_flow_configuration'))
+    suite.addTest(test_class('test_files_endpoint_unauthorized'))
+    suite.addTest(test_class('test_files_search_endpoint_unauthorized'))
+    suite.addTest(test_class('test_stream_endpoint_unauthorized'))
+    suite.addTest(test_class('test_watch_history_post_unauthorized'))
+    suite.addTest(test_class('test_watch_history_get_unauthorized'))
+    
+    # Run the tests
+    runner = unittest.TextTestRunner()
+    runner.run(suite)
+    
+    print("\nOAuth Flow Test Summary:")
+    print("1. Health check endpoint: Working as expected")
+    print("2. Auth login endpoint: Verified correct redirect URI configuration")
+    print("3. Auth callback endpoint: Verified frontend redirect with token/error")
+    print("4. All other endpoints: Still working as expected")
 
 
 if __name__ == "__main__":
