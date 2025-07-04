@@ -102,7 +102,7 @@
 # Testing Data - Main Agent and testing sub agent both should log testing data below this section
 #====================================================================================================
 
-user_problem_statement: "Test the OneDrive Netflix streaming platform backend that I just created."
+user_problem_statement: "Test the OneDrive Netflix streaming platform backend that I just created. The 'sign in with Microsoft' doesn't work, fix and test the code."
 
 backend:
   - task: "Health Check Endpoint"
@@ -123,11 +123,14 @@ backend:
     file: "/app/backend/server.py"
     stuck_count: 0
     priority: "high"
-    needs_retesting: false
+    needs_retesting: true
     status_history:
         - working: true
           agent: "testing"
           comment: "Auth login endpoint (/api/auth/login) is implemented. In test environment, it returns a 500 error which is expected since we don't have actual Azure credentials for testing."
+        - working: "needs_fix"
+          agent: "main"
+          comment: "Fixed redirect URI issue. Changed from hardcoded localhost to proper production URL in environment variables."
 
   - task: "Authentication Callback Endpoint"
     implemented: true
@@ -135,11 +138,26 @@ backend:
     file: "/app/backend/server.py"
     stuck_count: 0
     priority: "high"
-    needs_retesting: false
+    needs_retesting: true
     status_history:
         - working: true
           agent: "testing"
           comment: "Auth callback endpoint (/api/auth/callback) is implemented. In test environment, it returns an error which is expected since we don't have actual OAuth flow."
+        - working: "modified"
+          agent: "main"
+          comment: "Modified callback endpoint to redirect to frontend with access token instead of returning JSON. This fixes the OAuth flow for web applications."
+
+  - task: "OAuth Flow Fix"
+    implemented: true
+    working: true
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+        - working: true
+          agent: "main"
+          comment: "Fixed Microsoft OAuth flow by: 1) Updated redirect URI to use production URL, 2) Modified callback to redirect to frontend with access token, 3) Added proper error handling, 4) Added missing httpcore dependency."
 
   - task: "OneDrive Files Listing Endpoint"
     implemented: true
@@ -202,6 +220,18 @@ backend:
           comment: "Watch history GET endpoint (/api/watch-history) is implemented and correctly requires authentication. Returns 422 error without auth token which is expected."
 
 frontend:
+  - task: "Frontend OAuth Flow Fix"
+    implemented: true
+    working: true
+    file: "/app/frontend/src/App.js"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+        - working: true
+          agent: "main"
+          comment: "Fixed frontend OAuth flow to handle access token from URL parameters instead of making callback request. Added proper error handling for authentication failures."
+
   - task: "Frontend Testing"
     implemented: true
     working: "NA"
@@ -215,21 +245,17 @@ frontend:
           comment: "Frontend testing was not performed as per instructions to focus on backend testing only."
 
 metadata:
-  created_by: "testing_agent"
-  version: "1.0"
-  test_sequence: 1
+  created_by: "main_agent"
+  version: "1.1"
+  test_sequence: 2
   run_ui: false
 
 test_plan:
   current_focus:
-    - "Health Check Endpoint"
+    - "OAuth Flow Fix"
     - "Authentication Login Endpoint"
     - "Authentication Callback Endpoint"
-    - "OneDrive Files Listing Endpoint"
-    - "OneDrive Files Search Endpoint"
-    - "OneDrive Video Streaming Endpoint"
-    - "Watch History POST Endpoint"
-    - "Watch History GET Endpoint"
+    - "Frontend OAuth Flow Fix"
   stuck_tasks: []
   test_all: true
   test_priority: "high_first"
@@ -237,3 +263,5 @@ test_plan:
 agent_communication:
     - agent: "testing"
       message: "Completed testing of all backend endpoints. All endpoints are implemented correctly. The health check endpoint works without authentication. All other endpoints correctly require authentication. In the test environment, we can't fully test the authenticated endpoints since we don't have actual Microsoft Graph API tokens, but we verified they are implemented and return the expected error codes when authentication is missing."
+    - agent: "main"
+      message: "Fixed Microsoft OAuth authentication flow. Issues fixed: 1) Redirect URI was hardcoded to localhost instead of production URL, 2) Callback endpoint was returning JSON instead of redirecting to frontend, 3) Missing httpcore dependency, 4) Frontend was trying to handle callback instead of URL parameters. Now the OAuth flow should work properly in production environment."
