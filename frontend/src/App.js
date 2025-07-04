@@ -394,12 +394,22 @@ function App() {
                 <div key={video.id} className="video-card" onClick={() => playVideo(video)}>
                   <div className="video-thumbnail">
                     {getVideoThumbnail(video) ? (
-                      <img src={getVideoThumbnail(video)} alt={video.name} />
-                    ) : (
-                      <div className="placeholder-thumbnail">
-                        <div className="play-icon">▶</div>
-                      </div>
-                    )}
+                      <img 
+                        src={getVideoThumbnail(video)} 
+                        alt={video.name}
+                        onError={(e) => {
+                          // Hide broken thumbnail and show placeholder
+                          e.target.style.display = 'none';
+                          e.target.nextSibling.style.display = 'flex';
+                        }}
+                      />
+                    ) : null}
+                    <div 
+                      className="placeholder-thumbnail" 
+                      style={{ display: getVideoThumbnail(video) ? 'none' : 'flex' }}
+                    >
+                      <div className="play-icon">▶</div>
+                    </div>
                     <div className="video-overlay">
                       <div className="play-button">▶</div>
                     </div>
