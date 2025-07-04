@@ -16,6 +16,9 @@ const VideoPlayer = ({ video, backendUrl, accessToken, onBack }) => {
   const [isBuffering, setIsBuffering] = useState(false);
   const [videoQualities] = useState(['Auto', '1080p', '720p', '480p', '360p']);
   const [selectedQuality, setSelectedQuality] = useState('Auto');
+  const [showSubtitleMenu, setShowSubtitleMenu] = useState(false);
+  const [subtitles, setSubtitles] = useState([]);
+  const [selectedSubtitle, setSelectedSubtitle] = useState(null);
 
   const playbackSpeeds = [0.25, 0.5, 0.75, 1, 1.25, 1.5, 1.75, 2];
   
