@@ -88,6 +88,9 @@ class FolderContents(BaseModel):
     folders: List[FileItem] = []
     files: List[FileItem] = []
     total_size: int = 0
+    folder_count: int = 0
+    file_count: int = 0
+    media_count: int = 0
 
 # Database connection
 @app.on_event("startup")
