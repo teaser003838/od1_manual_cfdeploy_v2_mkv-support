@@ -92,6 +92,38 @@ const VideoPlayer = ({ video, backendUrl, accessToken, onBack }) => {
       setShowControls(true);
     };
 
+    const handleError = (e) => {
+      console.error('Video error:', e);
+      setIsPlaying(false);
+      setIsBuffering(false);
+      
+      // Check if it's an MKV file and provide specific error message
+      const videoSrc = videoElement.src;
+      const isMkvFile = videoSrc.includes('.mkv') || video.name.toLowerCase().endsWith('.mkv');
+      
+      if (isMkvFile) {
+        setError('MKV file format may not be supported in this browser. Please try a different browser or convert the file to MP4.');
+      } else {
+        setError('Video playback error. Please try again or use a different browser.');
+      }
+      
+      // Auto-hide error after 10 seconds for MKV files (longer than usual)
+      setTimeout(() => setError(''), isMkvFile ? 10000 : 5000);
+    };
+
+    const handleLoadError = () => {
+      setIsBuffering(false);
+      const isMkvFile = video.name.toLowerCase().endsWith('.mkv');
+      
+      if (isMkvFile) {
+        setError('Unable to load MKV file. This format may not be supported in your browser. Try Chrome, Firefox, or Edge for better MKV support.');
+      } else {
+        setError('Failed to load video. Please check your connection and try again.');
+      }
+      
+      setTimeout(() => setError(''), isMkvFile ? 10000 : 5000);
+    };
+
     const handleFullscreenChange = () => {
       const isFullscreenNow = !!document.fullscreenElement;
       setIsFullscreen(isFullscreenNow);
