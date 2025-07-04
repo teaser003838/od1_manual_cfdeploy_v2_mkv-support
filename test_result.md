@@ -347,3 +347,5 @@ agent_communication:
       message: "CRITICAL VIDEO STREAMING FIX: Modified streaming endpoint to accept authentication via URL parameters (token=) instead of requiring Authorization headers, since HTML5 video elements cannot send custom headers. This fixes the 'No video with supported format and MIME type found' error. Also added dedicated thumbnail endpoint with fallback support."
     - agent: "main"
       message: "USER REQUEST: Fix video streaming with enhanced video player UI. Requirements: 1) Touch screen optimized for mobile, 2) Keyboard controlled for PC, 3) No seeking icons - screen inbuilt seeking, 4) Fullscreen auto-hide menus after 5 seconds. Current implementation has basic touch/keyboard controls but needs major enhancements for mobile touch gestures and improved user experience."
+    - agent: "main"
+      message: "AUTHENTICATION FIX: User reported password authentication failing with correct password '66244?BOy.'. Fixed by: 1) Regenerated correct bcrypt hash for the password, 2) Fixed FastAPI/Starlette version compatibility issue (upgraded FastAPI to 0.115.14), 3) Updated requirements.txt. Password authentication now working correctly."
