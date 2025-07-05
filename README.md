@@ -33,22 +33,7 @@ Deploy to **Cloudflare** for FREE:
 - `frontend/` - React application
 - `DEPLOYMENT_GUIDE.md` - Complete deployment guide
 
-## 📋 Environment Variables Required
 
-```env
-# Azure/Microsoft Graph API
-AZURE_CLIENT_ID=your_client_id_here
-AZURE_CLIENT_SECRET=your_client_secret_here
-AZURE_TENANT_ID=your_tenant_id_here
-
-# Database (Neon PostgreSQL)
-DATABASE_URL=postgresql://username:password@host:port/database
-
-# Application URLs (auto-set by Vercel)
-REDIRECT_URI=https://your-app.vercel.app/api/auth/callback
-FRONTEND_URL=https://your-app.vercel.app
-REACT_APP_BACKEND_URL=https://your-app.vercel.app
-```
 
 ### 🏗️ Architecture
 
