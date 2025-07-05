@@ -56,9 +56,6 @@ class UserPreferences(BaseModel):
     theme: str = "dark"
     quality: str = "auto"
 
-class PasswordAuth(BaseModel):
-    password: str
-
 class FileItem(BaseModel):
     id: str
     name: str
