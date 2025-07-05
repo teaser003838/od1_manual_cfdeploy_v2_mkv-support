@@ -14,6 +14,7 @@ function App() {
   const [selectedItem, setSelectedItem] = useState(null);
   const [currentFolder, setCurrentFolder] = useState('root'); // Track current folder for navigation
   const [allPhotos, setAllPhotos] = useState([]);
+  const [videoPlaylist, setVideoPlaylist] = useState([]); // For Netflix-style next video functionality
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
