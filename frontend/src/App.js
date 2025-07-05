@@ -189,14 +189,16 @@ function App() {
     );
   }
 
-  // Video Player View
+  // Netflix Video Player View
   if (currentView === 'video' && selectedItem) {
     return (
-      <VideoPlayer 
+      <NetflixVideoPlayer 
         video={selectedItem}
         backendUrl={BACKEND_URL}
         accessToken={accessToken}
         onBack={handleBackToExplorer}
+        onNextVideo={handleNextVideo}
+        playlist={videoPlaylist}
       />
     );
   }
