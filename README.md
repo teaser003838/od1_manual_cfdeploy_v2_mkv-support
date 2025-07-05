@@ -96,16 +96,11 @@ uvicorn server:app --reload
 - 🔄 Secure database connections
 - 🚫 No hardcoded credentials
 
-## 📱 Supported Media Formats
+### 🎯 Supported Media Formats
 
-### Video
-- MP4, MKV, AVI, WebM, MOV, WMV, FLV, M4V
-
-### Audio  
-- MP3, WAV, FLAC, M4A, OGG, AAC, WMA, OPUS
-
-### Images
-- JPG, PNG, GIF, WebP, BMP, TIFF, SVG
+**Video**: MP4, MKV, AVI, WebM, MOV, WMV, FLV, M4V, 3GP, OGV
+**Audio**: MP3, WAV, FLAC, M4A, OGG, AAC, WMA, OPUS, AIFF, ALAC
+**Photos**: JPG, PNG, GIF, WebP, BMP, TIFF, SVG
 
 ## 🎮 Controls
 
