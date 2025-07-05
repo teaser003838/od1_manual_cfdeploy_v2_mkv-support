@@ -317,6 +317,13 @@
   opacity: 0;
 }
 
+/* Bottom section container for progress bar and controls */
+.netflix-bottom-section {
+  display: flex;
+  flex-direction: column;
+  position: relative;
+}
+
 /* Top Bar */
 .netflix-top-bar {
   display: flex;
