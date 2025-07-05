@@ -92,9 +92,43 @@ function App() {
     }
   };
 
-  const handlePlayVideo = (video) => {
+  const handlePlayVideo = async (video) => {
     setSelectedItem(video);
+    
+    // Build playlist for Netflix-style auto-play next functionality
+    try {
+      // Get all videos from current folder for playlist
+      const response = await fetch(`${BACKEND_URL}/api/explorer/browse?folder_id=${currentFolder}&file_types=video&page_size=1000`, {
+        headers: {
+          'Authorization': `Bearer ${accessToken}`,
+          'Content-Type': 'application/json'
+        }
+      });
+      
+      if (response.ok) {
+        const data = await response.json();
+        const allVideos = data.files || [];
+        
+        // Create playlist excluding current video
+        const playlist = allVideos.filter(v => v.id !== video.id);
+        setVideoPlaylist(playlist);
+      }
+    } catch (error) {
+      console.error('Failed to build video playlist:', error);
+      setVideoPlaylist([]);
+    }
+    
     setCurrentView('video');
+  };
+
+  const handleNextVideo = (nextVideo) => {
+    if (nextVideo) {
+      setSelectedItem(nextVideo);
+      
+      // Update playlist to remove the video we just played
+      const updatedPlaylist = videoPlaylist.filter(v => v.id !== nextVideo.id);
+      setVideoPlaylist(updatedPlaylist);
+    }
   };
 
   const handlePlayAudio = (audio) => {
