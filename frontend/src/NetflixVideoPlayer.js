@@ -562,6 +562,9 @@ const NetflixVideoPlayer = ({ video, backendUrl, accessToken, onBack, onNextVide
       ref={containerRef}
       onMouseMove={handleMouseMove}
       onMouseLeave={() => !isMobile && isPlaying && setShowControls(false)}
+      onTouchStart={handleContainerTouch}
+      onTouchEnd={handleContainerTouch}
+      onClick={handleContainerClick}
     >
       {/* Video Element */}
       <video
