@@ -11,7 +11,7 @@ from unittest.mock import patch, MagicMock, AsyncMock
 # Get the backend URL from the frontend .env file
 BACKEND_URL = "https://onedrive-media-api.hul1hu.workers.dev"
 API_URL = f"{BACKEND_URL}/api"
-FRONTEND_URL = "https://cc4f05b5-80f4-4006-9ece-f0d0868de48a.preview.emergentagent.com"
+FRONTEND_URL = "https://onedrive-media-app.pages.dev"
 EXPECTED_REDIRECT_URI = f"{API_URL}/auth/callback"
 
 # Mock token for testing endpoints that require authentication
