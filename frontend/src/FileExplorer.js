@@ -295,22 +295,26 @@ const FileExplorer = ({ accessToken, currentFolder: parentCurrentFolder, onFolde
   const clearSearch = () => {
     setSearchQuery('');
     setSearchResults(null);
+    if (searchTimeoutRef.current) {
+      clearTimeout(searchTimeoutRef.current);
+    }
   };
 
-  const formatFileSize = (bytes) => {
+  // Performance optimized utilities
+  const formatFileSize = useCallback((bytes) => {
     if (bytes === 0) return '0 Bytes';
     const k = 1024;
     const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB'];
     const i = Math.floor(Math.log(bytes) / Math.log(k));
     return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
-  };
+  }, []);
 
-  const formatDate = (dateString) => {
+  const formatDate = useCallback((dateString) => {
     if (!dateString) return 'Unknown';
     return new Date(dateString).toLocaleDateString();
-  };
+  }, []);
 
-  const getFileIcon = (item) => {
+  const getFileIcon = useCallback((item) => {
     if (item.type === 'folder') {
       return '📁';
     } else if (item.media_type === 'video') {
@@ -322,9 +326,9 @@ const FileExplorer = ({ accessToken, currentFolder: parentCurrentFolder, onFolde
     } else {
       return '📄';
     }
-  };
+  }, []);
 
-  const handleItemClick = (item) => {
+  const handleItemClick = useCallback((item) => {
     if (item.type === 'folder') {
       navigateToFolder(item.id);
     } else if (item.media_type === 'video') {
@@ -339,9 +343,10 @@ const FileExplorer = ({ accessToken, currentFolder: parentCurrentFolder, onFolde
         window.open(item.download_url, '_blank');
       }
     }
-  };
+  }, [navigateToFolder, onPlayVideo, onViewPhoto, onPlayAudio]);
 
-  const renderBreadcrumbs = () => {
+  // Optimized render functions
+  const renderBreadcrumbs = useMemo(() => {
     if (!folderContents?.breadcrumbs) return null;
 
     return (
@@ -361,78 +366,96 @@ const FileExplorer = ({ accessToken, currentFolder: parentCurrentFolder, onFolde
         ))}
       </div>
     );
-  };
+  }, [folderContents?.breadcrumbs, handleBreadcrumbClick]);
 
-  const renderItems = (items) => {
-    if (!items || items.length === 0) {
-      return (
-        <div className="empty-folder">
-          <div className="empty-icon">📂</div>
-          <h3>Empty folder</h3>
-          <p>This folder doesn't contain any files or subfolders.</p>
-        </div>
-      );
-    }
-
+  // Lazy loading thumbnail component
+  const LazyThumbnail = React.memo(({ item }) => {
+    const [loaded, setLoaded] = useState(false);
+    const [error, setError] = useState(false);
+    
     return (
-      <div className={`items-container ${viewMode}`}>
-        {items.map((item) => (
-          <div 
-            key={item.id} 
-            className={`item-card ${item.type}`}
-            onClick={() => handleItemClick(item)}
-          >
-            <div className="item-thumbnail">
-              {item.thumbnail_url && item.media_type === 'photo' ? (
-                <img 
-                  src={item.thumbnail_url} 
-                  alt={item.name}
-                  className="thumbnail-image"
-                  onError={(e) => {
-                    e.target.style.display = 'none';
-                    e.target.nextSibling.style.display = 'flex';
-                  }}
-                />
-              ) : null}
-              <div 
-                className="icon-placeholder" 
-                style={{ display: (item.thumbnail_url && item.media_type === 'photo') ? 'none' : 'flex' }}
-              >
-                <span className="file-icon">{getFileIcon(item)}</span>
-              </div>
-              {item.is_media && (
-                <div className="media-overlay">
-                  <div className="play-button">
-                    {item.media_type === 'video' ? '▶' : item.media_type === 'audio' ? '🎵' : '👁️'}
-                  </div>
-                </div>
-              )}
-            </div>
-            
-            <div className="item-info">
-              <h3 className="item-name" title={item.name}>{item.name}</h3>
-              {searchResults && (
-                <p className="item-path">📍 {item.full_path}</p>
-              )}
-              <div className="item-details">
-                {item.type === 'file' && (
-                  <span className="file-size">{formatFileSize(item.size)}</span>
-                )}
-                {item.modified && (
-                  <span className="modified-date">Modified: {formatDate(item.modified)}</span>
-                )}
-              </div>
+      <div className="item-thumbnail">
+        {item.thumbnail_url && item.media_type === 'photo' && !error ? (
+          <img 
+            src={item.thumbnail_url} 
+            alt={item.name}
+            className={`thumbnail-image ${loaded ? 'loaded' : 'loading'}`}
+            onLoad={() => setLoaded(true)}
+            onError={() => setError(true)}
+            loading="lazy"
+          />
+        ) : (
+          <div className="icon-placeholder">
+            <span className="file-icon">{getFileIcon(item)}</span>
+          </div>
+        )}
+        {item.is_media && (
+          <div className="media-overlay">
+            <div className="play-button">
+              {item.media_type === 'video' ? '▶' : item.media_type === 'audio' ? '🎵' : '👁️'}
             </div>
           </div>
-        ))}
+        )}
       </div>
     );
-  };
+  });
 
-  const displayData = searchResults || folderContents;
-  const allItems = searchResults ? 
-    searchResults.results : 
-    [...(folderContents?.folders || []), ...(folderContents?.files || [])];
+  // Optimized item renderer for virtual scrolling
+  const renderItem = useCallback((item, index) => (
+    <div 
+      key={`${item.id}-${index}`}
+      className={`item-card ${item.type} ${viewMode}`}
+      onClick={() => handleItemClick(item)}
+      style={{ height: viewMode === 'list' ? '60px' : '200px' }}
+    >
+      <LazyThumbnail item={item} />
+      
+      <div className="item-info">
+        <h3 className="item-name" title={item.name}>{item.name}</h3>
+        {searchResults && (
+          <p className="item-path">📍 {item.full_path}</p>
+        )}
+        <div className="item-details">
+          {item.type === 'file' && (
+            <span className="file-size">{formatFileSize(item.size)}</span>
+          )}
+          {item.modified && (
+            <span className="modified-date">Modified: {formatDate(item.modified)}</span>
+          )}
+        </div>
+      </div>
+    </div>
+  ), [viewMode, handleItemClick, searchResults, formatFileSize, formatDate]);
+
+  // Memoized items list for performance
+  const allItems = useMemo(() => {
+    if (searchResults) {
+      return searchResults.results || [];
+    }
+    return [...(folderContents?.folders || []), ...(folderContents?.files || [])];
+  }, [searchResults, folderContents]);
+
+  // Performance stats display
+  const performanceStats = useMemo(() => {
+    const displayData = searchResults || folderContents;
+    if (!displayData) return null;
+    
+    const totalItems = searchResults ? 
+      searchResults.pagination?.total_items : 
+      (folderContents?.folders?.length || 0) + (folderContents?.files?.length || 0);
+    
+    return (
+      <div className="performance-stats">
+        <span>📊 {totalItems} items</span>
+        {displayData.pagination && (
+          <span>Page {displayData.pagination.current_page} of {displayData.pagination.total_pages}</span>
+        )}
+        {folderContents?.total_size > 0 && (
+          <span>💾 {formatFileSize(folderContents.total_size)}</span>
+        )}
+      </div>
+    );
+  }, [searchResults, folderContents, formatFileSize]);
 
   return (
     <div className="file-explorer">
@@ -443,10 +466,10 @@ const FileExplorer = ({ accessToken, currentFolder: parentCurrentFolder, onFolde
             type="text"
             placeholder="Search across OneDrive..."
             value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
+            onChange={(e) => handleSearchChange(e.target.value)}
             className="search-input"
           />
-          <button type="submit" className="search-button">
+          <button type="submit" className="search-button" disabled={loading}>
             🔍 Search
           </button>
           {searchResults && (
@@ -457,10 +480,66 @@ const FileExplorer = ({ accessToken, currentFolder: parentCurrentFolder, onFolde
         </form>
       </div>
 
-      {/* Navigation and Controls */}
+      {/* Advanced Controls */}
+      <div className="controls-section">
+        {/* Filter Controls */}
+        <div className="filter-controls">
+          <label>Filter:</label>
+          <select 
+            value={fileTypeFilter} 
+            onChange={(e) => setFileTypeFilter(e.target.value)}
+            className="filter-select"
+          >
+            <option value="all">All Files</option>
+            <option value="folder">Folders</option>
+            <option value="video">Videos</option>
+            <option value="audio">Audio</option>
+            <option value="photo">Photos</option>
+          </select>
+        </div>
+
+        {/* Sort Controls */}
+        <div className="sort-controls">
+          <label>Sort by:</label>
+          <select 
+            value={sortBy} 
+            onChange={(e) => setSortBy(e.target.value)}
+            className="sort-select"
+          >
+            <option value="name">Name</option>
+            <option value="size">Size</option>
+            <option value="modified">Modified</option>
+            <option value="type">Type</option>
+            {searchResults && <option value="relevance">Relevance</option>}
+          </select>
+          <button 
+            onClick={() => setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc')}
+            className="sort-order-button"
+          >
+            {sortOrder === 'asc' ? '⬆️' : '⬇️'}
+          </button>
+        </div>
+
+        {/* Page Size Control */}
+        <div className="page-size-controls">
+          <label>Items per page:</label>
+          <select 
+            value={pageSize} 
+            onChange={(e) => setPageSize(Number(e.target.value))}
+            className="page-size-select"
+          >
+            <option value="100">100</option>
+            <option value="200">200</option>
+            <option value="500">500</option>
+            <option value="1000">1000</option>
+          </select>
+        </div>
+      </div>
+
+      {/* Navigation and View Controls */}
       {!searchResults && (
         <div className="navigation-section">
-          {renderBreadcrumbs()}
+          {renderBreadcrumbs}
           <div className="view-controls">
             <button 
               className={`view-button ${viewMode === 'grid' ? 'active' : ''}`}
@@ -478,12 +557,15 @@ const FileExplorer = ({ accessToken, currentFolder: parentCurrentFolder, onFolde
         </div>
       )}
 
-      {/* Content Area */}
-      <div className="content-area">
-        {loading ? (
+      {/* Performance Stats */}
+      {performanceStats}
+
+      {/* Content Area with Virtual Scrolling */}
+      <div className="content-area" onScroll={handleScroll}>
+        {loading && currentPage === 1 ? (
           <div className="loading">
             <div className="loading-spinner"></div>
-            <p>Loading...</p>
+            <p>Loading {searchResults ? 'search results' : 'folder contents'}...</p>
           </div>
         ) : error ? (
           <div className="error-state">
@@ -494,23 +576,45 @@ const FileExplorer = ({ accessToken, currentFolder: parentCurrentFolder, onFolde
               Try Again
             </button>
           </div>
-        ) : searchResults ? (
-          <div className="search-results">
-            <h2>Search Results ({searchResults.total} found)</h2>
-            {renderItems(searchResults.results)}
+        ) : allItems.length === 0 ? (
+          <div className="empty-folder">
+            <div className="empty-icon">📂</div>
+            <h3>{searchResults ? 'No search results' : 'Empty folder'}</h3>
+            <p>{searchResults ? 'Try a different search term.' : 'This folder doesn\'t contain any files or subfolders.'}</p>
           </div>
         ) : (
-          <div className="folder-contents">
-            {folderContents && (
-              <div className="folder-info">
-                <h2>📁 {folderContents.current_folder}</h2>
-                {folderContents.total_size > 0 && (
-                  <p className="folder-size">Total size: {formatFileSize(folderContents.total_size)}</p>
+          <>
+            {/* Use virtual scrolling for large lists */}
+            {allItems.length > 100 && viewMode === 'list' ? (
+              <VirtualizedList
+                items={allItems}
+                renderItem={renderItem}
+                itemHeight={60}
+                containerHeight={600}
+                overscan={10}
+              />
+            ) : (
+              <div className={`items-container ${viewMode}`}>
+                {allItems.map((item, index) => renderItem(item, index))}
+              </div>
+            )}
+            
+            {/* Load More Button / Infinite Scroll Indicator */}
+            {hasMore && (
+              <div className="load-more-section">
+                {loadingMore ? (
+                  <div className="loading-more">
+                    <div className="loading-spinner"></div>
+                    <p>Loading more items...</p>
+                  </div>
+                ) : (
+                  <button onClick={loadMore} className="load-more-button">
+                    Load More Items
+                  </button>
                 )}
               </div>
             )}
-            {renderItems(allItems)}
-          </div>
+          </>
         )}
       </div>
     </div>
