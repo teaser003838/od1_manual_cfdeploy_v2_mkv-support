@@ -156,7 +156,7 @@ async def auth_callback(code: str, state: Optional[str] = None):
         
     except Exception as e:
         logger.error(f"Callback error: {str(e)}")
-        frontend_url = os.getenv("FRONTEND_URL", "https://cc4f05b5-80f4-4006-9ece-f0d0868de48a.preview.emergentagent.com")
+        frontend_url = os.getenv("FRONTEND_URL", "https://onedrive-media-app.pages.dev")
         return RedirectResponse(url=f"{frontend_url}?error=callback_failed")
 
 async def get_user_info(access_token: str):
