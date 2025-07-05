@@ -125,7 +125,10 @@ function getAuthToken(request) {
 }
 
 // Root page handler for worker direct access
-function handleRootPage(corsHeaders) {
+function handleRootPage(request, corsHeaders) {
+  const url = new URL(request.url);
+  const workerUrl = `${url.protocol}//${url.host}`;
+  
   const html = `
     <!DOCTYPE html>
     <html>
@@ -159,7 +162,7 @@ function handleRootPage(corsHeaders) {
         
         <h2>🔧 Configuration:</h2>
         <p>Make sure your Cloudflare Pages environment variable points to this Worker:</p>
-        <p><code>REACT_APP_BACKEND_URL=${new URL(self.location).origin}</code></p>
+        <p><code>REACT_APP_BACKEND_URL=${workerUrl}</code></p>
         
         <h2>🧪 Quick Test:</h2>
         <p><a href="/api/health" target="_blank">Test Health Endpoint</a></p>
