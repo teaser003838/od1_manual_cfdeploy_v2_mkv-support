@@ -154,6 +154,7 @@ function App() {
     setCurrentView('explorer');
     setSelectedItem(null);
     setAllPhotos([]);
+    setVideoPlaylist([]);
     // Note: We keep currentFolder unchanged so user returns to the same directory
   };
 
