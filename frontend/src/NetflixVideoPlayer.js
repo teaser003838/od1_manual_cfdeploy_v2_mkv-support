@@ -677,128 +677,130 @@ const NetflixVideoPlayer = ({ video, backendUrl, accessToken, onBack, onNextVide
         )}
 
         {/* Progress Bar */}
-        <div className="netflix-progress-container">
-          <div 
-            className="netflix-progress-bar"
-            ref={progressBarRef}
-            onClick={handleSeek}
-            onMouseMove={handleProgressHover}
-            onMouseLeave={() => setPreviewTime(null)}
-          >
-            {/* Buffered ranges */}
-            {bufferedRanges.map((range, index) => (
-              <div
-                key={index}
-                className="netflix-buffered-range"
-                style={{
-                  left: `${(range.start / duration) * 100}%`,
-                  width: `${((range.end - range.start) / duration) * 100}%`
-                }}
-              />
-            ))}
-            
-            {/* Progress fill */}
+        <div className="netflix-bottom-section">
+          <div className="netflix-progress-container">
             <div 
-              className="netflix-progress-fill"
-              style={{ width: `${(currentTime / duration) * 100}%` }}
-            />
-            
-            {/* Progress handle */}
-            <div 
-              className="netflix-progress-handle"
-              style={{ left: `${(currentTime / duration) * 100}%` }}
-            />
-            
-            {/* Preview thumbnail */}
-            {previewTime && (
-              <div 
-                className="netflix-preview-thumbnail"
-                style={{ left: `${(previewTime / duration) * 100}%` }}
-              >
-                <div className="netflix-preview-time">
-                  {formatTime(previewTime)}
-                </div>
-              </div>
-            )}
-          </div>
-        </div>
-
-        {/* Bottom Controls */}
-        <div className="netflix-bottom-controls">
-          <div className="netflix-left-controls">
-            <button className="netflix-control-button netflix-play-pause" onClick={togglePlay}>
-              {isPlaying ? '⏸️' : '▶️'}
-            </button>
-            
-            <button className="netflix-control-button" onClick={() => skipTime(-10)}>
-              ⏪
-            </button>
-            
-            <button className="netflix-control-button" onClick={() => skipTime(10)}>
-              ⏩
-            </button>
-            
-            <div 
-              className="netflix-volume-container"
-              onMouseEnter={() => setShowVolumeSlider(true)}
-              onMouseLeave={() => setShowVolumeSlider(false)}
+              className="netflix-progress-bar"
+              ref={progressBarRef}
+              onClick={handleSeek}
+              onMouseMove={handleProgressHover}
+              onMouseLeave={() => setPreviewTime(null)}
             >
-              <button className="netflix-control-button" onClick={toggleMute}>
-                {isMuted || volume === 0 ? '🔇' : volume < 0.5 ? '🔉' : '🔊'}
-              </button>
+              {/* Buffered ranges */}
+              {bufferedRanges.map((range, index) => (
+                <div
+                  key={index}
+                  className="netflix-buffered-range"
+                  style={{
+                    left: `${(range.start / duration) * 100}%`,
+                    width: `${((range.end - range.start) / duration) * 100}%`
+                  }}
+                />
+              ))}
               
-              {showVolumeSlider && (
-                <div className="netflix-volume-slider">
-                  <input
-                    type="range"
-                    min="0"
-                    max="1"
-                    step="0.01"
-                    value={isMuted ? 0 : volume}
-                    onChange={(e) => {
-                      const newVolume = parseFloat(e.target.value);
-                      setVolume(newVolume);
-                      setIsMuted(newVolume === 0);
-                      if (videoRef.current) {
-                        videoRef.current.volume = newVolume;
-                      }
-                    }}
-                  />
+              {/* Progress fill */}
+              <div 
+                className="netflix-progress-fill"
+                style={{ width: `${(currentTime / duration) * 100}%` }}
+              />
+              
+              {/* Progress handle */}
+              <div 
+                className="netflix-progress-handle"
+                style={{ left: `${(currentTime / duration) * 100}%` }}
+              />
+              
+              {/* Preview thumbnail */}
+              {previewTime && (
+                <div 
+                  className="netflix-preview-thumbnail"
+                  style={{ left: `${(previewTime / duration) * 100}%` }}
+                >
+                  <div className="netflix-preview-time">
+                    {formatTime(previewTime)}
+                  </div>
                 </div>
               )}
             </div>
-            
-            <div className="netflix-time-display">
-              {formatTime(currentTime)} / {formatTime(duration)}
-            </div>
           </div>
 
-          <div className="netflix-right-controls">
-            {subtitles.length > 0 && (
+          {/* Bottom Controls */}
+          <div className="netflix-bottom-controls">
+            <div className="netflix-left-controls">
+              <button className="netflix-control-button netflix-play-pause" onClick={togglePlay}>
+                {isPlaying ? '⏸️' : '▶️'}
+              </button>
+              
+              <button className="netflix-control-button" onClick={() => skipTime(-10)}>
+                ⏪
+              </button>
+              
+              <button className="netflix-control-button" onClick={() => skipTime(10)}>
+                ⏩
+              </button>
+              
+              <div 
+                className="netflix-volume-container"
+                onMouseEnter={() => setShowVolumeSlider(true)}
+                onMouseLeave={() => setShowVolumeSlider(false)}
+              >
+                <button className="netflix-control-button" onClick={toggleMute}>
+                  {isMuted || volume === 0 ? '🔇' : volume < 0.5 ? '🔉' : '🔊'}
+                </button>
+                
+                {showVolumeSlider && (
+                  <div className="netflix-volume-slider">
+                    <input
+                      type="range"
+                      min="0"
+                      max="1"
+                      step="0.01"
+                      value={isMuted ? 0 : volume}
+                      onChange={(e) => {
+                        const newVolume = parseFloat(e.target.value);
+                        setVolume(newVolume);
+                        setIsMuted(newVolume === 0);
+                        if (videoRef.current) {
+                          videoRef.current.volume = newVolume;
+                        }
+                      }}
+                    />
+                  </div>
+                )}
+              </div>
+              
+              <div className="netflix-time-display">
+                {formatTime(currentTime)} / {formatTime(duration)}
+              </div>
+            </div>
+
+            <div className="netflix-right-controls">
+              {subtitles.length > 0 && (
+                <button 
+                  className="netflix-control-button"
+                  onClick={() => setShowSubtitleMenu(!showSubtitleMenu)}
+                >
+                  📝
+                </button>
+              )}
+              
               <button 
                 className="netflix-control-button"
-                onClick={() => setShowSubtitleMenu(!showSubtitleMenu)}
+                onClick={() => setShowQualityMenu(!showQualityMenu)}
               >
-                📝
+                HD
               </button>
-            )}
-            
-            <button 
-              className="netflix-control-button"
-              onClick={() => setShowQualityMenu(!showQualityMenu)}
-            >
-              HD
-            </button>
-            
-            {document.pictureInPictureEnabled && (
-              <button className="netflix-control-button" onClick={togglePictureInPicture}>
-                📺
+              
+              {document.pictureInPictureEnabled && (
+                <button className="netflix-control-button" onClick={togglePictureInPicture}>
+                  📺
+                </button>
+              )}
+              
+              <button className="netflix-control-button" onClick={toggleFullscreen}>
+                {isFullscreen ? '🗗' : '⛶'}
               </button>
-            )}
-            
-            <button className="netflix-control-button" onClick={toggleFullscreen}>
-              {isFullscreen ? '🗗' : '⛶'}
-            </button>
+            </div>
           </div>
         </div>
 
