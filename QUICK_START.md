@@ -37,10 +37,14 @@
 
 ### Option 3: Manual Deploy
 
+📋 **[Complete Manual Deploy Guide](MANUAL_DEPLOY_GUIDE.md)**
+🗄️ **[Neon Database Setup Guide](NEON_DATABASE_GUIDE.md)**
+
 1. **Push to GitHub**
-2. **Import in Vercel**: vercel.com/new
-3. **Add environment variables**
-4. **Deploy**
+2. **Set up Neon Database** → Get DATABASE_URL
+3. **Import in Vercel**: vercel.com/new
+4. **Add environment variables**
+5. **Deploy and test**
 
 ## 🔧 Environment Variables (Required)
 
