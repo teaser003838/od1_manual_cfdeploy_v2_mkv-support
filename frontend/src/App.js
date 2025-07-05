@@ -8,9 +8,7 @@ import './App.css';
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL || (process.env.NODE_ENV === 'production' ? '' : 'http://localhost:8001');
 
 function App() {
-  const [isPasswordAuthenticated, setIsPasswordAuthenticated] = useState(false);
   const [isOneDriveAuthenticated, setIsOneDriveAuthenticated] = useState(false);
-  const [password, setPassword] = useState('');
   const [accessToken, setAccessToken] = useState(null);
   const [currentView, setCurrentView] = useState('explorer'); // 'explorer', 'video', 'audio', 'photo'
   const [selectedItem, setSelectedItem] = useState(null);
@@ -20,13 +18,8 @@ function App() {
   const [error, setError] = useState('');
 
   useEffect(() => {
-    // Check for existing sessions
-    const savedPasswordAuth = localStorage.getItem('password_authenticated');
+    // Check for existing OneDrive access token
     const savedAccessToken = localStorage.getItem('access_token');
-    
-    if (savedPasswordAuth === 'true') {
-      setIsPasswordAuthenticated(true);
-    }
     
     if (savedAccessToken) {
       setAccessToken(savedAccessToken);
@@ -55,36 +48,6 @@ function App() {
       window.history.replaceState({}, document.title, window.location.pathname);
     }
   }, [isOneDriveAuthenticated]);
-
-  const handlePasswordLogin = async (e) => {
-    e.preventDefault();
-    setLoading(true);
-    setError('');
-
-    try {
-      const response = await fetch(`${BACKEND_URL}/api/auth/password`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ password }),
-      });
-
-      if (response.ok) {
-        const data = await response.json();
-        setIsPasswordAuthenticated(true);
-        localStorage.setItem('password_authenticated', 'true');
-        setPassword('');
-      } else {
-        setError('Invalid password. Please try again.');
-      }
-    } catch (error) {
-      console.error('Password authentication failed:', error);
-      setError('Authentication failed. Please try again.');
-    } finally {
-      setLoading(false);
-    }
-  };
 
   const handleOneDriveLogin = async () => {
     try {
@@ -132,52 +95,13 @@ function App() {
   };
 
   const handleLogout = () => {
-    localStorage.removeItem('password_authenticated');
     localStorage.removeItem('access_token');
-    setIsPasswordAuthenticated(false);
     setIsOneDriveAuthenticated(false);
     setAccessToken(null);
     setSelectedItem(null);
     setCurrentView('explorer');
-    setPassword('');
     setError('');
   };
-
-  // Password Authentication Screen
-  if (!isPasswordAuthenticated) {
-    return (
-      <div className="login-container">
-        <div className="login-card">
-          <h1>🗂️ OneDrive Explorer</h1>
-          <p>Secure access to your OneDrive files</p>
-          
-          {error && (
-            <div className="error-message">
-              ⚠️ {error}
-            </div>
-          )}
-          
-          <form onSubmit={handlePasswordLogin} className="password-form">
-            <input
-              type="password"
-              placeholder="Enter access password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              className="password-input"
-              required
-            />
-            <button 
-              type="submit" 
-              className="login-button"
-              disabled={loading}
-            >
-              {loading ? 'Authenticating...' : 'Access Explorer'}
-            </button>
-          </form>
-        </div>
-      </div>
-    );
-  }
 
   // OneDrive Authentication Screen
   if (!isOneDriveAuthenticated) {
@@ -195,10 +119,6 @@ function App() {
           
           <button onClick={handleOneDriveLogin} className="login-button">
             Sign in with Microsoft OneDrive
-          </button>
-          
-          <button onClick={handleLogout} className="logout-link">
-            ← Back to Password Login
           </button>
         </div>
       </div>
