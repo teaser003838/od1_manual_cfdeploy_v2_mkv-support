@@ -46,18 +46,18 @@ Deploy to **Cloudflare** for FREE:
 
 
 
-## 🔧 Local Development
+### 🔧 Local Development
 
 ```bash
 # Frontend
 cd frontend
-yarn install
-yarn start
+npm install
+npm start
 
-# Backend (original)
+# Backend (original FastAPI version)
 cd backend
 pip install -r requirements.txt
-uvicorn server:app --reload
+python server.py
 ```
 
 ## 🎯 Production Features
