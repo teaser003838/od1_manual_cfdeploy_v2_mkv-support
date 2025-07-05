@@ -1,0 +1,5 @@
+# Cloudflare Pages redirects configuration
+# This file handles client-side routing for the React app
+
+# Redirect all non-file requests to index.html for client-side routing
+/*    /index.html   200
