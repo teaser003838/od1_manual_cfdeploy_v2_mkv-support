@@ -1,50 +1,31 @@
-# ⚡ Quick Start Guide - Vercel Deployment
+# 🚀 DIRECT DEPLOYMENT - NO GIT ISSUES
 
-## 🚀 Deploy in 5 Minutes
+## Skip All Git Problems
 
-### Prerequisites
-- Vercel account
-- Your Azure API credentials
+### Option 1: Vercel CLI (Recommended - No Git Required)
 
-### Option 1: One-Click Deploy (Fastest)
+```bash
+# Install and login
+npm i -g vercel
+vercel login
 
-1. **Click Deploy Button** (will be generated after pushing to GitHub):
-   [![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=YOUR_GITHUB_REPO_URL)
+# Deploy directly from this folder
+cd /app
+vercel --prod
+```
 
-2. **Set Environment Variables** during deployment:
-   ```
-   AZURE_CLIENT_ID=37fb551b-33c1-4dd0-8c16-5ead6f0f2b45
-   AZURE_CLIENT_SECRET=_IW8Q~l-15ff~RpMif-PfScDyFbV9rn92Hx5Laz5
-   AZURE_TENANT_ID=f2c9e08f-779f-4dd6-9f7b-da627fd90983
-   ```
+### Option 2: ZIP Upload
 
-3. **Add Neon Database**: Enable Neon integration during setup
+1. **Create ZIP**:
+```bash
+cd /app
+zip -r onedrive-netflix.zip . -x "node_modules/*" "backend/*" "*.git*"
+```
 
-### Option 2: CLI Deploy
-
-1. **Install Vercel CLI**:
-   ```bash
-   npm i -g vercel
-   ```
-
-2. **Run deployment script**:
-   ```bash
-   chmod +x deploy-vercel.sh
-   ./deploy-vercel.sh
-   ```
-
-3. **Follow prompts** and set environment variables
-
-### Option 3: Manual Deploy
-
-📋 **[Complete Manual Deploy Guide](MANUAL_DEPLOY_GUIDE.md)**
-🗄️ **[Neon Database Setup Guide](NEON_DATABASE_GUIDE.md)**
-
-1. **Push to GitHub**
-2. **Set up Neon Database** → Get DATABASE_URL
-3. **Import in Vercel**: vercel.com/new
-4. **Add environment variables**
-5. **Deploy and test**
+2. **Upload ZIP to Vercel**: https://vercel.com/new
+3. **Set build settings**:
+   - Build command: `yarn vercel-build`
+   - Output directory: `frontend/build`
 
 ## 🔧 Environment Variables (Required)
 
