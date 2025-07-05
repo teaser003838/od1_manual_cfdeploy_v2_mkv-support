@@ -8,6 +8,6 @@
     "vercel-build": "cd frontend && yarn install && yarn build"
   },
   "engines": {
-    "node": "18.x"
+    "node": "20.x"
   }
 }
