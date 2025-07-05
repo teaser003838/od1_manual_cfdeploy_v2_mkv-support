@@ -44,11 +44,7 @@ Deploy to **Cloudflare** for FREE:
 - **Storage**: Microsoft OneDrive via Graph API
 - **Hosting**: Cloudflare Pages + Workers
 
-## 📚 Documentation
 
-- **[🚀 QUICK_START.md](QUICK_START.md)** - Deploy in 5 minutes
-- **[📖 DEPLOYMENT_GUIDE.md](DEPLOYMENT_GUIDE.md)** - Complete deployment guide
-- **[🔄 ARCHITECTURE_CHANGES.md](ARCHITECTURE_CHANGES.md)** - Technical changes for Vercel
 
 ## 🔧 Local Development
 
