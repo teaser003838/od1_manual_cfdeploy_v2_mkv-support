@@ -51,13 +51,14 @@ FRONTEND_URL=https://your-app.vercel.app
 REACT_APP_BACKEND_URL=https://your-app.vercel.app
 ```
 
-## 🏗️ Architecture
+### 🏗️ Architecture
 
-- **Frontend**: React + TailwindCSS (Static Site)
-- **Backend**: FastAPI (Serverless Functions)
-- **Database**: PostgreSQL via Neon
-- **Authentication**: Azure OAuth + Password
+- **Frontend**: React with Tailwind CSS
+- **Backend**: Cloudflare Workers (originally FastAPI)
+- **Database**: Cloudflare D1 (SQLite)
+- **Authentication**: Microsoft OneDrive OAuth
 - **Storage**: Microsoft OneDrive via Graph API
+- **Hosting**: Cloudflare Pages + Workers
 
 ## 📚 Documentation
 
