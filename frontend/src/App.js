@@ -51,15 +51,43 @@ function App() {
 
   const handleOneDriveLogin = async () => {
     try {
+      console.log('Attempting to login with backend URL:', BACKEND_URL);
       const response = await fetch(`${BACKEND_URL}/api/auth/login`);
+      console.log('Response status:', response.status);
+      console.log('Response headers:', response.headers);
+      
+      // Check if response is ok before parsing
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error('Response not ok:', response.status, errorText);
+        setError(`Login failed with status ${response.status}: ${errorText}`);
+        return;
+      }
+      
+      // Check content type
+      const contentType = response.headers.get('content-type');
+      console.log('Content-Type:', contentType);
+      
+      if (!contentType || !contentType.includes('application/json')) {
+        const responseText = await response.text();
+        console.error('Response is not JSON:', responseText);
+        setError('Server returned non-JSON response. Please try again.');
+        return;
+      }
+      
       const data = await response.json();
+      console.log('Login response data:', data);
       
       if (data.auth_url) {
         window.location.href = data.auth_url;
+      } else {
+        setError('No auth URL received from server.');
       }
     } catch (error) {
       console.error('OneDrive login failed:', error);
-      setError('OneDrive login failed. Please try again.');
+      console.error('Error type:', error.constructor.name);
+      console.error('Error message:', error.message);
+      setError(`OneDrive login failed: ${error.message}`);
     }
   };
 
