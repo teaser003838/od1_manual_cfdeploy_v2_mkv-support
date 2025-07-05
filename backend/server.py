@@ -151,7 +151,7 @@ async def auth_callback(code: str, state: Optional[str] = None):
             )
         
         # Redirect to frontend with access token
-        frontend_url = os.getenv("FRONTEND_URL", "https://onedrive-media-app.pages.dev")
+        frontend_url = os.getenv("FRONTEND_URL", "https://cc4f05b5-80f4-4006-9ece-f0d0868de48a.preview.emergentagent.com")
         return RedirectResponse(url=f"{frontend_url}?access_token={result['access_token']}")
         
     except Exception as e:
