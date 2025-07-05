@@ -124,6 +124,58 @@ function getAuthToken(request) {
   return null;
 }
 
+// Root page handler for worker direct access
+function handleRootPage(corsHeaders) {
+  const html = `
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <title>OneDrive Media Streaming API</title>
+        <style>
+            body { font-family: Arial, sans-serif; max-width: 800px; margin: 50px auto; padding: 20px; }
+            .status { color: green; font-weight: bold; }
+            .endpoint { background: #f5f5f5; padding: 10px; margin: 10px 0; border-radius: 5px; }
+            .note { background: #e3f2fd; padding: 15px; border-radius: 5px; margin: 20px 0; }
+        </style>
+    </head>
+    <body>
+        <h1>🚀 OneDrive Media Streaming API</h1>
+        <p class="status">✅ Worker is running successfully!</p>
+        
+        <div class="note">
+            <h3>📌 Important Note:</h3>
+            <p>This is the <strong>API backend</strong>. To access the main application, visit your <strong>Cloudflare Pages URL</strong> instead.</p>
+            <p>Example: <code>https://your-app.pages.dev</code></p>
+        </div>
+        
+        <h2>📋 Available API Endpoints:</h2>
+        <div class="endpoint"><strong>GET</strong> /api/health - Health check</div>
+        <div class="endpoint"><strong>GET</strong> /api/auth/login - Start OAuth login</div>
+        <div class="endpoint"><strong>GET</strong> /api/auth/callback - OAuth callback</div>
+        <div class="endpoint"><strong>GET</strong> /api/explorer/browse - Browse OneDrive folders</div>
+        <div class="endpoint"><strong>GET</strong> /api/explorer/search - Search files</div>
+        <div class="endpoint"><strong>GET</strong> /api/stream/{file_id} - Stream media files</div>
+        <div class="endpoint"><strong>POST/GET</strong> /api/watch-history - Manage watch history</div>
+        
+        <h2>🔧 Configuration:</h2>
+        <p>Make sure your Cloudflare Pages environment variable points to this Worker:</p>
+        <p><code>REACT_APP_BACKEND_URL=${new URL(self.location).origin}</code></p>
+        
+        <h2>🧪 Quick Test:</h2>
+        <p><a href="/api/health" target="_blank">Test Health Endpoint</a></p>
+    </body>
+    </html>
+  `;
+  
+  return new Response(html, {
+    status: 200,
+    headers: {
+      ...corsHeaders,
+      'Content-Type': 'text/html',
+    },
+  });
+}
+
 // Health check endpoint
 function handleHealthCheck(corsHeaders) {
   return jsonResponse(
