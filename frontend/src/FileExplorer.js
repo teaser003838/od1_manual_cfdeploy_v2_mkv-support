@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import './FileExplorer.css';
 
-const BACKEND_URL = process.env.REACT_APP_BACKEND_URL || 'http://localhost:8001';
+const BACKEND_URL = process.env.REACT_APP_BACKEND_URL || (process.env.NODE_ENV === 'production' ? '' : 'http://localhost:8001');
 
 const FileExplorer = ({ accessToken, currentFolder: parentCurrentFolder, onFolderChange, onPlayVideo, onViewPhoto, onPlayAudio }) => {
   const [currentFolder, setCurrentFolder] = useState(parentCurrentFolder || 'root');
