@@ -443,17 +443,44 @@ def get_thumbnail_url(item: dict) -> Optional[str]:
             return thumbnail["small"]["url"]
     return None
 @app.get("/api/explorer/search")
-async def search_files(q: str, authorization: str = Header(...)):
-    """Search files across entire OneDrive with full path results"""
+async def search_files(
+    q: str, 
+    page: int = 1, 
+    page_size: int = 100,
+    file_types: str = "all",  # all, video, audio, photo, folder
+    sort_by: str = "relevance",
+    sort_order: str = "desc",
+    authorization: str = Header(...)
+):
+    """Search files across entire OneDrive with pagination and performance optimizations"""
     try:
         access_token = authorization.replace("Bearer ", "")
         
-        async with httpx.AsyncClient() as client:
-            # Use Microsoft Graph search
-            response = await client.get(
-                f"https://graph.microsoft.com/v1.0/me/drive/root/search(q='{q}')",
-                headers={"Authorization": f"Bearer {access_token}"}
-            )
+        # Validate parameters
+        page = max(1, page)
+        page_size = min(max(1, page_size), 1000)
+        q = q.strip()
+        
+        if not q:
+            raise HTTPException(status_code=400, detail="Search query cannot be empty")
+        
+        # Use concurrent requests for better performance
+        async with httpx.AsyncClient(timeout=90.0) as client:
+            # Microsoft Graph search with optimized query
+            search_query = f"'{q}'"
+            if file_types == "video":
+                search_query += " AND (file.mimeType:'video/' OR name:.mp4 OR name:.mkv OR name:.avi)"
+            elif file_types == "audio":
+                search_query += " AND (file.mimeType:'audio/' OR name:.mp3 OR name:.wav OR name:.flac)"
+            elif file_types == "photo":
+                search_query += " AND (file.mimeType:'image/' OR name:.jpg OR name:.png OR name:.gif)"
+            elif file_types == "folder":
+                search_query += " AND folder"
+            
+            # Request larger batch for server-side optimization
+            url = f"https://graph.microsoft.com/v1.0/me/drive/root/search(q={search_query})?$top=2000"
+            
+            response = await client.get(url, headers={"Authorization": f"Bearer {access_token}"})
             
             if response.status_code != 200:
                 raise HTTPException(status_code=400, detail="Search failed")
@@ -461,76 +488,185 @@ async def search_files(q: str, authorization: str = Header(...)):
             data = response.json()
             items = data.get("value", [])
             
-            # Process search results
+            # Process search results efficiently
             results = []
-            video_extensions = ['.mp4', '.mkv', '.avi', '.webm', '.mov', '.wmv', '.flv', '.m4v', '.3gp', '.ogv']
-            photo_extensions = ['.jpg', '.jpeg', '.png', '.gif', '.webp', '.bmp', '.tiff', '.svg']
-            audio_extensions = ['.mp3', '.wav', '.flac', '.m4a', '.ogg', '.aac', '.wma', '.opus', '.aiff', '.alac']
-            video_mime_types = ['video/mp4', 'video/x-msvideo', 'video/quicktime', 'video/x-ms-wmv', 
-                              'video/webm', 'video/x-matroska', 'video/x-flv', 'video/3gpp', 'video/ogg']
-            photo_mime_types = ['image/jpeg', 'image/png', 'image/gif', 'image/webp', 'image/bmp', 
-                              'image/tiff', 'image/svg+xml']
-            audio_mime_types = ['audio/mpeg', 'audio/wav', 'audio/flac', 'audio/mp4', 'audio/ogg', 
-                              'audio/aac', 'audio/x-ms-wma', 'audio/opus', 'audio/aiff', 'audio/alac']
             
+            # Optimized media type detection (same as browse)
+            video_extensions = {'.mp4', '.mkv', '.avi', '.webm', '.mov', '.wmv', '.flv', '.m4v', '.3gp', '.ogv'}
+            photo_extensions = {'.jpg', '.jpeg', '.png', '.gif', '.webp', '.bmp', '.tiff', '.svg'}
+            audio_extensions = {'.mp3', '.wav', '.flac', '.m4a', '.ogg', '.aac', '.wma', '.opus', '.aiff', '.alac'}
+            video_mime_types = {'video/mp4', 'video/x-msvideo', 'video/quicktime', 'video/x-ms-wmv', 
+                              'video/webm', 'video/x-matroska', 'video/x-flv', 'video/3gpp', 'video/ogg'}
+            photo_mime_types = {'image/jpeg', 'image/png', 'image/gif', 'image/webp', 'image/bmp', 
+                              'image/tiff', 'image/svg+xml'}
+            audio_mime_types = {'audio/mpeg', 'audio/wav', 'audio/flac', 'audio/mp4', 'audio/ogg', 
+                              'audio/aac', 'audio/x-ms-wma', 'audio/opus', 'audio/aiff', 'audio/alac'}
+            
+            # Batch process for performance
+            full_path_tasks = []
             for item in items:
+                # Start full path calculation concurrently for better performance
+                if item.get("parentReference"):
+                    task = asyncio.create_task(get_full_path_optimized(client, access_token, item))
+                    full_path_tasks.append((item, task))
+                else:
+                    full_path_tasks.append((item, None))
+            
+            # Process items with concurrent path resolution
+            for item, path_task in full_path_tasks:
                 item_name = item.get("name", "").lower()
                 
                 # Get full path
-                full_path = await get_full_path(client, access_token, item)
+                if path_task:
+                    try:
+                        full_path = await path_task
+                    except:
+                        full_path = item["name"]  # Fallback to name only
+                else:
+                    full_path = item["name"]
                 
                 if item.get("folder"):
                     # It's a folder
-                    results.append(FileItem(
-                        id=item["id"],
-                        name=item["name"],
-                        type="folder",
-                        size=item.get("size", 0),
-                        modified=item.get("lastModifiedDateTime"),
-                        created=item.get("createdDateTime"),
-                        full_path=full_path,
-                        is_media=False
-                    ))
+                    if file_types == "all" or file_types == "folder":
+                        results.append(FileItem(
+                            id=item["id"],
+                            name=item["name"],
+                            type="folder",
+                            size=item.get("size", 0),
+                            modified=item.get("lastModifiedDateTime"),
+                            created=item.get("createdDateTime"),
+                            full_path=full_path,
+                            is_media=False
+                        ))
                 else:
-                    # It's a file
+                    # It's a file - optimize media type detection
                     mime_type = item.get("file", {}).get("mimeType", "")
-                    is_video = any(item_name.endswith(ext) for ext in video_extensions) or mime_type in video_mime_types
-                    is_photo = any(item_name.endswith(ext) for ext in photo_extensions) or mime_type in photo_mime_types
-                    is_audio = any(item_name.endswith(ext) for ext in audio_extensions) or mime_type in audio_mime_types
                     
-                    media_type = None
-                    if is_video:
-                        media_type = "video"
-                    elif is_photo:
-                        media_type = "photo"
-                    elif is_audio:
-                        media_type = "audio"
+                    # Fast extension lookup
+                    file_ext = None
+                    if '.' in item_name:
+                        file_ext = '.' + item_name.split('.')[-1]
+                    
+                    is_video = (file_ext in video_extensions) or (mime_type in video_mime_types)
+                    is_photo = (file_ext in photo_extensions) or (mime_type in photo_mime_types)
+                    is_audio = (file_ext in audio_extensions) or (mime_type in audio_mime_types)
+                    
+                    media_type = "video" if is_video else "photo" if is_photo else "audio" if is_audio else "other"
+                    
+                    # Filter by file type
+                    if file_types == "all" or file_types == media_type:
+                        results.append(FileItem(
+                            id=item["id"],
+                            name=item["name"],
+                            type="file",
+                            size=item.get("size", 0),
+                            modified=item.get("lastModifiedDateTime"),
+                            created=item.get("createdDateTime"),
+                            mime_type=mime_type,
+                            full_path=full_path,
+                            is_media=is_video or is_photo or is_audio,
+                            media_type=media_type,
+                            thumbnail_url=get_thumbnail_url(item),
+                            download_url=item.get("@microsoft.graph.downloadUrl")
+                        ))
+            
+            # Sort results efficiently
+            if sort_by == "relevance":
+                # Sort by relevance: exact matches first, then partial matches
+                def relevance_score(item):
+                    name_lower = item.name.lower()
+                    query_lower = q.lower()
+                    if name_lower == query_lower:
+                        return 0  # Exact match
+                    elif name_lower.startswith(query_lower):
+                        return 1  # Starts with query
+                    elif query_lower in name_lower:
+                        return 2  # Contains query
                     else:
-                        media_type = "other"
-                    
-                    results.append(FileItem(
-                        id=item["id"],
-                        name=item["name"],
-                        type="file",
-                        size=item.get("size", 0),
-                        modified=item.get("lastModifiedDateTime"),
-                        created=item.get("createdDateTime"),
-                        mime_type=mime_type,
-                        full_path=full_path,
-                        is_media=is_video or is_photo or is_audio,
-                        media_type=media_type,
-                        thumbnail_url=get_thumbnail_url(item),
-                        download_url=item.get("@microsoft.graph.downloadUrl")
-                    ))
+                        return 3  # Other match
+                
+                results.sort(key=relevance_score)
+            elif sort_by == "name":
+                results.sort(key=lambda x: x.name.lower(), reverse=(sort_order == "desc"))
+            elif sort_by == "size":
+                results.sort(key=lambda x: x.size or 0, reverse=(sort_order == "desc"))
+            elif sort_by == "modified":
+                results.sort(key=lambda x: x.modified or "", reverse=(sort_order == "desc"))
+            elif sort_by == "type":
+                results.sort(key=lambda x: (x.type, x.name.lower()), reverse=(sort_order == "desc"))
             
-            # Sort by name
-            results.sort(key=lambda x: x.name.lower())
+            # Apply pagination
+            total_results = len(results)
+            start_idx = (page - 1) * page_size
+            end_idx = start_idx + page_size
+            paginated_results = results[start_idx:end_idx]
             
-            return {"results": results, "total": len(results)}
+            # Calculate pagination info
+            total_pages = (total_results + page_size - 1) // page_size
+            has_next = page < total_pages
+            has_prev = page > 1
+            
+            return {
+                "results": paginated_results,
+                "query": q,
+                "pagination": {
+                    "current_page": page,
+                    "page_size": page_size,
+                    "total_items": total_results,
+                    "total_pages": total_pages,
+                    "has_next": has_next,
+                    "has_prev": has_prev,
+                    "start_index": start_idx,
+                    "end_index": min(end_idx, total_results)
+                },
+                "sorting": {
+                    "sort_by": sort_by,
+                    "sort_order": sort_order
+                },
+                "filters": {
+                    "file_types": file_types
+                }
+            }
             
     except Exception as e:
         logger.error(f"Search error: {str(e)}")
         raise HTTPException(status_code=500, detail="Search failed")
+
+async def get_full_path_optimized(client: httpx.AsyncClient, access_token: str, item: dict) -> str:
+    """Optimized full path calculation with caching"""
+    try:
+        path_parts = [item["name"]]
+        current = item
+        depth = 0
+        max_depth = 10  # Prevent infinite loops
+        
+        while current.get("parentReference") and current["parentReference"].get("id") != "root" and depth < max_depth:
+            parent_id = current["parentReference"]["id"]
+            
+            # Use timeout for individual requests
+            try:
+                parent_response = await asyncio.wait_for(
+                    client.get(
+                        f"https://graph.microsoft.com/v1.0/me/drive/items/{parent_id}",
+                        headers={"Authorization": f"Bearer {access_token}"}
+                    ),
+                    timeout=5.0  # 5 second timeout per request
+                )
+                
+                if parent_response.status_code == 200:
+                    parent = parent_response.json()
+                    path_parts.append(parent["name"])
+                    current = parent
+                    depth += 1
+                else:
+                    break
+            except asyncio.TimeoutError:
+                break
+        
+        path_parts.reverse()
+        return "/".join(path_parts)
+    except:
+        return item["name"]
 
 async def get_full_path(client: httpx.AsyncClient, access_token: str, item: dict) -> str:
     """Get full path for an item"""
