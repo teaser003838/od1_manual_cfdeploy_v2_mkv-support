@@ -1,13 +1,19 @@
 {
-  "name": "onedrive-netflix-app",
+  "name": "onedrive-explorer",
   "version": "1.0.0",
-  "description": "OneDrive Netflix-style file explorer and media player",
+  "description": "OneDrive Media Explorer - Stream videos, audio, and photos from OneDrive",
+  "main": "backend/server.py",
   "scripts": {
-    "build": "cd frontend && yarn install && yarn build",
-    "dev": "cd frontend && yarn start",
-    "vercel-build": "cd frontend && yarn install && yarn build"
+    "install": "cd frontend && yarn install",
+    "build": "cd frontend && yarn build",
+    "start": "cd backend && python -m uvicorn server:app --host 0.0.0.0 --port $PORT",
+    "dev": "cd frontend && yarn start"
   },
+  "keywords": ["onedrive", "media", "streaming", "fastapi", "react"],
+  "author": "OneDrive Explorer",
+  "license": "MIT",
   "engines": {
-    "node": "20.x"
+    "node": ">=18.0.0",
+    "python": ">=3.11.0"
   }
 }
