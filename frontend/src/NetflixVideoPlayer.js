@@ -568,6 +568,16 @@ const NetflixVideoPlayer = ({ video, backendUrl, accessToken, onBack, onNextVide
       onTouchEnd={handleContainerTouch}
       onClick={handleContainerClick}
     >
+      {/* Touch overlay for mobile fullscreen black areas */}
+      {isMobile && isFullscreen && (
+        <div 
+          className="netflix-touch-overlay"
+          onTouchStart={handleContainerTouch}
+          onTouchEnd={handleContainerTouch}
+          onClick={handleContainerClick}
+        />
+      )}
+
       {/* Video Element */}
       <video
         ref={videoRef}
