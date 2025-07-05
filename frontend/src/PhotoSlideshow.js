@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import './PhotoSlideshow.css';
 
-const BACKEND_URL = process.env.REACT_APP_BACKEND_URL || 'http://localhost:8001';
+const BACKEND_URL = process.env.REACT_APP_BACKEND_URL || (process.env.NODE_ENV === 'production' ? '' : 'http://localhost:8001');
 
 const PhotoSlideshow = ({ photo, accessToken, onBack, allPhotos = [] }) => {
   const [currentPhotoIndex, setCurrentPhotoIndex] = useState(0);
