@@ -31,7 +31,7 @@ export default {
     try {
       // Route handling
       if (path === '/') {
-        return handleRootPage(corsHeaders);
+        return handleRootPage(request, corsHeaders);
       }
       
       if (path === '/api/health') {
