@@ -397,6 +397,18 @@ frontend:
           agent: "main"
           comment: "FIXED VIDEO PLAYER NAVIGATION ISSUE: 1) Added currentFolder state to App component to track current directory, 2) Modified FileExplorer to accept currentFolder and onFolderChange props, 3) Updated navigation functions to sync folder state between App and FileExplorer, 4) Modified handleBackToExplorer to preserve currentFolder so users return to the same directory instead of home, 5) Added proper state synchronization between parent and child components. This fixes the issue where going back from video player would incorrectly navigate to home directory instead of the current folder."
 
+  - task: "OneDrive Login JSON Parsing Error Fix"
+    implemented: true
+    working: true
+    file: "/app/frontend/src/App.js"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+        - working: true
+          agent: "main"
+          comment: "CRITICAL BUG FIX: Fixed OneDrive login JSON parsing error reported by user: 'OneDrive login failed: SyntaxError: JSON.parse: unexpected character at line 1 column 1 of the JSON data' in Firefox browser. Enhanced handleOneDriveLogin function with: 1) Improved error logging with response status, headers, and content-type validation, 2) Added proper response.ok check before attempting JSON parsing, 3) Added content-type validation to ensure response is JSON before parsing, 4) Added detailed error messages for different failure scenarios, 5) Added fallback to response.text() when JSON parsing fails. Testing confirmed successful login with proper JSON response (status 200, content-type: application/json) and successful redirect to Microsoft authentication page."
+
 metadata:
   created_by: "main_agent"
   version: "1.1"
