@@ -604,5 +604,5 @@ async def get_watch_history(authorization: str = Header(...)):
 async def health_check():
     return {"status": "healthy", "service": "OneDrive File Explorer API"}
 
-# Export the app for Vercel
-app = app
+# Export the app for Cloudflare Workers
+# This endpoint is converted for Cloudflare deployment
