@@ -394,6 +394,7 @@
 .netflix-progress-container {
   padding: 0 50px 10px;
   position: relative;
+  margin-bottom: 0;
 }
 
 .netflix-progress-bar {
