@@ -1,0 +1,14 @@
+# Cloudflare Pages Build Configuration
+
+# Build command for React app
+npm run build
+
+# Publish directory
+build
+
+# Node.js version
+14.17.0
+
+# Environment variables (set these in Cloudflare Pages dashboard)
+# REACT_APP_BACKEND_URL=https://your-worker-name.your-subdomain.workers.dev
+# REACT_APP_FRONTEND_URL=https://your-pages-app.pages.dev
