@@ -1,16 +1,20 @@
-# 🎬 OneDrive Netflix - Vercel Deployment Ready
+# 🚀 OneDrive Media Streaming App
 
-A sophisticated OneDrive file explorer and media player with Netflix-style interface, now optimized for Vercel deployment.
+## Complete OneDrive Media Platform
 
-## ✨ Features
+A full-featured media streaming application that connects to your OneDrive account, allowing you to browse, stream, and enjoy your personal media collection from anywhere.
 
-- 🔐 **Dual Authentication**: Password + Microsoft OAuth
-- 📁 **File Explorer**: Browse OneDrive with search and filtering
-- 🎬 **Video Player**: Advanced video player with touch/keyboard controls
-- 🎵 **Audio Player**: Professional music player interface
-- 🖼️ **Photo Viewer**: Slideshow with zoom and navigation
-- 📱 **Mobile Optimized**: Touch gestures and responsive design
-- ⚡ **Serverless**: Optimized for Vercel's serverless architecture
+### ✨ Features
+
+- **🔐 OneDrive Authentication** - Secure Microsoft OAuth integration
+- **📱 Media Streaming** - Stream videos, audio, and view photos
+- **🗂️ File Explorer** - Browse OneDrive folders with breadcrumb navigation
+- **🔍 Smart Search** - Find files across your entire OneDrive
+- **🎬 Enhanced Video Player** - Supports MP4, MKV, AVI, WebM with seeking
+- **🎵 Professional Audio Player** - Full music player with controls for MP3, FLAC, WAV, M4A
+- **📸 Photo Slideshow** - Beautiful image viewer for your photos
+- **📊 Watch History** - Track your viewing activity
+- **📱 Mobile Optimized** - Touch controls and responsive design
 
 ## 🚀 Quick Deploy to Vercel
 
