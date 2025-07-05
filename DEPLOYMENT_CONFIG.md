@@ -1,111 +1,64 @@
 # Deployment Configuration Guide
 
-## Making Your App Independent from Emergent
+## Your Current Configuration
 
-This guide will help you configure your application to work with your own domain instead of the Emergent platform.
+This guide shows your current configuration for independent deployment.
 
-## Quick Setup for Cloudflare Deployment
+## Your Deployment URLs
 
-### 1. Update Environment Variables
+- **Cloudflare Pages**: `https://onedrive-media-app.pages.dev`
+- **Cloudflare Worker**: `https://onedrive-media-api.hul1hu.workers.dev`
 
-After deploying to Cloudflare, update these environment variables:
+## Required Environment Variables
 
-#### Frontend (.env in /frontend folder):
+### Cloudflare Pages Environment Variables
+
+Set these in your Cloudflare Pages dashboard:
 ```
-REACT_APP_BACKEND_URL=https://your-worker-name.your-subdomain.workers.dev
-WDS_SOCKET_PORT=443
-```
-
-#### Backend (.env in /backend folder - only needed for local development):
-```
-MONGO_URL=mongodb://localhost:27017
-AZURE_CLIENT_ID=37fb551b-33c1-4dd0-8c16-5ead6f0f2b45
-AZURE_CLIENT_SECRET=_IW8Q~l-15ff~RpMif-PfScDyFbV9rn92Hx5Laz5
-AZURE_TENANT_ID=f2c9e08f-779f-4dd6-9f7b-da627fd90983
-DB_NAME="test_database"
-REDIRECT_URI=https://your-pages-app.pages.dev/api/auth/callback
-FRONTEND_URL=https://your-pages-app.pages.dev
+REACT_APP_BACKEND_URL=https://onedrive-media-api.hul1hu.workers.dev
 ```
 
-### 2. Cloudflare Pages Environment Variables
+### Cloudflare Worker Environment Variables
 
-In your Cloudflare Pages dashboard, set:
-```
-REACT_APP_BACKEND_URL=https://your-worker-name.your-subdomain.workers.dev
-```
-
-### 3. Cloudflare Worker Environment Variables
-
-In your Cloudflare Worker dashboard, set:
+Set these in your Cloudflare Worker dashboard:
 ```
 AZURE_CLIENT_ID=37fb551b-33c1-4dd0-8c16-5ead6f0f2b45
 AZURE_CLIENT_SECRET=_IW8Q~l-15ff~RpMif-PfScDyFbV9rn92Hx5Laz5
 AZURE_TENANT_ID=f2c9e08f-779f-4dd6-9f7b-da627fd90983
-FRONTEND_URL=https://your-pages-app.pages.dev
+FRONTEND_URL=https://onedrive-media-app.pages.dev
+REDIRECT_URI=https://onedrive-media-api.hul1hu.workers.dev/api/auth/callback
 ```
 
-### 4. Update Azure OAuth Redirect URLs
+## Azure OAuth Configuration
 
-1. Go to Azure Portal → App registrations
-2. Find your app (Client ID: 37fb551b-33c1-4dd0-8c16-5ead6f0f2b45)
-3. Go to Authentication → Platform configurations
-4. Update redirect URIs to:
-   - `https://your-pages-app.pages.dev/api/auth/callback`
-   - `https://your-worker-name.your-subdomain.workers.dev/api/auth/callback`
+In your Azure Portal → App registrations → Authentication:
 
-### 5. Replace Placeholder URLs
+**Required Redirect URIs:**
+- `https://onedrive-media-api.hul1hu.workers.dev/api/auth/callback`
 
-Replace these placeholder URLs with your actual Cloudflare URLs:
+**CRITICAL**: Make sure the redirect URI points to your **Worker URL**, not your Pages URL!
 
-- `your-worker-name.your-subdomain.workers.dev` → Your Cloudflare Worker URL
-- `your-pages-app.pages.dev` → Your Cloudflare Pages URL
+## OAuth Flow Explanation
 
-## Example Configuration
+The correct OAuth flow should be:
+1. User clicks login → Frontend calls Worker `/api/auth/login`
+2. Worker generates Microsoft auth URL and returns it
+3. User is redirected to Microsoft
+4. Microsoft redirects to Worker `/api/auth/callback`
+5. Worker handles callback and redirects to Pages with access token
 
-If your deployments are:
-- Worker: `https://onedrive-api.myusername.workers.dev`
-- Pages: `https://onedrive-app.pages.dev`
+## Troubleshooting
 
-Then your configuration would be:
+If you're getting a white page at the callback URL, it means:
+1. The OAuth redirect URI is pointing to Pages instead of Worker
+2. Check your Azure App Registration redirect URIs
+3. Ensure Cloudflare Worker environment variables are set correctly
 
-**Frontend (.env):**
-```
-REACT_APP_BACKEND_URL=https://onedrive-api.myusername.workers.dev
-WDS_SOCKET_PORT=443
-```
+## Testing Your Deployment
 
-**Cloudflare Pages Environment Variables:**
-```
-REACT_APP_BACKEND_URL=https://onedrive-api.myusername.workers.dev
-```
-
-**Cloudflare Worker Environment Variables:**
-```
-AZURE_CLIENT_ID=37fb551b-33c1-4dd0-8c16-5ead6f0f2b45
-AZURE_CLIENT_SECRET=_IW8Q~l-15ff~RpMif-PfScDyFbV9rn92Hx5Laz5
-AZURE_TENANT_ID=f2c9e08f-779f-4dd6-9f7b-da627fd90983
-FRONTEND_URL=https://onedrive-app.pages.dev
-```
-
-**Azure OAuth Redirect URLs:**
-- `https://onedrive-app.pages.dev/api/auth/callback`
-- `https://onedrive-api.myusername.workers.dev/api/auth/callback`
-
-## Troubleshooting OAuth Issues
-
-If OAuth still redirects to emergent:
-
-1. **Check Azure App Registration**: Ensure redirect URIs are updated to your domain
-2. **Clear Browser Cache**: OAuth URLs might be cached
-3. **Verify Environment Variables**: Make sure FRONTEND_URL in Worker matches your Pages URL
-4. **Check Worker Logs**: Look for OAuth redirect issues in Cloudflare Worker logs
-
-## Testing Your Independent Deployment
-
-1. Visit your Cloudflare Pages URL
+1. Visit `https://onedrive-media-app.pages.dev`
 2. Click "Sign in with Microsoft OneDrive"
-3. Verify it redirects to Microsoft OAuth (not emergent)
-4. After authentication, verify you're redirected back to your domain
-5. Test file browsing and video streaming functionality
+3. You should be redirected to Microsoft OAuth
+4. After authentication, you should return to your Pages URL with the file explorer loaded
 
-Your application should now be completely independent from the Emergent platform!
+Your application is now completely independent from the Emergent platform!
