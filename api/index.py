@@ -1,7 +1,7 @@
 from fastapi import FastAPI, Request, HTTPException, Header, Depends, Response
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import StreamingResponse, RedirectResponse
-import asyncpg
+from motor.motor_asyncio import AsyncIOMotorClient
 from pydantic import BaseModel
 from msal import ConfidentialClientApplication
 import httpx
@@ -40,7 +40,7 @@ app.add_middleware(
 CLIENT_ID = os.getenv("AZURE_CLIENT_ID")
 CLIENT_SECRET = os.getenv("AZURE_CLIENT_SECRET")
 TENANT_ID = os.getenv("AZURE_TENANT_ID")
-DATABASE_URL = os.getenv("DATABASE_URL")
+MONGO_URL = os.getenv("MONGO_URL", "mongodb://localhost:27017")
 REDIRECT_URI = os.getenv("REDIRECT_URI")
 FRONTEND_URL = os.getenv("FRONTEND_URL")
 
@@ -53,49 +53,6 @@ msal_app = ConfidentialClientApplication(
     client_credential=CLIENT_SECRET,
     authority=AUTHORITY
 )
-
-# Database connection pool
-db_pool = None
-
-@app.on_event("startup")
-async def startup_event():
-    global db_pool
-    try:
-        db_pool = await asyncpg.create_pool(DATABASE_URL, min_size=1, max_size=20)
-        logger.info("Connected to PostgreSQL database")
-        
-        # Create tables if they don't exist
-        async with db_pool.acquire() as connection:
-            await connection.execute("""
-                CREATE TABLE IF NOT EXISTS users (
-                    id SERIAL PRIMARY KEY,
-                    user_id VARCHAR(255) UNIQUE NOT NULL,
-                    name VARCHAR(255),
-                    email VARCHAR(255),
-                    last_login TIMESTAMP,
-                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-                );
-            """)
-            
-            await connection.execute("""
-                CREATE TABLE IF NOT EXISTS watch_history (
-                    id SERIAL PRIMARY KEY,
-                    user_id VARCHAR(255) NOT NULL,
-                    item_id VARCHAR(255) NOT NULL,
-                    name VARCHAR(255) NOT NULL,
-                    timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                    FOREIGN KEY (user_id) REFERENCES users(user_id)
-                );
-            """)
-            
-            logger.info("Database tables created/verified")
-    except Exception as e:
-        logger.error(f"Database connection failed: {str(e)}")
-
-@app.on_event("shutdown")
-async def shutdown_event():
-    if db_pool:
-        await db_pool.close()
 
 # Models
 class WatchHistory(BaseModel):
@@ -136,11 +93,17 @@ class FolderContents(BaseModel):
     file_count: int = 0
     media_count: int = 0
 
-# Database helper functions
-async def get_db_connection():
-    if not db_pool:
-        raise HTTPException(status_code=500, detail="Database not available")
-    return db_pool.acquire()
+# Database connection
+@app.on_event("startup")
+async def startup_event():
+    app.mongodb_client = AsyncIOMotorClient(MONGO_URL)
+    app.mongodb = app.mongodb_client["onedrive_netflix"]
+    logger.info("Connected to MongoDB")
+
+@app.on_event("shutdown")
+async def shutdown_event():
+    if hasattr(app, 'mongodb_client'):
+        app.mongodb_client.close()
 
 # Authentication endpoints
 @app.post("/api/auth/password")
@@ -149,7 +112,6 @@ async def authenticate_password(auth: PasswordAuth):
     if pwd_context.verify(auth.password, HASHED_PASSWORD):
         # Generate a simple session token
         session_token = secrets.token_urlsafe(32)
-        # In production, store this in a database or cache
         return {"authenticated": True, "session_token": session_token}
     else:
         raise HTTPException(status_code=401, detail="Invalid password")
@@ -196,18 +158,18 @@ async def auth_callback(code: str, state: Optional[str] = None):
         user_id = user_info.get("id")
         
         if user_id:
-            async with await get_db_connection() as connection:
-                await connection.execute("""
-                    INSERT INTO users (user_id, name, email, last_login)
-                    VALUES ($1, $2, $3, $4)
-                    ON CONFLICT (user_id) 
-                    DO UPDATE SET 
-                        name = EXCLUDED.name,
-                        email = EXCLUDED.email,
-                        last_login = EXCLUDED.last_login
-                """, user_id, user_info.get("displayName"), 
-                user_info.get("mail", user_info.get("userPrincipalName")), 
-                datetime.utcnow())
+            # Store in MongoDB
+            await app.mongodb.users.update_one(
+                {"user_id": user_id},
+                {
+                    "$set": {
+                        "name": user_info.get("displayName"),
+                        "email": user_info.get("mail", user_info.get("userPrincipalName")),
+                        "last_login": datetime.utcnow()
+                    }
+                },
+                upsert=True
+            )
         
         # Redirect to frontend with access token
         return RedirectResponse(url=f"{FRONTEND_URL}?access_token={result['access_token']}")
@@ -426,7 +388,7 @@ def get_thumbnail_url(item: dict) -> Optional[str]:
             return thumbnail["small"]["url"]
     return None
 
-# Continue with more endpoints...
+# Streaming endpoint
 @app.get("/api/stream/{item_id}")
 async def stream_media(item_id: str, request: Request, authorization: str = Header(None), token: str = None, quality: str = None):
     """Stream video or audio files with proper format compatibility and range request support"""
@@ -471,7 +433,6 @@ async def stream_media(item_id: str, request: Request, authorization: str = Head
                 elif filename.endswith('.webm'):
                     return "video/webm"
                 elif filename.endswith('.mkv'):
-                    # Use proper MKV MIME type - browsers that support MKV will handle it
                     return "video/x-matroska"
                 elif filename.endswith('.avi'):
                     return "video/x-msvideo"
@@ -619,11 +580,13 @@ async def add_watch_history(
         if not user_id:
             raise HTTPException(status_code=401, detail="User not authenticated")
         
-        async with await get_db_connection() as connection:
-            await connection.execute("""
-                INSERT INTO watch_history (user_id, item_id, name, timestamp)
-                VALUES ($1, $2, $3, $4)
-            """, user_id, history.item_id, history.name, datetime.utcnow())
+        # Store in MongoDB
+        await app.mongodb.watch_history.insert_one({
+            "user_id": user_id,
+            "item_id": history.item_id,
+            "name": history.name,
+            "timestamp": datetime.utcnow()
+        })
         
         return {"status": "success"}
     except Exception as e:
@@ -640,20 +603,14 @@ async def get_watch_history(authorization: str = Header(...)):
         if not user_id:
             raise HTTPException(status_code=401, detail="User not authenticated")
         
-        async with await get_db_connection() as connection:
-            rows = await connection.fetch("""
-                SELECT item_id, name, timestamp 
-                FROM watch_history 
-                WHERE user_id = $1 
-                ORDER BY timestamp DESC
-            """, user_id)
-        
+        # Get from MongoDB
+        cursor = app.mongodb.watch_history.find({"user_id": user_id}).sort("timestamp", -1)
         watch_history = []
-        for row in rows:
+        async for doc in cursor:
             watch_history.append({
-                "item_id": row["item_id"],
-                "name": row["name"],
-                "timestamp": row["timestamp"]
+                "item_id": doc["item_id"],
+                "name": doc["name"],
+                "timestamp": doc["timestamp"]
             })
         
         return {"watch_history": watch_history}
