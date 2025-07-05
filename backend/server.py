@@ -169,28 +169,235 @@ async def get_user_info(access_token: str):
             return response.json()
         return {}
 
-async def get_folder_stats(client: httpx.AsyncClient, access_token: str, folder_id: str) -> dict:
-    """Get folder statistics including total size and item counts"""
+@app.get("/api/explorer/batch-browse")
+async def batch_browse_folders(
+    folder_ids: str,  # Comma-separated folder IDs
+    max_items_per_folder: int = 50,
+    authorization: str = Header(...)
+):
+    """Batch browse multiple folders for performance optimization"""
+    try:
+        access_token = authorization.replace("Bearer ", "")
+        folder_id_list = [fid.strip() for fid in folder_ids.split(",") if fid.strip()]
+        
+        if not folder_id_list:
+            raise HTTPException(status_code=400, detail="No folder IDs provided")
+        
+        if len(folder_id_list) > 20:  # Limit batch size
+            raise HTTPException(status_code=400, detail="Too many folders requested (max 20)")
+        
+        max_items_per_folder = min(max_items_per_folder, 200)  # Limit items per folder
+        
+        async with httpx.AsyncClient(timeout=120.0) as client:
+            # Create concurrent tasks for each folder
+            tasks = []
+            for folder_id in folder_id_list:
+                task = asyncio.create_task(
+                    batch_browse_single_folder(client, access_token, folder_id, max_items_per_folder)
+                )
+                tasks.append((folder_id, task))
+            
+            # Execute all requests concurrently
+            results = {}
+            for folder_id, task in tasks:
+                try:
+                    result = await task
+                    results[folder_id] = result
+                except Exception as e:
+                    logger.error(f"Error browsing folder {folder_id}: {str(e)}")
+                    results[folder_id] = {
+                        "error": str(e),
+                        "folders": [],
+                        "files": [],
+                        "total_items": 0
+                    }
+            
+            return {"results": results}
+            
+    except Exception as e:
+        logger.error(f"Batch browse error: {str(e)}")
+        raise HTTPException(status_code=500, detail="Batch browse failed")
+
+async def batch_browse_single_folder(
+    client: httpx.AsyncClient, 
+    access_token: str, 
+    folder_id: str, 
+    max_items: int
+) -> dict:
+    """Browse a single folder for batch operation"""
     try:
         # Get folder contents
-        url = f"https://graph.microsoft.com/v1.0/me/drive/items/{folder_id}/children"
+        if folder_id == "root":
+            url = "https://graph.microsoft.com/v1.0/me/drive/root/children"
+        else:
+            url = f"https://graph.microsoft.com/v1.0/me/drive/items/{folder_id}/children"
+        
+        url += f"?$top={max_items}"
+        
         response = await client.get(url, headers={"Authorization": f"Bearer {access_token}"})
         
         if response.status_code != 200:
-            return {"total_size": 0}
+            return {
+                "error": f"Failed to fetch folder: {response.status_code}",
+                "folders": [],
+                "files": [],
+                "total_items": 0
+            }
         
         data = response.json()
         items = data.get("value", [])
+        
+        # Quick processing for batch operation
+        folders = []
+        files = []
+        
+        for item in items:
+            if item.get("folder"):
+                folders.append({
+                    "id": item["id"],
+                    "name": item["name"],
+                    "type": "folder",
+                    "size": item.get("size", 0),
+                    "modified": item.get("lastModifiedDateTime")
+                })
+            else:
+                # Quick media type detection
+                item_name = item.get("name", "").lower()
+                mime_type = item.get("file", {}).get("mimeType", "")
+                
+                media_type = "other"
+                if any(ext in item_name for ext in ['.mp4', '.mkv', '.avi', '.webm']) or 'video' in mime_type:
+                    media_type = "video"
+                elif any(ext in item_name for ext in ['.jpg', '.jpeg', '.png', '.gif']) or 'image' in mime_type:
+                    media_type = "photo"
+                elif any(ext in item_name for ext in ['.mp3', '.wav', '.flac', '.m4a']) or 'audio' in mime_type:
+                    media_type = "audio"
+                
+                files.append({
+                    "id": item["id"],
+                    "name": item["name"],
+                    "type": "file",
+                    "size": item.get("size", 0),
+                    "modified": item.get("lastModifiedDateTime"),
+                    "media_type": media_type,
+                    "mime_type": mime_type
+                })
+        
+        return {
+            "folders": folders,
+            "files": files,
+            "total_items": len(items),
+            "has_more": len(items) == max_items  # Indicates if there might be more items
+        }
+        
+    except Exception as e:
+        return {
+            "error": str(e),
+            "folders": [],
+            "files": [],
+            "total_items": 0
+        }
+
+@app.get("/api/explorer/quick-stats")
+async def get_folder_quick_stats(
+    folder_ids: str,  # Comma-separated folder IDs
+    authorization: str = Header(...)
+):
+    """Get quick statistics for multiple folders without full content"""
+    try:
+        access_token = authorization.replace("Bearer ", "")
+        folder_id_list = [fid.strip() for fid in folder_ids.split(",") if fid.strip()]
+        
+        if not folder_id_list:
+            raise HTTPException(status_code=400, detail="No folder IDs provided")
+        
+        if len(folder_id_list) > 50:  # Allow more folders for stats
+            raise HTTPException(status_code=400, detail="Too many folders requested (max 50)")
+        
+        async with httpx.AsyncClient(timeout=60.0) as client:
+            # Create concurrent tasks for each folder
+            tasks = []
+            for folder_id in folder_id_list:
+                task = asyncio.create_task(
+                    get_single_folder_stats(client, access_token, folder_id)
+                )
+                tasks.append((folder_id, task))
+            
+            # Execute all requests concurrently
+            results = {}
+            for folder_id, task in tasks:
+                try:
+                    result = await task
+                    results[folder_id] = result
+                except Exception as e:
+                    logger.error(f"Error getting stats for folder {folder_id}: {str(e)}")
+                    results[folder_id] = {
+                        "error": str(e),
+                        "total_items": 0,
+                        "folder_count": 0,
+                        "file_count": 0,
+                        "total_size": 0
+                    }
+            
+            return {"results": results}
+            
+    except Exception as e:
+        logger.error(f"Quick stats error: {str(e)}")
+        raise HTTPException(status_code=500, detail="Quick stats failed")
+
+async def get_single_folder_stats(client: httpx.AsyncClient, access_token: str, folder_id: str) -> dict:
+    """Get quick stats for a single folder"""
+    try:
+        # Get folder contents with minimal data
+        if folder_id == "root":
+            url = "https://graph.microsoft.com/v1.0/me/drive/root/children?$select=id,name,size,folder&$top=1000"
+        else:
+            url = f"https://graph.microsoft.com/v1.0/me/drive/items/{folder_id}/children?$select=id,name,size,folder&$top=1000"
+        
+        response = await client.get(url, headers={"Authorization": f"Bearer {access_token}"})
+        
+        if response.status_code != 200:
+            return {
+                "error": f"Failed to fetch folder: {response.status_code}",
+                "total_items": 0,
+                "folder_count": 0,
+                "file_count": 0,
+                "total_size": 0
+            }
+        
+        data = response.json()
+        items = data.get("value", [])
+        
+        # Calculate quick stats
+        folder_count = 0
+        file_count = 0
         total_size = 0
         
         for item in items:
-            item_size = item.get("size", 0)
-            total_size += item_size
+            size = item.get("size", 0)
+            total_size += size
+            
+            if item.get("folder"):
+                folder_count += 1
+            else:
+                file_count += 1
         
-        return {"total_size": total_size}
+        return {
+            "total_items": len(items),
+            "folder_count": folder_count,
+            "file_count": file_count,
+            "total_size": total_size,
+            "has_more": len(items) == 1000  # Indicates if there might be more items
+        }
+        
     except Exception as e:
-        logger.error(f"Error getting folder stats: {str(e)}")
-        return {"total_size": 0}
+        return {
+            "error": str(e),
+            "total_items": 0,
+            "folder_count": 0,
+            "file_count": 0,
+            "total_size": 0
+        }
 
 # File explorer endpoints with performance optimizations
 @app.get("/api/explorer/browse")
