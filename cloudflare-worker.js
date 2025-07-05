@@ -30,6 +30,10 @@ export default {
 
     try {
       // Route handling
+      if (path === '/') {
+        return handleRootPage(corsHeaders);
+      }
+      
       if (path === '/api/health') {
         return handleHealthCheck(corsHeaders);
       }
