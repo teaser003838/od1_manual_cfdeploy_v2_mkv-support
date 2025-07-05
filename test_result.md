@@ -102,7 +102,7 @@
 # Testing Data - Main Agent and testing sub agent both should log testing data below this section
 #====================================================================================================
 
-user_problem_statement: "this repo code doesn't properly load the onedrive content streaming files into the onedrive netflix app, browse button doesn't load files and not stream perfectly"
+user_problem_statement: "remove pass auth completely, rest remain same"
 
 backend:
   - task: "Health Check Endpoint"
