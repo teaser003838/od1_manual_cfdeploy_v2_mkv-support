@@ -1467,8 +1467,199 @@ async def get_video_thumbnail(item_id: str, authorization: str = Header(None), t
         logger.error(f"Get thumbnail error: {str(e)}")
         raise HTTPException(status_code=500, detail="Failed to get thumbnail")
 
-@app.get("/api/subtitles/{item_id}")
-async def get_subtitles(item_id: str, authorization: str = Header(None), token: str = None):
+@app.get("/api/video-metadata/{item_id}")
+async def get_video_metadata(item_id: str, authorization: str = Header(None), token: str = None):
+    """Get enhanced video metadata for Netflix-style player"""
+    try:
+        # Try to get access token from header first, then from query parameter
+        access_token = None
+        if authorization:
+            access_token = authorization.replace("Bearer ", "")
+        elif token:
+            access_token = token
+        else:
+            raise HTTPException(status_code=401, detail="Authorization required")
+        
+        async with httpx.AsyncClient() as client:
+            # Get video file info
+            response = await client.get(
+                f"https://graph.microsoft.com/v1.0/me/drive/items/{item_id}",
+                headers={"Authorization": f"Bearer {access_token}"}
+            )
+            
+            if response.status_code != 200:
+                raise HTTPException(status_code=404, detail="Video not found")
+            
+            file_info = response.json()
+            
+            # Extract enhanced metadata
+            metadata = {
+                "id": file_info["id"],
+                "name": file_info["name"],
+                "size": file_info.get("size", 0),
+                "duration": None,  # Would be extracted from video file analysis
+                "resolution": None,  # Would be extracted from video file analysis
+                "bitrate": None,  # Would be extracted from video file analysis
+                "codec": None,  # Would be extracted from video file analysis
+                "available_qualities": ["Auto", "1080p", "720p", "480p", "360p"],
+                "has_subtitles": False,  # Will be determined by subtitle search
+                "thumbnail_url": get_thumbnail_url(file_info),
+                "download_url": file_info.get("@microsoft.graph.downloadUrl"),
+                "created": file_info.get("createdDateTime"),
+                "modified": file_info.get("lastModifiedDateTime"),
+                "mime_type": file_info.get("file", {}).get("mimeType", "")
+            }
+            
+            return metadata
+            
+    except Exception as e:
+        logger.error(f"Get video metadata error: {str(e)}")
+        raise HTTPException(status_code=500, detail="Failed to get video metadata")
+
+@app.get("/api/video-quality/{item_id}")
+async def get_video_quality_options(item_id: str, authorization: str = Header(None), token: str = None):
+    """Get available quality options for a video"""
+    try:
+        # Try to get access token from header first, then from query parameter
+        access_token = None
+        if authorization:
+            access_token = authorization.replace("Bearer ", "")
+        elif token:
+            access_token = token
+        else:
+            raise HTTPException(status_code=401, detail="Authorization required")
+        
+        # In a real implementation, this would analyze the video file
+        # For now, return standard Netflix-style quality options
+        quality_options = [
+            {
+                "quality": "Auto",
+                "label": "Auto",
+                "description": "Adjusts automatically based on your connection",
+                "bitrate": None,
+                "resolution": None
+            },
+            {
+                "quality": "1080p",
+                "label": "Full HD",
+                "description": "1920x1080",
+                "bitrate": "5000k",
+                "resolution": "1920x1080"
+            },
+            {
+                "quality": "720p", 
+                "label": "HD",
+                "description": "1280x720",
+                "bitrate": "2500k",
+                "resolution": "1280x720"
+            },
+            {
+                "quality": "480p",
+                "label": "SD",
+                "description": "854x480",
+                "bitrate": "1000k", 
+                "resolution": "854x480"
+            },
+            {
+                "quality": "360p",
+                "label": "Low",
+                "description": "640x360",
+                "bitrate": "500k",
+                "resolution": "640x360"
+            }
+        ]
+        
+        return {"available_qualities": quality_options}
+        
+    except Exception as e:
+        logger.error(f"Get video quality options error: {str(e)}")
+        raise HTTPException(status_code=500, detail="Failed to get quality options")
+
+@app.get("/api/video-timeline-thumbnails/{item_id}")
+async def get_video_timeline_thumbnails(item_id: str, count: int = 10, authorization: str = Header(None), token: str = None):
+    """Generate timeline thumbnails for video scrubbing (Netflix-style)"""
+    try:
+        # Try to get access token from header first, then from query parameter
+        access_token = None
+        if authorization:
+            access_token = authorization.replace("Bearer ", "")
+        elif token:
+            access_token = token
+        else:
+            raise HTTPException(status_code=401, detail="Authorization required")
+        
+        # In a real implementation, this would:
+        # 1. Download the video file temporarily
+        # 2. Use FFmpeg to extract thumbnails at specific timestamps
+        # 3. Upload thumbnails to a temporary storage
+        # 4. Return URLs to the thumbnails
+        
+        # For now, return mock data structure
+        thumbnails = []
+        for i in range(count):
+            percentage = (i / (count - 1)) * 100
+            thumbnails.append({
+                "timestamp": percentage,
+                "thumbnail_url": f"https://via.placeholder.com/160x90?text={int(percentage)}%",
+                "time_seconds": 0  # Would be calculated based on video duration
+            })
+        
+        return {"thumbnails": thumbnails}
+        
+    except Exception as e:
+        logger.error(f"Get timeline thumbnails error: {str(e)}")
+        raise HTTPException(status_code=500, detail="Failed to get timeline thumbnails")
+
+@app.get("/api/video-chapters/{item_id}")
+async def get_video_chapters(item_id: str, authorization: str = Header(None), token: str = None):
+    """Get video chapters for skip intro/outro functionality"""
+    try:
+        # Try to get access token from header first, then from query parameter
+        access_token = None
+        if authorization:
+            access_token = authorization.replace("Bearer ", "")
+        elif token:
+            access_token = token
+        else:
+            raise HTTPException(status_code=401, detail="Authorization required")
+        
+        # In a real implementation, this would analyze the video for:
+        # - Silent periods (likely intro/outro)
+        # - Scene changes
+        # - Audio pattern analysis
+        # - Machine learning-based intro/outro detection
+        
+        # For now, return example chapter data
+        chapters = {
+            "intro": {
+                "start": 0,
+                "end": 90,  # 1:30
+                "confidence": 0.85
+            },
+            "outro": {
+                "start": None,  # Would be calculated as duration - outro_length
+                "end": None,    # Would be video duration
+                "confidence": 0.75
+            },
+            "chapters": [
+                {
+                    "title": "Opening",
+                    "start": 0,
+                    "end": 90
+                },
+                {
+                    "title": "Main Content", 
+                    "start": 90,
+                    "end": None  # Would be calculated
+                }
+            ]
+        }
+        
+        return chapters
+        
+    except Exception as e:
+        logger.error(f"Get video chapters error: {str(e)}")
+        raise HTTPException(status_code=500, detail="Failed to get video chapters")
     try:
         # Try to get access token from header first, then from query parameter
         access_token = None
