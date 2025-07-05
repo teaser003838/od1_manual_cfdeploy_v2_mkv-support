@@ -117,7 +117,7 @@ REACT_APP_BACKEND_URL=https://your-app-name.vercel.app
 
 1. **Go to Azure Portal** → App Registrations → Your App
 2. **Update Redirect URIs:**
-   - Remove: `https://032a33f8-1388-410c-9398-586fd3a92898.preview.emergentagent.com/api/auth/callback`
+   - Remove: `https://bbde640e-ea42-453f-80d0-fdca2de2d38c.preview.emergentagent.com/api/auth/callback`
    - Add: `https://your-app-name.vercel.app/api/auth/callback`
 
 3. **Update CORS settings if needed**

@@ -41,7 +41,7 @@ CLIENT_ID = os.getenv("AZURE_CLIENT_ID", "37fb551b-33c1-4dd0-8c16-5ead6f0f2b45")
 CLIENT_SECRET = os.getenv("AZURE_CLIENT_SECRET", "_IW8Q~l-15ff~RpMif-PfScDyFbV9rn92Hx5Laz5")
 TENANT_ID = os.getenv("AZURE_TENANT_ID", "f2c9e08f-779f-4dd6-9f7b-da627fd90983")
 MONGO_URL = os.getenv("MONGO_URL", "mongodb://localhost:27017")
-REDIRECT_URI = os.getenv("REDIRECT_URI", "https://032a33f8-1388-410c-9398-586fd3a92898.preview.emergentagent.com/api/auth/callback")
+REDIRECT_URI = os.getenv("REDIRECT_URI", "https://bbde640e-ea42-453f-80d0-fdca2de2d38c.preview.emergentagent.com/api/auth/callback")
 
 # MSAL Configuration
 AUTHORITY = f"https://login.microsoftonline.com/{TENANT_ID}"
@@ -150,7 +150,7 @@ async def auth_callback(code: str, state: Optional[str] = None):
         if "access_token" not in result:
             logger.error(f"Token acquisition failed: {result}")
             # Redirect to frontend with error
-            frontend_url = os.getenv("FRONTEND_URL", "https://032a33f8-1388-410c-9398-586fd3a92898.preview.emergentagent.com")
+            frontend_url = os.getenv("FRONTEND_URL", "https://bbde640e-ea42-453f-80d0-fdca2de2d38c.preview.emergentagent.com")
             return RedirectResponse(url=f"{frontend_url}?error=authentication_failed")
         
         # Store user info in database
@@ -172,12 +172,12 @@ async def auth_callback(code: str, state: Optional[str] = None):
             )
         
         # Redirect to frontend with access token
-        frontend_url = os.getenv("FRONTEND_URL", "https://032a33f8-1388-410c-9398-586fd3a92898.preview.emergentagent.com")
+        frontend_url = os.getenv("FRONTEND_URL", "https://bbde640e-ea42-453f-80d0-fdca2de2d38c.preview.emergentagent.com")
         return RedirectResponse(url=f"{frontend_url}?access_token={result['access_token']}")
         
     except Exception as e:
         logger.error(f"Callback error: {str(e)}")
-        frontend_url = os.getenv("FRONTEND_URL", "https://032a33f8-1388-410c-9398-586fd3a92898.preview.emergentagent.com")
+        frontend_url = os.getenv("FRONTEND_URL", "https://bbde640e-ea42-453f-80d0-fdca2de2d38c.preview.emergentagent.com")
         return RedirectResponse(url=f"{frontend_url}?error=callback_failed")
 
 async def get_user_info(access_token: str):
