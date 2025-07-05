@@ -16,23 +16,22 @@ A full-featured media streaming application that connects to your OneDrive accou
 - **📊 Watch History** - Track your viewing activity
 - **📱 Mobile Optimized** - Touch controls and responsive design
 
-## 🚀 Quick Deploy to Vercel
+### 🚀 Deployment
 
-### Option 1: One-Click Deploy
-[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https://github.com/yourusername/your-repo)
+Deploy to **Cloudflare** for FREE:
 
-### Option 2: CLI Deploy
-```bash
-# Make script executable and run
-chmod +x deploy-vercel.sh
-./deploy-vercel.sh
-```
+1. **Read**: `DEPLOYMENT_GUIDE.md` for complete instructions
+2. **Quick Start**: `QUICK_START.md` for fast deployment
+3. **Files**: All deployment files included
 
-### Option 3: Manual Deploy
-1. Push code to GitHub
-2. Import to Vercel
-3. Set environment variables
-4. Deploy
+**Cost**: $0 - Everything runs on Cloudflare's free tier
+
+### 📁 Key Files
+
+- `cloudflare-worker.js` - Backend API code
+- `cloudflare-d1-schema.sql` - Database schema
+- `frontend/` - React application
+- `DEPLOYMENT_GUIDE.md` - Complete deployment guide
 
 ## 📋 Environment Variables Required
 
