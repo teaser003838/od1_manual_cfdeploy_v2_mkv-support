@@ -129,7 +129,7 @@ async def auth_callback(code: str, state: Optional[str] = None):
         if "access_token" not in result:
             logger.error(f"Token acquisition failed: {result}")
             # Redirect to frontend with error
-            frontend_url = os.getenv("FRONTEND_URL", "https://onedrive-media-app.pages.dev")
+            frontend_url = os.getenv("FRONTEND_URL", "https://cc4f05b5-80f4-4006-9ece-f0d0868de48a.preview.emergentagent.com")
             return RedirectResponse(url=f"{frontend_url}?error=authentication_failed")
         
         # Store user info in database
