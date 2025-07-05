@@ -9,6 +9,8 @@
   font-family: 'Netflix Sans', 'Helvetica Neue', Arial, sans-serif;
   color: white;
   cursor: none;
+  /* Ensure touch events are captured in black areas */
+  touch-action: manipulation;
 }
 
 .netflix-player-container.fullscreen {
