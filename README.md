@@ -60,69 +60,10 @@ pip install -r requirements.txt
 python server.py
 ```
 
-## 🎯 Production Features
+### 📞 Support
 
-- ✅ **Auto-scaling**: Serverless functions scale automatically
-- ✅ **Global CDN**: Vercel Edge Network for worldwide performance
-- ✅ **Database**: PostgreSQL with connection pooling
-- ✅ **Security**: HTTPS, environment isolation, secure secrets
-- ✅ **Monitoring**: Built-in logging and analytics
-- ✅ **Cost Efficient**: Pay only for usage
+- **Deployment**: See `DEPLOYMENT_GUIDE.md`
+- **Issues**: Check Cloudflare dashboard logs
+- **Features**: All major streaming features included
 
-## 🔒 Security
-
-- 🔐 Multi-layer authentication (Password + OAuth)
-- 🛡️ All secrets in environment variables
-- 🌐 HTTPS enforced by default
-- 🔄 Secure database connections
-- 🚫 No hardcoded credentials
-
-### 🎯 Supported Media Formats
-
-**Video**: MP4, MKV, AVI, WebM, MOV, WMV, FLV, M4V, 3GP, OGV
-**Audio**: MP3, WAV, FLAC, M4A, OGG, AAC, WMA, OPUS, AIFF, ALAC
-**Photos**: JPG, PNG, GIF, WebP, BMP, TIFF, SVG
-
-## 🎮 Controls
-
-### Video Player
-- **Space/K**: Play/Pause
-- **←/→**: Seek backward/forward
-- **↑/↓**: Volume control
-- **F**: Fullscreen
-- **M**: Mute/Unmute
-- **Touch**: Tap zones for mobile
-
-### Audio Player
-- **Space**: Play/Pause
-- **←/→**: Skip 10s
-- **R**: Repeat mode
-- **S**: Shuffle
-
-## 🆘 Support
-
-### Troubleshooting
-1. Check environment variables in Vercel Dashboard
-2. Verify Azure app registration redirect URIs
-3. Test database connection
-4. Check Vercel function logs
-
-### Resources
-- [Vercel Documentation](https://vercel.com/docs)
-- [Microsoft Graph API](https://docs.microsoft.com/en-us/graph/)
-- [Neon Database](https://neon.tech/docs)
-
-## 📄 License
-
-MIT License - feel free to use for personal or commercial projects.
-
-## 🎉 Success!
-
-Once deployed, your app will be available at:
-`https://your-app-name.vercel.app`
-
-**Default password**: `66244?BOy.`
-
----
-
-**Made with ❤️ for seamless OneDrive media streaming**
+**Your personal OneDrive media streaming platform - deploy it for free!** 🚀
