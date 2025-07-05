@@ -1,0 +1,40 @@
+# Cloudflare Pages Build Configuration
+# This file should be placed in your frontend directory
+
+# Build Configuration
+build:
+  command: npm run build
+  publish: build
+  
+# Environment Variables (set these in Cloudflare Pages dashboard)
+# REACT_APP_BACKEND_URL=https://your-worker-name.your-subdomain.workers.dev
+
+# Build Settings
+node_version: 18
+
+# Functions (not used for this static site)
+functions_dir: functions
+
+# Redirects and Headers
+redirects:
+  # Handle client-side routing
+  - from: "/*"
+    to: "/index.html"
+    status: 200
+    conditions:
+      - header:
+          name: "accept"
+          value: "text/html"
+
+headers:
+  # Security headers
+  - for: "/*"
+    values:
+      X-Frame-Options: "DENY"
+      X-Content-Type-Options: "nosniff"
+      Referrer-Policy: "strict-origin-when-cross-origin"
+      
+  # Cache static assets
+  - for: "/static/*"
+    values:
+      Cache-Control: "public, max-age=31536000, immutable"
