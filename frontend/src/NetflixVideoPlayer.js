@@ -519,11 +519,13 @@ const NetflixVideoPlayer = ({ video, backendUrl, accessToken, onBack, onNextVide
   const handleContainerClick = (e) => {
     if (!isMobile) return;
     
-    // Only handle clicks on the container itself, not on child elements
-    if (e.target === containerRef.current) {
-      // Show controls when clicking on black areas in fullscreen
-      setShowControls(true);
-      showControlsTemporarily();
+    // Show controls when clicking anywhere in the container (including video)
+    setShowControls(true);
+    showControlsTemporarily();
+    
+    // If clicking directly on video, also toggle play/pause
+    if (e.target === videoRef.current) {
+      togglePlay();
     }
   };
 
