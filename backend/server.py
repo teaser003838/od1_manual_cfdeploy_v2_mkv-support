@@ -192,19 +192,34 @@ async def get_folder_stats(client: httpx.AsyncClient, access_token: str, folder_
         logger.error(f"Error getting folder stats: {str(e)}")
         return {"total_size": 0}
 
-# File explorer endpoints
+# File explorer endpoints with performance optimizations
 @app.get("/api/explorer/browse")
-async def browse_folder(folder_id: str = "root", authorization: str = Header(...)):
-    """Browse OneDrive folder with file explorer interface"""
+async def browse_folder(
+    folder_id: str = "root", 
+    page: int = 1, 
+    page_size: int = 100,
+    sort_by: str = "name",
+    sort_order: str = "asc",
+    file_types: str = "all",  # all, video, audio, photo, folder
+    authorization: str = Header(...)
+):
+    """Browse OneDrive folder with pagination and performance optimizations"""
     try:
         access_token = authorization.replace("Bearer ", "")
         
-        async with httpx.AsyncClient() as client:
-            # Get folder contents
+        # Validate pagination parameters
+        page = max(1, page)
+        page_size = min(max(1, page_size), 1000)  # Limit to 1000 items per page
+        
+        async with httpx.AsyncClient(timeout=60.0) as client:
+            # Get folder contents with pagination support
             if folder_id == "root":
                 url = "https://graph.microsoft.com/v1.0/me/drive/root/children"
             else:
                 url = f"https://graph.microsoft.com/v1.0/me/drive/items/{folder_id}/children"
+            
+            # Add top parameter for server-side pagination (if supported)
+            url += f"?$top=5000"  # Request larger batch, we'll paginate on our side
             
             response = await client.get(url, headers={"Authorization": f"Bearer {access_token}"})
             
@@ -214,8 +229,10 @@ async def browse_folder(folder_id: str = "root", authorization: str = Header(...
             data = response.json()
             items = data.get("value", [])
             
-            # Get folder information for breadcrumbs
+            # Get folder information for breadcrumbs (concurrent request)
             current_folder_info = {}
+            breadcrumbs_task = None
+            
             if folder_id != "root":
                 folder_response = await client.get(
                     f"https://graph.microsoft.com/v1.0/me/drive/items/{folder_id}",
@@ -223,72 +240,66 @@ async def browse_folder(folder_id: str = "root", authorization: str = Header(...
                 )
                 if folder_response.status_code == 200:
                     current_folder_info = folder_response.json()
+                    # Start breadcrumbs building concurrently
+                    breadcrumbs_task = asyncio.create_task(
+                        build_breadcrumbs(client, access_token, current_folder_info)
+                    )
             
-            # Build breadcrumbs
-            breadcrumbs = await build_breadcrumbs(client, access_token, current_folder_info)
-            
-            # Process items
+            # Process items efficiently
             folders = []
             files = []
             total_size = 0
-            folder_count = 0
-            file_count = 0
-            media_count = 0
             
-            # Define supported media types
-            video_extensions = ['.mp4', '.mkv', '.avi', '.webm', '.mov', '.wmv', '.flv', '.m4v', '.3gp', '.ogv']
-            photo_extensions = ['.jpg', '.jpeg', '.png', '.gif', '.webp', '.bmp', '.tiff', '.svg']
-            audio_extensions = ['.mp3', '.wav', '.flac', '.m4a', '.ogg', '.aac', '.wma', '.opus', '.aiff', '.alac']
-            video_mime_types = ['video/mp4', 'video/x-msvideo', 'video/quicktime', 'video/x-ms-wmv', 
-                              'video/webm', 'video/x-matroska', 'video/x-flv', 'video/3gpp', 'video/ogg']
-            photo_mime_types = ['image/jpeg', 'image/png', 'image/gif', 'image/webp', 'image/bmp', 
-                              'image/tiff', 'image/svg+xml']
-            audio_mime_types = ['audio/mpeg', 'audio/wav', 'audio/flac', 'audio/mp4', 'audio/ogg', 
-                              'audio/aac', 'audio/x-ms-wma', 'audio/opus', 'audio/aiff', 'audio/alac']
+            # Define supported media types (as constants for performance)
+            video_extensions = {'.mp4', '.mkv', '.avi', '.webm', '.mov', '.wmv', '.flv', '.m4v', '.3gp', '.ogv'}
+            photo_extensions = {'.jpg', '.jpeg', '.png', '.gif', '.webp', '.bmp', '.tiff', '.svg'}
+            audio_extensions = {'.mp3', '.wav', '.flac', '.m4a', '.ogg', '.aac', '.wma', '.opus', '.aiff', '.alac'}
+            video_mime_types = {'video/mp4', 'video/x-msvideo', 'video/quicktime', 'video/x-ms-wmv', 
+                              'video/webm', 'video/x-matroska', 'video/x-flv', 'video/3gpp', 'video/ogg'}
+            photo_mime_types = {'image/jpeg', 'image/png', 'image/gif', 'image/webp', 'image/bmp', 
+                              'image/tiff', 'image/svg+xml'}
+            audio_mime_types = {'audio/mpeg', 'audio/wav', 'audio/flac', 'audio/mp4', 'audio/ogg', 
+                              'audio/aac', 'audio/x-ms-wma', 'audio/opus', 'audio/aiff', 'audio/alac'}
             
+            # Batch process items for better performance
             for item in items:
                 item_name = item.get("name", "").lower()
                 item_size = item.get("size", 0)
                 total_size += item_size
                 
-                # Build full path
+                # Build full path efficiently
                 current_path = current_folder_info.get("name", "Root") if folder_id != "root" else "Root"
                 full_path = f"{current_path}/{item['name']}" if current_path != "Root" else item['name']
                 
                 if item.get("folder"):
                     # It's a folder
-                    folder_count += 1
-                    # Get folder statistics
-                    folder_stats = await get_folder_stats(client, access_token, item["id"])
-                    
-                    folders.append(FileItem(
+                    folder_item = FileItem(
                         id=item["id"],
                         name=item["name"],
                         type="folder",
-                        size=folder_stats["total_size"],
+                        size=item_size,  # Use folder size from API directly (faster)
                         modified=item.get("lastModifiedDateTime"),
                         created=item.get("createdDateTime"),
                         full_path=full_path,
                         is_media=False
-                    ))
+                    )
+                    folders.append(folder_item)
                 else:
-                    # It's a file
+                    # It's a file - optimize media type detection
                     mime_type = item.get("file", {}).get("mimeType", "")
-                    is_video = any(item_name.endswith(ext) for ext in video_extensions) or mime_type in video_mime_types
-                    is_photo = any(item_name.endswith(ext) for ext in photo_extensions) or mime_type in photo_mime_types
-                    is_audio = any(item_name.endswith(ext) for ext in audio_extensions) or mime_type in audio_mime_types
                     
-                    media_type = None
-                    if is_video:
-                        media_type = "video"
-                    elif is_photo:
-                        media_type = "photo"
-                    elif is_audio:
-                        media_type = "audio"
-                    else:
-                        media_type = "other"
+                    # Fast extension lookup using sets
+                    file_ext = None
+                    if '.' in item_name:
+                        file_ext = '.' + item_name.split('.')[-1]
                     
-                    files.append(FileItem(
+                    is_video = (file_ext in video_extensions) or (mime_type in video_mime_types)
+                    is_photo = (file_ext in photo_extensions) or (mime_type in photo_mime_types)
+                    is_audio = (file_ext in audio_extensions) or (mime_type in audio_mime_types)
+                    
+                    media_type = "video" if is_video else "photo" if is_photo else "audio" if is_audio else "other"
+                    
+                    file_item = FileItem(
                         id=item["id"],
                         name=item["name"],
                         type="file",
@@ -301,20 +312,83 @@ async def browse_folder(folder_id: str = "root", authorization: str = Header(...
                         media_type=media_type,
                         thumbnail_url=get_thumbnail_url(item),
                         download_url=item.get("@microsoft.graph.downloadUrl")
-                    ))
+                    )
+                    files.append(file_item)
             
-            # Sort folders and files by name
-            folders.sort(key=lambda x: x.name.lower())
-            files.sort(key=lambda x: x.name.lower())
+            # Filter by file type if specified
+            if file_types != "all":
+                if file_types == "folder":
+                    files = []
+                elif file_types == "video":
+                    files = [f for f in files if f.media_type == "video"]
+                    folders = []
+                elif file_types == "audio":
+                    files = [f for f in files if f.media_type == "audio"]
+                    folders = []
+                elif file_types == "photo":
+                    files = [f for f in files if f.media_type == "photo"]
+                    folders = []
             
-            return FolderContents(
-                current_folder=current_folder_info.get("name", "Root"),
-                parent_folder=current_folder_info.get("parentReference", {}).get("id"),
-                breadcrumbs=breadcrumbs,
-                folders=folders,
-                files=files,
-                total_size=total_size
-            )
+            # Combine and sort items efficiently
+            all_items = folders + files
+            
+            # Sort items
+            if sort_by == "name":
+                all_items.sort(key=lambda x: x.name.lower(), reverse=(sort_order == "desc"))
+            elif sort_by == "size":
+                all_items.sort(key=lambda x: x.size or 0, reverse=(sort_order == "desc"))
+            elif sort_by == "modified":
+                all_items.sort(key=lambda x: x.modified or "", reverse=(sort_order == "desc"))
+            elif sort_by == "type":
+                all_items.sort(key=lambda x: (x.type, x.name.lower()), reverse=(sort_order == "desc"))
+            
+            # Apply pagination
+            total_items = len(all_items)
+            start_idx = (page - 1) * page_size
+            end_idx = start_idx + page_size
+            paginated_items = all_items[start_idx:end_idx]
+            
+            # Separate back into folders and files for response
+            paginated_folders = [item for item in paginated_items if item.type == "folder"]
+            paginated_files = [item for item in paginated_items if item.type == "file"]
+            
+            # Wait for breadcrumbs if needed
+            breadcrumbs = []
+            if breadcrumbs_task:
+                breadcrumbs = await breadcrumbs_task
+            elif folder_id == "root":
+                breadcrumbs = [{"name": "Root", "id": "root"}]
+            
+            # Calculate pagination info
+            total_pages = (total_items + page_size - 1) // page_size
+            has_next = page < total_pages
+            has_prev = page > 1
+            
+            return {
+                "current_folder": current_folder_info.get("name", "Root"),
+                "parent_folder": current_folder_info.get("parentReference", {}).get("id"),
+                "breadcrumbs": breadcrumbs,
+                "folders": paginated_folders,
+                "files": paginated_files,
+                "total_size": total_size,
+                "pagination": {
+                    "current_page": page,
+                    "page_size": page_size,
+                    "total_items": total_items,
+                    "total_pages": total_pages,
+                    "has_next": has_next,
+                    "has_prev": has_prev,
+                    "start_index": start_idx,
+                    "end_index": min(end_idx, total_items)
+                },
+                "sorting": {
+                    "sort_by": sort_by,
+                    "sort_order": sort_order
+                },
+                "filters": {
+                    "file_types": file_types
+                }
+            }
             
     except Exception as e:
         logger.error(f"Browse folder error: {str(e)}")
