@@ -1214,4 +1214,11 @@ async def health_check():
 
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run(app, host="0.0.0.0", port=8001)
+    import os
+    
+    # Use Railway's PORT environment variable, fallback to 8001 for local development
+    port = int(os.environ.get("PORT", 8001))
+    host = "0.0.0.0"
+    
+    logger.info(f"Starting server on {host}:{port}")
+    uvicorn.run(app, host=host, port=port)
