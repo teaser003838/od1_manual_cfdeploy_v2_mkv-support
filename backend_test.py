@@ -8,9 +8,9 @@ import time
 from unittest.mock import patch, MagicMock, AsyncMock
 
 # Get the backend URL from the frontend .env file
-BACKEND_URL = "https://213415b5-7b36-46f6-ae5b-80d9ba920744.preview.emergentagent.com"
+BACKEND_URL = "https://073c81bb-40d2-4392-b0c7-11856ca419e1.preview.emergentagent.com"
 API_URL = f"{BACKEND_URL}/api"
-FRONTEND_URL = "https://213415b5-7b36-46f6-ae5b-80d9ba920744.preview.emergentagent.com"
+FRONTEND_URL = "https://073c81bb-40d2-4392-b0c7-11856ca419e1.preview.emergentagent.com"
 EXPECTED_REDIRECT_URI = f"{API_URL}/auth/callback"
 
 # Mock token for testing endpoints that require authentication
