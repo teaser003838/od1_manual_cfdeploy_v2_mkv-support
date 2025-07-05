@@ -2,18 +2,15 @@
   "name": "onedrive-explorer",
   "version": "1.0.0",
   "description": "OneDrive Media Explorer - Stream videos, audio, and photos from OneDrive",
-  "main": "backend/server.py",
   "scripts": {
-    "install": "cd frontend && yarn install",
-    "build": "cd frontend && yarn build",
-    "start": "cd backend && python -m uvicorn server:app --host 0.0.0.0 --port $PORT",
-    "dev": "cd frontend && yarn start"
+    "install-frontend": "cd frontend && yarn install",
+    "build-frontend": "cd frontend && yarn build",
+    "start-frontend": "cd frontend && yarn start",
+    "install-backend": "cd backend && pip install -r requirements.txt",
+    "start-backend": "cd backend && python server.py",
+    "dev": "echo 'Use supervisorctl to start services in development'"
   },
   "keywords": ["onedrive", "media", "streaming", "fastapi", "react"],
   "author": "OneDrive Explorer",
-  "license": "MIT",
-  "engines": {
-    "node": ">=18.0.0",
-    "python": ">=3.11.0"
-  }
+  "license": "MIT"
 }
