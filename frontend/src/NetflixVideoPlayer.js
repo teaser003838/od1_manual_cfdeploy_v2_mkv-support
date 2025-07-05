@@ -501,6 +501,12 @@ const NetflixVideoPlayer = ({ video, backendUrl, accessToken, onBack, onNextVide
     }, 3000);
   };
 
+  const handleMouseMove = () => {
+    if (!isMobile) {
+      showControlsTemporarily();
+    }
+  };
+
   // Container touch handlers for mobile fullscreen
   const handleContainerTouch = (e) => {
     if (!isMobile) return;
