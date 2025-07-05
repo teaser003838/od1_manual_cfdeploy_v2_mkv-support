@@ -5,6 +5,7 @@ import json
 import os
 import re
 import time
+import statistics
 from unittest.mock import patch, MagicMock, AsyncMock
 
 # Get the backend URL from the frontend .env file
@@ -26,8 +27,19 @@ AUDIO_EXTENSIONS = ['.mp3', '.wav', '.flac', '.m4a', '.ogg', '.aac', '.wma', '.o
 AUDIO_MIME_TYPES = ['audio/mpeg', 'audio/wav', 'audio/flac', 'audio/mp4', 'audio/ogg', 
                     'audio/aac', 'audio/x-ms-wma', 'audio/opus', 'audio/aiff', 'audio/alac']
 
+# Photo file extensions and MIME types for testing
+PHOTO_EXTENSIONS = ['.jpg', '.jpeg', '.png', '.gif', '.webp', '.bmp', '.tiff', '.svg']
+PHOTO_MIME_TYPES = ['image/jpeg', 'image/png', 'image/gif', 'image/webp', 'image/bmp', 
+                   'image/tiff', 'image/svg+xml']
+
 # Quality parameters for streaming
 QUALITY_OPTIONS = ['480p', '720p', '1080p', 'Auto']
+
+# Pagination parameters for testing
+PAGE_SIZES = [100, 200, 500, 1000]
+SORT_OPTIONS = ['name', 'size', 'modified', 'type']
+SORT_ORDERS = ['asc', 'desc']
+FILE_TYPE_FILTERS = ['all', 'video', 'audio', 'photo', 'folder']
 
 class TestOneDriveNetflixBackend(unittest.TestCase):
     """Test suite for OneDrive Netflix Backend API"""
