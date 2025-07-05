@@ -1,68 +1,44 @@
-# 🚀 DIRECT DEPLOYMENT - NO GIT ISSUES
+# 🚀 OneDrive Media Streaming App - Quick Start
 
-## Skip All Git Problems
+## Fast Cloudflare Deployment
 
-### Option 1: Vercel CLI (Recommended - No Git Required)
+Deploy your OneDrive media streaming app to **Cloudflare** in under 10 minutes:
 
-```bash
-# Install and login
-npm i -g vercel
-vercel login
+### 1. Create D1 Database
+- Go to **Cloudflare Dashboard** → **D1**
+- Create database: `onedrive-media-db`
+- Run the SQL from `/app/cloudflare-d1-schema.sql`
 
-# Deploy directly from this folder
-cd /app
-vercel --prod
-```
+### 2. Deploy Worker
+- Go to **Workers** → **Create Worker**: `onedrive-media-api`
+- Copy code from `/app/cloudflare-worker.js`
+- Set environment variables (Azure credentials)
+- Bind D1 database as `DB`
 
-### Option 2: ZIP Upload
+### 3. Deploy Frontend
+- Build: `cd frontend && npm run build`
+- Upload `build` folder to **Cloudflare Pages**
+- Set `REACT_APP_BACKEND_URL` to your Worker URL
 
-1. **Create ZIP**:
-```bash
-cd /app
-zip -r onedrive-netflix.zip . -x "node_modules/*" "backend/*" "*.git*"
-```
+### 4. Update URLs
+- Update Worker `FRONTEND_URL` with Pages URL
+- Add Pages URL to Azure OAuth redirect URIs
 
-2. **Upload ZIP to Vercel**: https://vercel.com/new
-3. **Set build settings**:
-   - Build command: `yarn vercel-build`
-   - Output directory: `frontend/build`
+## 🎯 Your App Features
+- **OneDrive Authentication** - Microsoft OAuth
+- **Media Streaming** - Video, audio, photos
+- **File Explorer** - Browse and search OneDrive
+- **Watch History** - Track viewing activity
+- **Mobile Optimized** - Touch controls and responsive
 
-## 🔧 Environment Variables (Required)
+## 💰 Cost: FREE
+- Cloudflare Pages: Unlimited static hosting
+- Workers: 100,000 requests/day
+- D1 Database: 5GB storage free
 
-### Azure/Microsoft:
-```env
-AZURE_CLIENT_ID=your_client_id
-AZURE_CLIENT_SECRET=your_client_secret  
-AZURE_TENANT_ID=your_tenant_id
-```
+## 📁 Key Files
+- `cloudflare-worker.js` - Backend code
+- `cloudflare-d1-schema.sql` - Database schema
+- `CLOUDFLARE_DEPLOYMENT_GUIDE.md` - Detailed guide
 
-### Database (Auto-set with Neon integration):
-```env
-DATABASE_URL=postgresql://username:password@host:port/database
-```
-
-### URLs (Auto-set by Vercel):
-```env
-REDIRECT_URI=https://your-app.vercel.app/api/auth/callback
-FRONTEND_URL=https://your-app.vercel.app
-REACT_APP_BACKEND_URL=https://your-app.vercel.app
-```
-
-## ✅ Post-Deployment Checklist
-
-1. **Test App**: Visit your Vercel URL
-2. **Update Azure**: Add new redirect URI in Azure portal
-3. **Test Auth**: Try password login (66244?BOy.) and OAuth
-4. **Test Features**: Browse files, play media
-
-## 🆘 Need Help?
-
-- **Full Guide**: See `DEPLOYMENT_GUIDE.md`
-- **Architecture**: See `ARCHITECTURE_CHANGES.md`
-- **Issues**: Check Vercel dashboard logs
-
-## 🎉 Success!
-
-Your app should now be live at: `https://your-app-name.vercel.app`
-
-**Test login**: Password is `66244?BOy.`
+**Full deployment guide**: See `DEPLOYMENT_GUIDE.md`
