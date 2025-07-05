@@ -5,7 +5,7 @@ import FileExplorer from './FileExplorer';
 import PhotoSlideshow from './PhotoSlideshow';
 import './App.css';
 
-const BACKEND_URL = process.env.REACT_APP_BACKEND_URL || 'http://localhost:8001';
+const BACKEND_URL = process.env.REACT_APP_BACKEND_URL || (process.env.NODE_ENV === 'production' ? '' : 'http://localhost:8001');
 
 function App() {
   const [isPasswordAuthenticated, setIsPasswordAuthenticated] = useState(false);
