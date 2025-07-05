@@ -1,7 +1,43 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import './FileExplorer.css';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL || (process.env.NODE_ENV === 'production' ? '' : 'http://localhost:8001');
+
+// Virtual scrolling component for performance with 10000+ items
+const VirtualizedList = ({ items, renderItem, itemHeight = 80, containerHeight = 600, overscan = 5 }) => {
+  const [scrollTop, setScrollTop] = useState(0);
+  const scrollElementRef = useRef(null);
+  
+  const totalHeight = items.length * itemHeight;
+  const visibleStart = Math.floor(scrollTop / itemHeight);
+  const visibleEnd = Math.min(visibleStart + Math.ceil(containerHeight / itemHeight), items.length - 1);
+  
+  const startIndex = Math.max(0, visibleStart - overscan);
+  const endIndex = Math.min(items.length - 1, visibleEnd + overscan);
+  
+  const visibleItems = items.slice(startIndex, endIndex + 1);
+  
+  const handleScroll = useCallback((e) => {
+    setScrollTop(e.target.scrollTop);
+  }, []);
+  
+  return (
+    <div 
+      ref={scrollElementRef}
+      className="virtual-scroll-container"
+      style={{ height: containerHeight, overflowY: 'auto' }}
+      onScroll={handleScroll}
+    >
+      <div style={{ height: totalHeight, position: 'relative' }}>
+        <div style={{ transform: `translateY(${startIndex * itemHeight}px)` }}>
+          {visibleItems.map((item, index) => 
+            renderItem(item, startIndex + index)
+          )}
+        </div>
+      </div>
+    </div>
+  );
+};
 
 const FileExplorer = ({ accessToken, currentFolder: parentCurrentFolder, onFolderChange, onPlayVideo, onViewPhoto, onPlayAudio }) => {
   const [currentFolder, setCurrentFolder] = useState(parentCurrentFolder || 'root');
@@ -11,6 +47,25 @@ const FileExplorer = ({ accessToken, currentFolder: parentCurrentFolder, onFolde
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState(null);
   const [viewMode, setViewMode] = useState('grid'); // 'grid' or 'list'
+  
+  // Performance optimization states
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(200); // Start with larger page size for performance
+  const [sortBy, setSortBy] = useState('name');
+  const [sortOrder, setSortOrder] = useState('asc');
+  const [fileTypeFilter, setFileTypeFilter] = useState('all');
+  const [loadingMore, setLoadingMore] = useState(false);
+  const [hasMore, setHasMore] = useState(false);
+  
+  // Caching for performance
+  const folderCache = useRef(new Map());
+  const searchCache = useRef(new Map());
+  
+  // Debounced search
+  const searchTimeoutRef = useRef(null);
+  
+  // Performance metrics
+  const [stats, setStats] = useState(null);
 
   useEffect(() => {
     if (parentCurrentFolder && parentCurrentFolder !== currentFolder) {
@@ -20,17 +75,47 @@ const FileExplorer = ({ accessToken, currentFolder: parentCurrentFolder, onFolde
 
   useEffect(() => {
     if (accessToken) {
-      fetchFolderContents(currentFolder);
+      // Reset pagination when folder changes
+      setCurrentPage(1);
+      fetchFolderContents(currentFolder, 1, true);
     }
-  }, [currentFolder, accessToken]);
+  }, [currentFolder, accessToken, sortBy, sortOrder, fileTypeFilter]);
 
-  const fetchFolderContents = async (folderId) => {
+  // Optimized folder fetching with caching
+  const fetchFolderContents = async (folderId, page = 1, resetData = false) => {
     try {
-      setLoading(true);
+      setLoading(page === 1);
+      setLoadingMore(page > 1);
       setError('');
-      setSearchResults(null);
+      
+      if (resetData) {
+        setSearchResults(null);
+        setFolderContents(null);
+      }
 
-      const response = await fetch(`${BACKEND_URL}/api/explorer/browse?folder_id=${folderId}`, {
+      // Check cache first (only for first page)
+      const cacheKey = `${folderId}-${sortBy}-${sortOrder}-${fileTypeFilter}`;
+      if (page === 1 && folderCache.current.has(cacheKey)) {
+        const cachedData = folderCache.current.get(cacheKey);
+        // Use cached data if it's less than 30 seconds old
+        if (Date.now() - cachedData.timestamp < 30000) {
+          setFolderContents(cachedData.data);
+          setHasMore(cachedData.data.pagination?.has_next || false);
+          setLoading(false);
+          return;
+        }
+      }
+
+      const params = new URLSearchParams({
+        folder_id: folderId,
+        page: page.toString(),
+        page_size: pageSize.toString(),
+        sort_by: sortBy,
+        sort_order: sortOrder,
+        file_types: fileTypeFilter
+      });
+
+      const response = await fetch(`${BACKEND_URL}/api/explorer/browse?${params}`, {
         headers: {
           'Authorization': `Bearer ${accessToken}`,
           'Content-Type': 'application/json'
@@ -39,7 +124,25 @@ const FileExplorer = ({ accessToken, currentFolder: parentCurrentFolder, onFolde
 
       if (response.ok) {
         const data = await response.json();
-        setFolderContents(data);
+        
+        if (page === 1) {
+          setFolderContents(data);
+          // Cache the data
+          folderCache.current.set(cacheKey, {
+            data,
+            timestamp: Date.now()
+          });
+        } else {
+          // Append data for infinite scroll
+          setFolderContents(prev => prev ? {
+            ...data,
+            folders: [...prev.folders, ...data.folders],
+            files: [...prev.files, ...data.files]
+          } : data);
+        }
+        
+        setHasMore(data.pagination?.has_next || false);
+        setCurrentPage(page);
       } else {
         const errorText = await response.text();
         setError(`Failed to load folder: ${response.status} ${response.statusText}`);
@@ -50,21 +153,43 @@ const FileExplorer = ({ accessToken, currentFolder: parentCurrentFolder, onFolde
       setError(`Error loading folder: ${error.message}`);
     } finally {
       setLoading(false);
+      setLoadingMore(false);
     }
   };
 
-  const handleSearch = async (e) => {
-    e.preventDefault();
-    if (!searchQuery.trim()) {
+  // Optimized search with debouncing and caching
+  const performSearch = useCallback(async (query, page = 1) => {
+    if (!query.trim()) {
       setSearchResults(null);
       return;
     }
 
     try {
-      setLoading(true);
+      setLoading(page === 1);
+      setLoadingMore(page > 1);
       setError('');
 
-      const response = await fetch(`${BACKEND_URL}/api/explorer/search?q=${encodeURIComponent(searchQuery)}`, {
+      // Check cache first
+      const cacheKey = `search-${query}-${fileTypeFilter}-${sortBy}-${sortOrder}`;
+      if (page === 1 && searchCache.current.has(cacheKey)) {
+        const cachedData = searchCache.current.get(cacheKey);
+        if (Date.now() - cachedData.timestamp < 60000) { // 1 minute cache for search
+          setSearchResults(cachedData.data);
+          setLoading(false);
+          return;
+        }
+      }
+
+      const params = new URLSearchParams({
+        q: query,
+        page: page.toString(),
+        page_size: pageSize.toString(),
+        file_types: fileTypeFilter,
+        sort_by: sortBy,
+        sort_order: sortOrder
+      });
+
+      const response = await fetch(`${BACKEND_URL}/api/explorer/search?${params}`, {
         headers: {
           'Authorization': `Bearer ${accessToken}`,
           'Content-Type': 'application/json'
@@ -73,7 +198,23 @@ const FileExplorer = ({ accessToken, currentFolder: parentCurrentFolder, onFolde
 
       if (response.ok) {
         const data = await response.json();
-        setSearchResults(data);
+        
+        if (page === 1) {
+          setSearchResults(data);
+          // Cache search results
+          searchCache.current.set(cacheKey, {
+            data,
+            timestamp: Date.now()
+          });
+        } else {
+          // Append for infinite scroll
+          setSearchResults(prev => prev ? {
+            ...data,
+            results: [...prev.results, ...data.results]
+          } : data);
+        }
+        
+        setHasMore(data.pagination?.has_next || false);
       } else {
         setError('Search failed');
       }
@@ -82,8 +223,60 @@ const FileExplorer = ({ accessToken, currentFolder: parentCurrentFolder, onFolde
       setError(`Search error: ${error.message}`);
     } finally {
       setLoading(false);
+      setLoadingMore(false);
+    }
+  }, [accessToken, pageSize, fileTypeFilter, sortBy, sortOrder]);
+
+  // Debounced search handler
+  const handleSearchChange = (query) => {
+    setSearchQuery(query);
+    
+    if (searchTimeoutRef.current) {
+      clearTimeout(searchTimeoutRef.current);
+    }
+    
+    searchTimeoutRef.current = setTimeout(() => {
+      if (query.trim()) {
+        setCurrentPage(1);
+        performSearch(query, 1);
+      } else {
+        setSearchResults(null);
+      }
+    }, 300); // 300ms debounce
+  };
+
+  const handleSearch = async (e) => {
+    e.preventDefault();
+    if (searchTimeoutRef.current) {
+      clearTimeout(searchTimeoutRef.current);
+    }
+    if (searchQuery.trim()) {
+      setCurrentPage(1);
+      await performSearch(searchQuery, 1);
     }
   };
+
+  // Load more data for infinite scroll
+  const loadMore = useCallback(() => {
+    if (hasMore && !loadingMore) {
+      const nextPage = currentPage + 1;
+      if (searchResults) {
+        performSearch(searchQuery, nextPage);
+      } else {
+        fetchFolderContents(currentFolder, nextPage, false);
+      }
+    }
+  }, [hasMore, loadingMore, currentPage, searchResults, searchQuery, currentFolder, performSearch]);
+
+  // Infinite scroll handler
+  const handleScroll = useCallback((e) => {
+    const { scrollTop, scrollHeight, clientHeight } = e.target;
+    
+    // Load more when near bottom (within 200px)
+    if (scrollHeight - scrollTop <= clientHeight + 200) {
+      loadMore();
+    }
+  }, [loadMore]);
 
   const navigateToFolder = (folderId) => {
     setCurrentFolder(folderId);
