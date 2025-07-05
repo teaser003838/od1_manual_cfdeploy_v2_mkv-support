@@ -13,19 +13,12 @@ import asyncio
 import logging
 import hashlib
 import secrets
-from passlib.context import CryptContext
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 app = FastAPI(title="OneDrive File Explorer API", version="1.0.0")
-
-# Password hashing context
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
-
-# Hash the password (66244?BOy.)
-HASHED_PASSWORD = "$2b$12$/T4PlT81dyzgHY4wte6pxuquCgU9TRkIYWi.LqKd7TN8BEcSF8OG."  # 66244?BOy.
 
 # CORS middleware
 app.add_middleware(
@@ -63,9 +56,6 @@ class WatchHistory(BaseModel):
 class UserPreferences(BaseModel):
     theme: str = "dark"
     quality: str = "auto"
-
-class PasswordAuth(BaseModel):
-    password: str
 
 class FileItem(BaseModel):
     id: str
@@ -106,15 +96,6 @@ async def shutdown_event():
         app.mongodb_client.close()
 
 # Authentication endpoints
-@app.post("/api/auth/password")
-async def authenticate_password(auth: PasswordAuth):
-    """Simple password authentication"""
-    if pwd_context.verify(auth.password, HASHED_PASSWORD):
-        # Generate a simple session token
-        session_token = secrets.token_urlsafe(32)
-        return {"authenticated": True, "session_token": session_token}
-    else:
-        raise HTTPException(status_code=401, detail="Invalid password")
 
 @app.get("/api/auth/login")
 async def login():
