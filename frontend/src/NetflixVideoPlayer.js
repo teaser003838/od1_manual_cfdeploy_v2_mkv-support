@@ -574,7 +574,7 @@ const NetflixVideoPlayer = ({ video, backendUrl, accessToken, onBack, onNextVide
         preload="metadata"
         crossOrigin="anonymous"
         playsInline
-        onClick={togglePlay}
+        onClick={!isMobile ? togglePlay : undefined}
       />
 
       {/* Loading Overlay */}
