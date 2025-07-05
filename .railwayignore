@@ -1,0 +1,38 @@
+# Development files
+*.md
+.env.local
+.env.development
+.env.test
+
+# Build artifacts
+node_modules/
+__pycache__/
+*.pyc
+*.pyo
+.pytest_cache/
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+logs/
+
+# Test files
+test_result.md
+scripts/
+
+# Git
+.git/
+.gitignore
+
+# Temporary files
+tmp/
+temp/
