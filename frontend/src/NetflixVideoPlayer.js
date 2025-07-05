@@ -501,8 +501,22 @@ const NetflixVideoPlayer = ({ video, backendUrl, accessToken, onBack, onNextVide
     }, 3000);
   };
 
-  const handleMouseMove = () => {
-    if (!isMobile) {
+  // Container touch handlers for mobile fullscreen
+  const handleContainerTouch = (e) => {
+    if (!isMobile) return;
+    
+    // Always show controls when touching anywhere in the container
+    setShowControls(true);
+    showControlsTemporarily();
+  };
+
+  const handleContainerClick = (e) => {
+    if (!isMobile) return;
+    
+    // Only handle clicks on the container itself, not on child elements
+    if (e.target === containerRef.current) {
+      // Show controls when clicking on black areas in fullscreen
+      setShowControls(true);
       showControlsTemporarily();
     }
   };
