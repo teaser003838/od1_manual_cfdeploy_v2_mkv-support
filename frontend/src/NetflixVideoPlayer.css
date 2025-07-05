@@ -26,6 +26,19 @@
   cursor: default;
 }
 
+/* Touch overlay for mobile fullscreen */
+.netflix-touch-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 1;
+  background: transparent;
+  touch-action: manipulation;
+  pointer-events: auto;
+}
+
 /* Video Element */
 .netflix-video {
   width: 100%;
