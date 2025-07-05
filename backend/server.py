@@ -13,19 +13,12 @@ import asyncio
 import logging
 import hashlib
 import secrets
-from passlib.context import CryptContext
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 app = FastAPI(title="OneDrive File Explorer API", version="1.0.0")
-
-# Password hashing context
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
-
-# Hash the password (66244?BOy.)
-HASHED_PASSWORD = "$2b$12$/T4PlT81dyzgHY4wte6pxuquCgU9TRkIYWi.LqKd7TN8BEcSF8OG."  # 66244?BOy.
 
 # CORS middleware
 app.add_middleware(
