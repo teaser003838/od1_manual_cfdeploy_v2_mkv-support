@@ -9,7 +9,7 @@ import statistics
 from unittest.mock import patch, MagicMock, AsyncMock
 
 # Get the backend URL from the frontend .env file
-BACKEND_URL = "https://cc4f05b5-80f4-4006-9ece-f0d0868de48a.preview.emergentagent.com"
+BACKEND_URL = "https://onedrive-media-api.hul1hu.workers.dev"
 API_URL = f"{BACKEND_URL}/api"
 FRONTEND_URL = "https://cc4f05b5-80f4-4006-9ece-f0d0868de48a.preview.emergentagent.com"
 EXPECTED_REDIRECT_URI = f"{API_URL}/auth/callback"
