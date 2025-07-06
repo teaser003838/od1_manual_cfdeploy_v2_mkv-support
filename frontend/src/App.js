@@ -179,7 +179,7 @@ function App() {
     return (
       <div className="login-container">
         <div className="login-card">
-          <h1>📱 OneFlex</h1>
+          <h1>OneFlex | Fast Smooth Free Streaming</h1>
           <p>Connect to your OneDrive to explore files</p>
           
           {error && (
