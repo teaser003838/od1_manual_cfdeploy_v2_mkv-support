@@ -259,14 +259,26 @@ const EnhancedVideoPlayer = ({
               <div className="video-meta">
                 <span>Size: {formatFileSize(file.size)}</span>
                 <span>Format: {videoInfo.format?.toUpperCase()}</span>
+                {videoInfo.container && videoInfo.container !== videoInfo.format && (
+                  <span>Container: {videoInfo.container.toUpperCase()}</span>
+                )}
                 {videoInfo.resolution && (
                   <span>Resolution: {videoInfo.resolution}</span>
                 )}
                 {videoInfo.isMKV && (
                   <span className="mkv-indicator">MKV</span>
                 )}
+                {videoInfo.audioTracks > 1 && (
+                  <span>Audio Tracks: {videoInfo.audioTracks}</span>
+                )}
+                {videoInfo.subtitleTracks > 0 && (
+                  <span>Subtitles: {videoInfo.subtitleTracks}</span>
+                )}
                 {streamingStats?.method && (
                   <span>Method: {streamingStats.method}</span>
+                )}
+                {videoInfo.browserCompatibility && !videoInfo.browserCompatibility.chrome && (
+                  <span className="compatibility-warning">⚠️ Limited Support</span>
                 )}
               </div>
             )}
