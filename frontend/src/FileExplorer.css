@@ -1,10 +1,13 @@
-/* File Explorer Styles - OneFlex Modern UI */
+/* File Explorer Styles - OneFlex Modern UI - Optimized for 60fps scrolling */
 
 .file-explorer {
   min-height: 100vh;
   background: #141414;
   color: white;
   padding: 10px;
+  /* Hardware acceleration for smooth scrolling */
+  transform: translateZ(0);
+  will-change: scroll-position;
 }
 
 /* Filters Section */
