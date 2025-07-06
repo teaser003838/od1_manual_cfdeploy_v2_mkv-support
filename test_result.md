@@ -111,17 +111,53 @@ the back button when pressing on browser redirects to "sign in page" but i need 
 
 all these should be responsive full support"
 
-  - task: "Password Authentication Removal"
+  - task: "Header Update to OneFlex Branding"
     implemented: true
     working: true
-    file: "/app/backend/server.py, /app/api/index.py"
+    file: "/app/frontend/src/App.js"
     stuck_count: 0
     priority: "high"
     needs_retesting: false
     status_history:
         - working: true
           agent: "main"
-          comment: "COMPLETED: Successfully removed password authentication completely from both backend files. Removed passlib imports, PasswordAuth model, password hashing context, HASHED_PASSWORD constant, and /api/auth/password endpoint. Updated requirements.txt files to remove passlib dependency. OneDrive OAuth authentication remains fully functional. Users now go directly to OneDrive authentication screen without password prompt."
+          comment: "COMPLETED: Successfully updated header from '📱 OneFlex' to 'OneFlex | Fast Smooth Free Streaming' in both login screen and main app header. Changes applied to App.js and verified through screenshot."
+
+  - task: "Hamburger Menu for Filter Controls"
+    implemented: true
+    working: true
+    file: "/app/frontend/src/FileExplorer.js, /app/frontend/src/FileExplorer.css"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+        - working: true
+          agent: "main"
+          comment: "COMPLETED: Replaced the full filter/sort/page size controls section with a responsive hamburger menu icon. Added collapsible dropdown menu with: 1) Hamburger menu toggle button with icon and label, 2) Responsive dropdown with slide-down animation, 3) Close button and click-outside functionality, 4) Mobile-responsive positioning (fixed modal on mobile), 5) All original controls maintained (filter, sort, page size). Menu appears on click and closes when clicking outside or close button."
+
+  - task: "Performance Stats Moved to Bottom"
+    implemented: true
+    working: true
+    file: "/app/frontend/src/FileExplorer.js"
+    stuck_count: 0
+    priority: "medium"
+    needs_retesting: true
+    status_history:
+        - working: true
+          agent: "main"
+          comment: "COMPLETED: Moved the performance stats section (showing file counts, page info, and total size) from the top of the FileExplorer to the bottom of the component, after the content area. This provides better visual hierarchy and makes the main content more prominent."
+
+  - task: "Back Button Navigation Fix"
+    implemented: false
+    working: false
+    file: "/app/frontend/src/App.js, /app/frontend/src/VideoPlayer.js, /app/frontend/src/AudioPlayer.js"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+        - working: false
+          agent: "main"
+          comment: "TODO: Need to fix back button behavior. Currently, browser back button redirects to sign-in page instead of going to previous folder. Need to implement proper navigation history management for: 1) FileExplorer folder navigation, 2) Video player back to current folder (not home), 3) Audio player back to current folder, 4) Photo viewer back to current folder. Should use browser history API or implement custom navigation stack."
 
 backend:
   - task: "Health Check Endpoint"
