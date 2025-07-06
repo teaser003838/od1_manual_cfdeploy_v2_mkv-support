@@ -511,7 +511,7 @@ const FileExplorer = ({
 
       {/* Hamburger Menu for Controls - Always visible when not in mobile search mode */}
       {!showSearch && (
-        <div className="hamburger-menu-section">
+        <div className="hamburger-menu-section" ref={controlsMenuRef}>
           <button 
             className="hamburger-menu-toggle"
             onClick={() => setShowControlsMenu(!showControlsMenu)}
