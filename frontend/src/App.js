@@ -345,7 +345,7 @@ function App() {
               🚪
             </button>
             <button 
-              onClick={() => {/* TODO: Add filter functionality */}} 
+              onClick={toggleFilters} 
               className="filters-button"
               title="Filters"
             >
