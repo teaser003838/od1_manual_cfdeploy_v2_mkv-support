@@ -274,6 +274,13 @@ function App() {
     setShowFilters(!showFilters);
   };
 
+  const scrollToTop = () => {
+    window.scrollTo({
+      top: 0,
+      behavior: 'smooth'
+    });
+  };
+
   // OneDrive Authentication Screen
   if (!isOneDriveAuthenticated) {
     return (
