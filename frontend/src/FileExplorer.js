@@ -538,17 +538,7 @@ const FileExplorer = ({
     );
   }, [searchResults, folderContents]);
 
-  // Pagination info for bottom of page
-  const paginationInfo = useMemo(() => {
-    const displayData = searchResults || folderContents;
-    if (!displayData || !displayData.pagination) return null;
-    
-    return (
-      <div className="pagination-info">
-        <span>Page {displayData.pagination.current_page} of {displayData.pagination.total_pages}</span>
-      </div>
-    );
-  }, [searchResults, folderContents]);
+
 
   return (
     <div className="file-explorer">
