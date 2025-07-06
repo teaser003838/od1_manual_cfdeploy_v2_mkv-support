@@ -583,6 +583,77 @@ const FileExplorer = ({
       
       {/* Performance Stats at Bottom */}
       {!showSearch && bottomPerformanceStats}
+
+      {/* Filters Section - Only show when showFilters is true */}
+      {showFilters && (
+        <div className="filters-section">
+          <div className="filters-header">
+            <h3>Filters & Options</h3>
+            <button 
+              onClick={onFiltersToggle}
+              className="close-filters-button"
+              title="Close Filters"
+            >
+              ✕
+            </button>
+          </div>
+          
+          <div className="filters-content">
+            {/* Filter Controls */}
+            <div className="filter-controls">
+              <label>Filter:</label>
+              <select 
+                value={fileTypeFilter} 
+                onChange={(e) => setFileTypeFilter(e.target.value)}
+                className="filter-select"
+              >
+                <option value="all">All Files</option>
+                <option value="folder">Folders</option>
+                <option value="video">Videos</option>
+                <option value="audio">Audio</option>
+                <option value="photo">Photos</option>
+              </select>
+            </div>
+
+            {/* Sort Controls */}
+            <div className="sort-controls">
+              <label>Sort by:</label>
+              <select 
+                value={sortBy} 
+                onChange={(e) => setSortBy(e.target.value)}
+                className="sort-select"
+              >
+                <option value="name">Name</option>
+                <option value="size">Size</option>
+                <option value="modified">Modified</option>
+                <option value="type">Type</option>
+                {searchResults && <option value="relevance">Relevance</option>}
+              </select>
+              <button 
+                onClick={() => setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc')}
+                className="sort-order-button"
+              >
+                {sortOrder === 'asc' ? '⬆️' : '⬇️'}
+              </button>
+            </div>
+
+            {/* Page Size Control */}
+            <div className="page-size-controls">
+              <label>Items per page:</label>
+              <select 
+                value={pageSize} 
+                onChange={(e) => setPageSize(Number(e.target.value))}
+                className="page-size-select"
+              >
+                <option value="100">100</option>
+                <option value="200">200</option>
+                <option value="500">500</option>
+                <option value="1000">1000</option>
+              </select>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
