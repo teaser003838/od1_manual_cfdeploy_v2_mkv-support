@@ -148,16 +148,16 @@ all these should be responsive full support"
           comment: "COMPLETED: Moved the performance stats section (showing file counts, page info, and total size) from the top of the FileExplorer to the bottom of the component, after the content area. This provides better visual hierarchy and makes the main content more prominent."
 
   - task: "Back Button Navigation Fix"
-    implemented: false
-    working: false
-    file: "/app/frontend/src/App.js, /app/frontend/src/VideoPlayer.js, /app/frontend/src/AudioPlayer.js"
+    implemented: true
+    working: true
+    file: "/app/frontend/src/App.js"
     stuck_count: 0
     priority: "high"
     needs_retesting: true
     status_history:
-        - working: false
+        - working: true
           agent: "main"
-          comment: "TODO: Need to fix back button behavior. Currently, browser back button redirects to sign-in page instead of going to previous folder. Need to implement proper navigation history management for: 1) FileExplorer folder navigation, 2) Video player back to current folder (not home), 3) Audio player back to current folder, 4) Photo viewer back to current folder. Should use browser history API or implement custom navigation stack."
+          comment: "COMPLETED: Implemented proper browser history management to fix back button navigation. Added: 1) HTML5 History API integration with pushState/popState events, 2) Navigation history tracking with state management for view, folder, and item, 3) Browser back button now correctly navigates to previous folder/view instead of sign-in page, 4) State restoration from browser history maintains correct app state, 5) Updated all navigation functions (handlePlayVideo, handlePlayAudio, handleViewPhoto, handleFolderChange) to push history states, 6) Modified handleBackToExplorer to use browser.back() for proper history navigation. Users can now use browser back button or app back button to navigate correctly through folders and media players."
 
 backend:
   - task: "Health Check Endpoint"
