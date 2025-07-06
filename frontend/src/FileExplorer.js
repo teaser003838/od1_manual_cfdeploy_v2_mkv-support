@@ -680,7 +680,7 @@ const FileExplorer = ({
       </div>
       
       {/* Performance Stats at Bottom */}
-      {!showSearch && performanceStats}
+      {!showSearch && bottomPerformanceStats}
     </div>
   );
 };
