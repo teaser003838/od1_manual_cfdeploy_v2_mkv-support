@@ -72,24 +72,9 @@ const FileExplorer = ({
   
   // Debounced search
   const searchTimeoutRef = useRef(null);
-  const controlsMenuRef = useRef(null); // Reference for hamburger menu
   
   // Performance metrics
   const [stats, setStats] = useState(null);
-
-  // Click outside handler for hamburger menu
-  useEffect(() => {
-    const handleClickOutside = (event) => {
-      if (controlsMenuRef.current && !controlsMenuRef.current.contains(event.target)) {
-        setShowControlsMenu(false);
-      }
-    };
-
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
-    };
-  }, []);
 
   useEffect(() => {
     if (parentCurrentFolder && parentCurrentFolder !== currentFolder) {
