@@ -591,8 +591,6 @@ const FileExplorer = ({
 
       {/* Performance Stats */}
       {!showSearch && performanceStats}
-
-      {/* Content Area with Virtual Scrolling */}
       <div className="content-area" onScroll={handleScroll}>
         {loading && currentPage === 1 ? (
           <div className="loading">
