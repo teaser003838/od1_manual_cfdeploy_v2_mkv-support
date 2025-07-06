@@ -331,6 +331,18 @@ backend:
           agent: "testing"
           comment: "Watch history GET endpoint (/api/watch-history) is implemented and correctly requires authentication. Returns 422 error without auth token which is expected."
 
+  - task: "Pagination Display Removal"
+    implemented: true
+    working: true
+    file: "/app/frontend/src/FileExplorer.js, /app/frontend/src/FileExplorer.css"
+    stuck_count: 0
+    priority: "medium"
+    needs_retesting: false
+    status_history:
+        - working: true
+          agent: "main"
+          comment: "COMPLETED: Completely removed the pagination display ('Page X of Y') from the entire application as requested. Changes made: 1) REMOVED PAGINATION COMPONENT - Completely removed the paginationInfo useMemo component that was rendering pagination info at the bottom of the page, 2) CLEANED UP PERFORMANCE STATS - Removed pagination display from topPerformanceStats component and cleaned up empty component references, 3) REMOVED CSS STYLES - Removed all pagination-info CSS styles including mobile responsive breakpoints, 4) CODE CLEANUP - Removed all references to pagination display components and cleaned up render logic. The yellow marked pagination text ('Page 1 of 1') is now completely removed from the repository while maintaining all other functionality including infinite scroll and load more features."
+
   - task: "Scroll Performance Optimization"
     implemented: true
     working: true
