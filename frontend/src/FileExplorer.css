@@ -1006,7 +1006,24 @@
   }
 }
 
-/* Accessibility improvements */
+/* Global scroll performance optimizations */
+* {
+  box-sizing: border-box;
+}
+
+html {
+  /* Enable smooth scrolling with hardware acceleration */
+  scroll-behavior: smooth;
+  -webkit-overflow-scrolling: touch;
+}
+
+body {
+  /* Hardware acceleration for main scroll container */
+  transform: translateZ(0);
+  will-change: scroll-position;
+}
+
+/* Reduce animations on lower-end devices */
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,
