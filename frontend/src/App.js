@@ -365,6 +365,8 @@ function App() {
           onViewPhoto={handleViewPhoto}
           showSearch={showSearch}
           onSearchToggle={toggleSearch}
+          showFilters={showFilters}
+          onFiltersToggle={toggleFilters}
         />
       </main>
     </div>
