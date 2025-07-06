@@ -642,6 +642,9 @@ const FileExplorer = ({
       
       {/* Performance Stats at Bottom */}
       {!showSearch && bottomPerformanceStats}
+      
+      {/* Enhanced Pagination Info at Bottom */}
+      {enhancedPaginationInfo}
 
       {/* Filters Section - Only show when showFilters is true */}
       {showFilters && (
