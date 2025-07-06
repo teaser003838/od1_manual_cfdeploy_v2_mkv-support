@@ -446,12 +446,15 @@
   border-radius: 12px;
 }
 
-/* Items Container */
+/* Items Container - Optimized for smooth scrolling */
 .items-container.grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
   gap: 16px;
   padding: 16px;
+  /* Hardware acceleration for grid container */
+  transform: translateZ(0);
+  will-change: contents;
 }
 
 .items-container.list {
@@ -459,6 +462,9 @@
   flex-direction: column;
   gap: 2px;
   padding: 8px;
+  /* Hardware acceleration for list container */
+  transform: translateZ(0);
+  will-change: contents;
 }
 
 /* Item Cards - Optimized for 60fps scrolling */
