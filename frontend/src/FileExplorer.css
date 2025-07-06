@@ -413,18 +413,21 @@
   color: white;
 }
 
-/* Virtual Scrolling Container */
+/* Virtual Scroll Container - Optimized for 60fps */
 .virtual-scroll-container {
-  width: 100%;
   position: relative;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 12px;
-  background: rgba(26, 26, 26, 0.8);
-  backdrop-filter: blur(10px);
+  /* Enable hardware acceleration */
+  transform: translateZ(0);
+  will-change: scroll-position;
+  /* Optimize scrolling on touch devices */
+  -webkit-overflow-scrolling: touch;
+  /* Optimize scroll performance */
+  contain: layout style paint;
 }
 
 .virtual-scroll-container::-webkit-scrollbar {
-  width: 8px;
+  width: 6px;
+  background: transparent;
 }
 
 .virtual-scroll-container::-webkit-scrollbar-track {
