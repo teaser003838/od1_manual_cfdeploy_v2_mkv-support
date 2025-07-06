@@ -463,21 +463,27 @@ const FileExplorer = ({
     return [...(folderContents?.folders || []), ...(folderContents?.files || [])];
   }, [searchResults, folderContents]);
 
-  // Performance stats display
-  const performanceStats = useMemo(() => {
+  // Performance stats display - Top section without folder size
+  const topPerformanceStats = useMemo(() => {
     const displayData = searchResults || folderContents;
     if (!displayData) return null;
     
-    const totalItems = searchResults ? 
-      searchResults.pagination?.total_items : 
-      (folderContents?.folders?.length || 0) + (folderContents?.files?.length || 0);
-    
     return (
       <div className="performance-stats">
-        <span>📊 {totalItems} items</span>
         {displayData.pagination && (
           <span>Page {displayData.pagination.current_page} of {displayData.pagination.total_pages}</span>
         )}
+      </div>
+    );
+  }, [searchResults, folderContents]);
+
+  // Performance stats display - Bottom section with folder size only
+  const bottomPerformanceStats = useMemo(() => {
+    const displayData = searchResults || folderContents;
+    if (!displayData) return null;
+    
+    return (
+      <div className="performance-stats">
         {folderContents?.total_size > 0 && (
           <span>💾 {formatFileSize(folderContents.total_size)}</span>
         )}
