@@ -227,12 +227,18 @@ function App() {
   };
 
   const handleBackToExplorer = () => {
-    setCurrentView('explorer');
-    setSelectedItem(null);
-    setAllPhotos([]);
-    setVideoPlaylist([]);
-    setShowSearch(false);
-    // Note: We keep currentFolder unchanged so user returns to the same directory
+    // Instead of directly setting state, use browser back functionality
+    if (window.history.length > 1) {
+      window.history.back();
+    } else {
+      // Fallback if no history available
+      setCurrentView('explorer');
+      setSelectedItem(null);
+      setAllPhotos([]);
+      setVideoPlaylist([]);
+      setShowSearch(false);
+      pushHistoryState('explorer', currentFolder, null);
+    }
   };
 
   const handleLogout = () => {
