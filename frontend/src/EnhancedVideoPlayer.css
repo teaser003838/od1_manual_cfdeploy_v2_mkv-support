@@ -1,0 +1,420 @@
+/* EnhancedVideoPlayer.css - Styles for Enhanced Video Player */
+
+.enhanced-video-player-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.95);
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  backdrop-filter: blur(5px);
+}
+
+.enhanced-video-player-container {
+  width: 95%;
+  height: 95%;
+  max-width: 1400px;
+  max-height: 900px;
+  display: flex;
+  flex-direction: column;
+  background: #1a1a1a;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.6);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.enhanced-video-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px 25px;
+  background: linear-gradient(135deg, #2d2d2d, #1f1f1f);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  min-height: 80px;
+}
+
+.video-title h2 {
+  color: white;
+  margin: 0 0 10px 0;
+  font-size: 1.6em;
+  font-weight: 600;
+  font-family: 'Netflix Sans', Arial, sans-serif;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+}
+
+.video-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 15px;
+  color: #bbb;
+  font-size: 0.9em;
+  font-family: 'Netflix Sans', Arial, sans-serif;
+}
+
+.video-meta span {
+  background: rgba(255, 255, 255, 0.1);
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 0.85em;
+}
+
+.mkv-indicator {
+  background: #e50914 !important;
+  color: white !important;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.video-controls {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  flex-shrink: 0;
+}
+
+.nav-button,
+.close-button {
+  background: rgba(255, 255, 255, 0.1);
+  color: white;
+  border: none;
+  padding: 12px 16px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 14px;
+  font-family: 'Netflix Sans', Arial, sans-serif;
+  transition: all 0.3s ease;
+  backdrop-filter: blur(10px);
+}
+
+.nav-button:hover,
+.close-button:hover {
+  background: rgba(255, 255, 255, 0.2);
+  transform: translateY(-1px);
+}
+
+.nav-button:disabled {
+  background: rgba(255, 255, 255, 0.05);
+  color: #666;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.playlist-counter {
+  color: #bbb;
+  font-size: 0.9em;
+  padding: 0 10px;
+  font-family: 'Netflix Sans Mono', monospace;
+}
+
+.close-button {
+  background: #e50914;
+  font-weight: 600;
+}
+
+.close-button:hover {
+  background: #f40612;
+}
+
+.enhanced-video-content {
+  flex: 1;
+  position: relative;
+  background: #000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 0;
+}
+
+.loading-state,
+.error-state {
+  text-align: center;
+  color: white;
+  padding: 40px;
+  font-family: 'Netflix Sans', Arial, sans-serif;
+}
+
+.loading-spinner {
+  font-size: 48px;
+  margin-bottom: 20px;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.mkv-loading-info {
+  color: #e50914;
+  font-size: 0.9em;
+  margin: 10px 0;
+  font-weight: 500;
+}
+
+.loading-time {
+  font-size: 0.9em;
+  color: #aaa;
+  margin-top: 10px;
+  font-family: 'Netflix Sans Mono', monospace;
+}
+
+.error-state {
+  max-width: 500px;
+  margin: 0 auto;
+}
+
+.error-icon {
+  font-size: 64px;
+  margin-bottom: 20px;
+  opacity: 0.8;
+}
+
+.error-state h3 {
+  margin: 0 0 15px 0;
+  color: #ff6b6b;
+  font-size: 1.5em;
+  font-weight: 600;
+}
+
+.error-state p {
+  margin: 0 0 20px 0;
+  color: #ccc;
+  line-height: 1.5;
+}
+
+.mkv-error-info {
+  background: rgba(229, 9, 20, 0.1);
+  border: 1px solid rgba(229, 9, 20, 0.3);
+  border-radius: 8px;
+  padding: 20px;
+  margin: 20px 0;
+  text-align: left;
+}
+
+.mkv-error-info h4 {
+  color: #e50914;
+  margin: 0 0 10px 0;
+  font-size: 1.1em;
+}
+
+.mkv-error-info ul {
+  margin: 0;
+  padding-left: 20px;
+  color: #ccc;
+}
+
+.mkv-error-info li {
+  margin-bottom: 8px;
+  line-height: 1.4;
+}
+
+.error-actions {
+  display: flex;
+  gap: 15px;
+  justify-content: center;
+  margin-top: 25px;
+}
+
+.error-actions button {
+  background: rgba(255, 255, 255, 0.1);
+  color: white;
+  border: none;
+  padding: 12px 20px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 14px;
+  font-family: 'Netflix Sans', Arial, sans-serif;
+  transition: all 0.3s ease;
+}
+
+.error-actions button:hover {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.main-universal-player {
+  width: 100%;
+  height: 100%;
+  border-radius: 0;
+}
+
+.enhanced-video-footer {
+  padding: 15px 25px;
+  background: linear-gradient(135deg, #1f1f1f, #2d2d2d);
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.playback-stats {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 20px;
+  color: #aaa;
+  font-size: 0.85em;
+  font-family: 'Netflix Sans Mono', monospace;
+}
+
+.playback-stats span {
+  background: rgba(255, 255, 255, 0.05);
+  padding: 6px 10px;
+  border-radius: 4px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.mkv-status {
+  background: rgba(229, 9, 20, 0.2) !important;
+  color: #e50914 !important;
+  border-color: rgba(229, 9, 20, 0.3) !important;
+  font-weight: 600;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .enhanced-video-player-container {
+    width: 100%;
+    height: 100%;
+    max-width: none;
+    max-height: none;
+    border-radius: 0;
+  }
+
+  .enhanced-video-header {
+    flex-direction: column;
+    gap: 15px;
+    align-items: flex-start;
+    padding: 15px;
+    min-height: auto;
+  }
+
+  .video-title h2 {
+    font-size: 1.3em;
+  }
+
+  .video-meta {
+    gap: 10px;
+  }
+
+  .video-meta span {
+    font-size: 0.8em;
+  }
+
+  .video-controls {
+    width: 100%;
+    justify-content: space-between;
+    flex-wrap: wrap;
+  }
+
+  .nav-button,
+  .close-button {
+    padding: 10px 14px;
+    font-size: 13px;
+  }
+
+  .playlist-counter {
+    font-size: 0.85em;
+  }
+
+  .enhanced-video-footer {
+    padding: 10px 15px;
+  }
+
+  .playback-stats {
+    flex-direction: column;
+    gap: 10px;
+  }
+}
+
+@media (max-width: 480px) {
+  .enhanced-video-header {
+    padding: 10px;
+  }
+
+  .video-title h2 {
+    font-size: 1.1em;
+  }
+
+  .video-meta {
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .video-controls {
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .nav-button,
+  .close-button {
+    width: 100%;
+    padding: 12px;
+  }
+
+  .mkv-error-info {
+    padding: 15px;
+  }
+
+  .error-actions {
+    flex-direction: column;
+  }
+
+  .error-actions button {
+    width: 100%;
+  }
+}
+
+/* Dark mode optimizations */
+@media (prefers-color-scheme: dark) {
+  .enhanced-video-player-container {
+    background: #0f0f0f;
+    border-color: rgba(255, 255, 255, 0.05);
+  }
+
+  .enhanced-video-header {
+    background: linear-gradient(135deg, #1a1a1a, #0f0f0f);
+  }
+
+  .enhanced-video-footer {
+    background: linear-gradient(135deg, #0f0f0f, #1a1a1a);
+  }
+}
+
+/* High DPI displays */
+@media (-webkit-min-device-pixel-ratio: 2), (min-resolution: 192dpi) {
+  .enhanced-video-player-overlay {
+    backdrop-filter: blur(8px);
+  }
+  
+  .enhanced-video-header,
+  .enhanced-video-footer {
+    backdrop-filter: blur(10px);
+  }
+}
+
+/* Accessibility improvements */
+.nav-button:focus,
+.close-button:focus {
+  outline: 2px solid #e50914;
+  outline-offset: 2px;
+}
+
+.error-actions button:focus {
+  outline: 2px solid #e50914;
+  outline-offset: 2px;
+}
+
+/* Reduce motion for users who prefer it */
+@media (prefers-reduced-motion: reduce) {
+  .loading-spinner {
+    animation: none;
+  }
+  
+  .nav-button,
+  .close-button,
+  .error-actions button {
+    transition: none;
+  }
+}
