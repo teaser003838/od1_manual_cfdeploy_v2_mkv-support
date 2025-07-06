@@ -259,6 +259,10 @@ function App() {
     setShowSearch(!showSearch);
   };
 
+  const toggleFilters = () => {
+    setShowFilters(!showFilters);
+  };
+
   // OneDrive Authentication Screen
   if (!isOneDriveAuthenticated) {
     return (
