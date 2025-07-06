@@ -183,6 +183,9 @@ function App() {
     }
     
     setCurrentView('video');
+    
+    // Push state to browser history
+    pushHistoryState('video', currentFolder, video);
   };
 
   const handleNextVideo = (nextVideo) => {
