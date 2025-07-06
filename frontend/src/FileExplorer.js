@@ -678,6 +678,9 @@ const FileExplorer = ({
           </div>
         </div>
       )}
+      
+      {/* Pagination Info at Bottom */}
+      {paginationInfo}
     </div>
   );
 };
