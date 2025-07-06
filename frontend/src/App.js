@@ -60,6 +60,16 @@ function App() {
     }
   }, [isOneDriveAuthenticated]);
 
+  // Handle scroll to show/hide scroll-to-top button
+  useEffect(() => {
+    const handleScroll = () => {
+      setShowScrollToTop(window.scrollY > 300);
+    };
+
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
   // Browser history management for back button support
   useEffect(() => {
     const handlePopState = (event) => {
