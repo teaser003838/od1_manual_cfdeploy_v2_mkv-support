@@ -469,19 +469,32 @@ const FileExplorer = ({
     );
   }, [searchResults, folderContents]);
 
-  // Performance stats display - Bottom section with folder size only
+  // Bottom performance stats without pagination
   const bottomPerformanceStats = useMemo(() => {
     const displayData = searchResults || folderContents;
     if (!displayData) return null;
     
     return (
       <div className="performance-stats">
-        {folderContents?.total_size > 0 && (
-          <span>💾 {formatFileSize(folderContents.total_size)}</span>
+        {/* Only show size info, pagination moved to bottom */}
+        {displayData.folder_size && (
+          <span>Total size: {displayData.folder_size}</span>
         )}
       </div>
     );
-  }, [searchResults, folderContents, formatFileSize]);
+  }, [searchResults, folderContents]);
+
+  // Pagination info for bottom of page
+  const paginationInfo = useMemo(() => {
+    const displayData = searchResults || folderContents;
+    if (!displayData || !displayData.pagination) return null;
+    
+    return (
+      <div className="pagination-info">
+        <span>Page {displayData.pagination.current_page} of {displayData.pagination.total_pages}</span>
+      </div>
+    );
+  }, [searchResults, folderContents]);
 
   return (
     <div className="file-explorer">
