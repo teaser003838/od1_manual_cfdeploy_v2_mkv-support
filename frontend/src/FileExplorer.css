@@ -109,13 +109,16 @@
   color: white;
 }
 
-/* Mobile Search Section */
+/* Mobile Search Section - Optimized */
 .mobile-search-section {
   margin-bottom: 20px;
   padding: 15px;
-  background: rgba(255, 255, 255, 0.05);
+  background: rgba(255, 255, 255, 0.08);
   border-radius: 12px;
-  backdrop-filter: blur(10px);
+  /* Reduced backdrop-filter for better performance */
+  backdrop-filter: blur(5px);
+  /* Hardware acceleration */
+  transform: translateZ(0);
 }
 
 .search-form {
