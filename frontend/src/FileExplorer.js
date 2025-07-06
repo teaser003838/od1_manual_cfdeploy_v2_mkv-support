@@ -530,7 +530,7 @@ const FileExplorer = ({
 
       {/* Performance Stats */}
       {!showSearch && topPerformanceStats}
-      <div className="content-area" onScroll={handleScroll}>
+      <div className="content-area">
         {loading && currentPage === 1 ? (
           <div className="loading">
             <div className="loading-spinner"></div>
