@@ -417,23 +417,6 @@
   border-radius: 12px;
 }
 
-.content-area::-webkit-scrollbar {
-  width: 8px;
-}
-
-.content-area::-webkit-scrollbar-track {
-  background: rgba(34, 34, 34, 0.5);
-}
-
-.content-area::-webkit-scrollbar-thumb {
-  background: rgba(68, 68, 68, 0.8);
-  border-radius: 4px;
-}
-
-.content-area::-webkit-scrollbar-thumb:hover {
-  background: rgba(102, 102, 102, 0.8);
-}
-
 /* Items Container */
 .items-container.grid {
   display: grid;
