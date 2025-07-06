@@ -193,7 +193,7 @@ async function handleAuthLogin(env, corsHeaders) {
   try {
     const authority = `https://login.microsoftonline.com/${env.AZURE_TENANT_ID}`;
     const scopes = ['Files.ReadWrite.All', 'User.Read'];
-    const redirectUri = `${env.FRONTEND_URL}/api/auth/callback`;
+    const redirectUri = env.REDIRECT_URI || `https://onedrive-media-api.hul1hu.workers.dev/api/auth/callback`;
     
     const authUrl = `${authority}/oauth2/v2.0/authorize?` +
       `client_id=${env.AZURE_CLIENT_ID}&` +
