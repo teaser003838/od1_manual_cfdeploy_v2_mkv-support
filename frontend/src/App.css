@@ -524,7 +524,8 @@ select:focus-visible {
   }
   
   .search-toggle-button,
-  .logout-button {
+  .logout-button,
+  .filters-button {
     border: 1px solid #fff;
   }
 }
