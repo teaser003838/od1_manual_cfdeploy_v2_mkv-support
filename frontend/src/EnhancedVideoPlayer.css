@@ -71,6 +71,19 @@
   letter-spacing: 0.5px;
 }
 
+.compatibility-warning {
+  background: #ff9800 !important;
+  color: white !important;
+  font-weight: 600;
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0% { opacity: 1; }
+  50% { opacity: 0.7; }
+  100% { opacity: 1; }
+}
+
 .video-controls {
   display: flex;
   align-items: center;
