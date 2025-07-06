@@ -557,8 +557,7 @@ const FileExplorer = ({
         </div>
       )}
 
-      {/* Performance Stats */}
-      {!showSearch && topPerformanceStats}
+      {/* Performance Stats - removed pagination display */}
       <div className="content-area">
         {loading && currentPage === 1 ? (
           <div className="loading">
