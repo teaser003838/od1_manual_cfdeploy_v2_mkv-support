@@ -279,15 +279,21 @@ const FileExplorer = ({
     }
   }, [hasMore, loadingMore, currentPage, searchResults, searchQuery, currentFolder, performSearch]);
 
-  // Infinite scroll handler
-  const handleScroll = useCallback((e) => {
-    const { scrollTop, scrollHeight, clientHeight } = e.target;
+  // Infinite scroll handler for window scroll
+  const handleScroll = useCallback(() => {
+    const { scrollTop, scrollHeight, clientHeight } = document.documentElement;
     
     // Load more when near bottom (within 200px)
     if (scrollHeight - scrollTop <= clientHeight + 200) {
       loadMore();
     }
   }, [loadMore]);
+
+  // Add window scroll listener for infinite scroll
+  useEffect(() => {
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, [handleScroll]);
 
   const navigateToFolder = (folderId) => {
     setCurrentFolder(folderId);
