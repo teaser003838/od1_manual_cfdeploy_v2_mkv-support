@@ -387,6 +387,18 @@ function App() {
           onFiltersToggle={toggleFilters}
         />
       </main>
+
+      {/* Scroll to Top Button */}
+      {showScrollToTop && (
+        <button
+          onClick={scrollToTop}
+          className="scroll-to-top-button"
+          title="Scroll to top"
+          aria-label="Scroll to top"
+        >
+          ⬆️
+        </button>
+      )}
     </div>
   );
 }
