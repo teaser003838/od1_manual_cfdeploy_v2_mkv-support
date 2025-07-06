@@ -221,6 +221,9 @@ function App() {
 
   const handleFolderChange = (folderId) => {
     setCurrentFolder(folderId);
+    
+    // Push state to browser history for folder navigation
+    pushHistoryState('explorer', folderId, null);
   };
 
   const handleBackToExplorer = () => {
