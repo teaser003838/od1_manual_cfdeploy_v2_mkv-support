@@ -498,6 +498,38 @@ body {
   }
 }
 
+/* Scroll to Top Button */
+.scroll-to-top-button {
+  position: fixed;
+  bottom: 30px;
+  right: 30px;
+  width: 50px;
+  height: 50px;
+  background: rgba(229, 9, 20, 0.9);
+  color: white;
+  border: none;
+  border-radius: 50%;
+  cursor: pointer;
+  font-size: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.3s ease;
+  z-index: 1000;
+  box-shadow: 0 4px 20px rgba(229, 9, 20, 0.3);
+  backdrop-filter: blur(10px);
+}
+
+.scroll-to-top-button:hover {
+  background: rgba(244, 6, 18, 0.9);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 25px rgba(229, 9, 20, 0.4);
+}
+
+.scroll-to-top-button:active {
+  transform: translateY(0);
+}
+
 /* Accessibility improvements */
 @media (prefers-reduced-motion: reduce) {
   *,
