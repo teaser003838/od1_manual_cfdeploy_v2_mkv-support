@@ -56,7 +56,6 @@ const FileExplorer = ({
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState(null);
   const [viewMode, setViewMode] = useState('grid'); // 'grid' or 'list'
-  const [showControlsMenu, setShowControlsMenu] = useState(false); // For responsive menu
   
   // Performance optimization states
   const [currentPage, setCurrentPage] = useState(1);
