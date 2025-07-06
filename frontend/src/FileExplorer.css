@@ -640,7 +640,7 @@
 
 .play-button:hover {
   background: #f40612;
-  transform: scale(1.1);
+  transform: scale(1.1) translateZ(0);
 }
 
 /* Item Info */
