@@ -1,6 +1,6 @@
-from fastapi import FastAPI, Request, HTTPException, Header, Depends, Response
+from fastapi import FastAPI, Request, HTTPException, Header, Depends, Response, Query
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import StreamingResponse, RedirectResponse
+from fastapi.responses import StreamingResponse, RedirectResponse, JSONResponse
 from motor.motor_asyncio import AsyncIOMotorClient
 from pydantic import BaseModel
 from msal import ConfidentialClientApplication
