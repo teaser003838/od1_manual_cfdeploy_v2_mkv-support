@@ -73,6 +73,7 @@ const FileExplorer = ({
   
   // Debounced search
   const searchTimeoutRef = useRef(null);
+  const controlsMenuRef = useRef(null); // Reference for hamburger menu
   
   // Performance metrics
   const [stats, setStats] = useState(null);
