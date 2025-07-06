@@ -17,6 +17,7 @@ function App() {
   const [videoPlaylist, setVideoPlaylist] = useState([]); // For Netflix-style next video functionality
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [showSearch, setShowSearch] = useState(false); // For mobile search toggle
 
   useEffect(() => {
     // Check for existing OneDrive access token
@@ -155,6 +156,7 @@ function App() {
     setSelectedItem(null);
     setAllPhotos([]);
     setVideoPlaylist([]);
+    setShowSearch(false);
     // Note: We keep currentFolder unchanged so user returns to the same directory
   };
 
@@ -165,6 +167,11 @@ function App() {
     setSelectedItem(null);
     setCurrentView('explorer');
     setError('');
+    setShowSearch(false);
+  };
+
+  const toggleSearch = () => {
+    setShowSearch(!showSearch);
   };
 
   // OneDrive Authentication Screen
@@ -172,7 +179,7 @@ function App() {
     return (
       <div className="login-container">
         <div className="login-card">
-          <h1>🗂️ OneDrive Explorer</h1>
+          <h1>📱 OneFlex</h1>
           <p>Connect to your OneDrive to explore files</p>
           
           {error && (
@@ -232,11 +239,21 @@ function App() {
     <div className="app">
       <header className="app-header">
         <div className="header-content">
-          <h1>🗂️ OneDrive Explorer</h1>
-          <div className="header-info">
-            <span className="user-info">📁 File Browser & Media Viewer</span>
-            <button onClick={handleLogout} className="logout-button">
-              🚪 Logout
+          <h1>📱 OneFlex</h1>
+          <div className="header-actions">
+            <button 
+              onClick={toggleSearch} 
+              className="search-toggle-button"
+              title="Search"
+            >
+              🔍
+            </button>
+            <button 
+              onClick={handleLogout} 
+              className="logout-button"
+              title="Logout"
+            >
+              🚪
             </button>
           </div>
         </div>
@@ -250,6 +267,8 @@ function App() {
           onPlayVideo={handlePlayVideo}
           onPlayAudio={handlePlayAudio}
           onViewPhoto={handleViewPhoto}
+          showSearch={showSearch}
+          onSearchToggle={toggleSearch}
         />
       </main>
     </div>

@@ -39,7 +39,16 @@ const VirtualizedList = ({ items, renderItem, itemHeight = 80, containerHeight =
   );
 };
 
-const FileExplorer = ({ accessToken, currentFolder: parentCurrentFolder, onFolderChange, onPlayVideo, onViewPhoto, onPlayAudio }) => {
+const FileExplorer = ({ 
+  accessToken, 
+  currentFolder: parentCurrentFolder, 
+  onFolderChange, 
+  onPlayVideo, 
+  onViewPhoto, 
+  onPlayAudio,
+  showSearch,
+  onSearchToggle
+}) => {
   const [currentFolder, setCurrentFolder] = useState(parentCurrentFolder || 'root');
   const [folderContents, setFolderContents] = useState(null);
   const [loading, setLoading] = useState(false);
@@ -298,6 +307,9 @@ const FileExplorer = ({ accessToken, currentFolder: parentCurrentFolder, onFolde
     if (searchTimeoutRef.current) {
       clearTimeout(searchTimeoutRef.current);
     }
+    if (onSearchToggle) {
+      onSearchToggle();
+    }
   };
 
   // Performance optimized utilities
@@ -459,85 +471,88 @@ const FileExplorer = ({ accessToken, currentFolder: parentCurrentFolder, onFolde
 
   return (
     <div className="file-explorer">
-      {/* Search Bar */}
-      <div className="search-section">
-        <form onSubmit={handleSearch} className="search-form">
-          <input
-            type="text"
-            placeholder="Search across OneDrive..."
-            value={searchQuery}
-            onChange={(e) => handleSearchChange(e.target.value)}
-            className="search-input"
-          />
-          <button type="submit" className="search-button" disabled={loading}>
-            🔍 Search
-          </button>
-          {searchResults && (
-            <button type="button" onClick={clearSearch} className="clear-search-button">
-              ✕ Clear
+      {/* Mobile Search Bar - Only show when showSearch is true */}
+      {showSearch && (
+        <div className="mobile-search-section">
+          <form onSubmit={handleSearch} className="search-form">
+            <input
+              type="text"
+              placeholder="Search across OneDrive..."
+              value={searchQuery}
+              onChange={(e) => handleSearchChange(e.target.value)}
+              className="search-input"
+              autoFocus
+            />
+            <button type="submit" className="search-button" disabled={loading}>
+              🔍
             </button>
-          )}
-        </form>
-      </div>
-
-      {/* Advanced Controls */}
-      <div className="controls-section">
-        {/* Filter Controls */}
-        <div className="filter-controls">
-          <label>Filter:</label>
-          <select 
-            value={fileTypeFilter} 
-            onChange={(e) => setFileTypeFilter(e.target.value)}
-            className="filter-select"
-          >
-            <option value="all">All Files</option>
-            <option value="folder">Folders</option>
-            <option value="video">Videos</option>
-            <option value="audio">Audio</option>
-            <option value="photo">Photos</option>
-          </select>
+            <button type="button" onClick={clearSearch} className="clear-search-button">
+              ✕
+            </button>
+          </form>
         </div>
+      )}
 
-        {/* Sort Controls */}
-        <div className="sort-controls">
-          <label>Sort by:</label>
-          <select 
-            value={sortBy} 
-            onChange={(e) => setSortBy(e.target.value)}
-            className="sort-select"
-          >
-            <option value="name">Name</option>
-            <option value="size">Size</option>
-            <option value="modified">Modified</option>
-            <option value="type">Type</option>
-            {searchResults && <option value="relevance">Relevance</option>}
-          </select>
-          <button 
-            onClick={() => setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc')}
-            className="sort-order-button"
-          >
-            {sortOrder === 'asc' ? '⬆️' : '⬇️'}
-          </button>
-        </div>
+      {/* Advanced Controls - Only show when not in mobile search mode */}
+      {!showSearch && (
+        <div className="controls-section">
+          {/* Filter Controls */}
+          <div className="filter-controls">
+            <label>Filter:</label>
+            <select 
+              value={fileTypeFilter} 
+              onChange={(e) => setFileTypeFilter(e.target.value)}
+              className="filter-select"
+            >
+              <option value="all">All Files</option>
+              <option value="folder">Folders</option>
+              <option value="video">Videos</option>
+              <option value="audio">Audio</option>
+              <option value="photo">Photos</option>
+            </select>
+          </div>
 
-        {/* Page Size Control */}
-        <div className="page-size-controls">
-          <label>Items per page:</label>
-          <select 
-            value={pageSize} 
-            onChange={(e) => setPageSize(Number(e.target.value))}
-            className="page-size-select"
-          >
-            <option value="100">100</option>
-            <option value="200">200</option>
-            <option value="500">500</option>
-            <option value="1000">1000</option>
-          </select>
+          {/* Sort Controls */}
+          <div className="sort-controls">
+            <label>Sort by:</label>
+            <select 
+              value={sortBy} 
+              onChange={(e) => setSortBy(e.target.value)}
+              className="sort-select"
+            >
+              <option value="name">Name</option>
+              <option value="size">Size</option>
+              <option value="modified">Modified</option>
+              <option value="type">Type</option>
+              {searchResults && <option value="relevance">Relevance</option>}
+            </select>
+            <button 
+              onClick={() => setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc')}
+              className="sort-order-button"
+            >
+              {sortOrder === 'asc' ? '⬆️' : '⬇️'}
+            </button>
+          </div>
+
+          {/* Page Size Control */}
+          <div className="page-size-controls">
+            <label>Items per page:</label>
+            <select 
+              value={pageSize} 
+              onChange={(e) => setPageSize(Number(e.target.value))}
+              className="page-size-select"
+            >
+              <option value="100">100</option>
+              <option value="200">200</option>
+              <option value="500">500</option>
+              <option value="1000">1000</option>
+            </select>
+          </div>
         </div>
-      </div>
+      )}
 
       {/* Navigation and View Controls */}
-      {!searchResults && (
+      {!searchResults && !showSearch && (
         <div className="navigation-section">
           {renderBreadcrumbs}
           <div className="view-controls">
@@ -558,7 +573,7 @@ const FileExplorer = ({ accessToken, currentFolder: parentCurrentFolder, onFolde
       )}
 
       {/* Performance Stats */}
-      {performanceStats}
+      {!showSearch && performanceStats}
 
       {/* Content Area with Virtual Scrolling */}
       <div className="content-area" onScroll={handleScroll}>
