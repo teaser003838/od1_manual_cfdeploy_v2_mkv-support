@@ -306,16 +306,34 @@ function App() {
 
   // Netflix Video Player View
   if (currentView === 'video' && selectedItem) {
-    return (
-      <NetflixVideoPlayer 
-        video={selectedItem}
-        backendUrl={BACKEND_URL}
-        accessToken={accessToken}
-        onBack={handleBackToExplorer}
-        onNextVideo={handleNextVideo}
-        playlist={videoPlaylist}
-      />
-    );
+    // Check if it's an MKV file to use the enhanced player
+    const isMKVFile = selectedItem.name.toLowerCase().endsWith('.mkv');
+    
+    if (isMKVFile) {
+      return (
+        <EnhancedVideoPlayer 
+          file={selectedItem}
+          onClose={handleBackToExplorer}
+          onNext={handleNextVideo}
+          onPrevious={handlePreviousVideo}
+          playlist={videoPlaylist}
+          currentIndex={videoPlaylist.findIndex(v => v.id === selectedItem.id)}
+          backendUrl={BACKEND_URL}
+          accessToken={accessToken}
+        />
+      );
+    } else {
+      return (
+        <NetflixVideoPlayer 
+          video={selectedItem}
+          backendUrl={BACKEND_URL}
+          accessToken={accessToken}
+          onBack={handleBackToExplorer}
+          onNextVideo={handleNextVideo}
+          playlist={videoPlaylist}
+        />
+      );
+    }
   }
 
   // Audio Player View
