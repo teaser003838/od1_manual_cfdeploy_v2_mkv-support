@@ -201,6 +201,9 @@ function App() {
   const handlePlayAudio = (audio) => {
     setSelectedItem(audio);
     setCurrentView('audio');
+    
+    // Push state to browser history
+    pushHistoryState('audio', currentFolder, audio);
   };
 
   const handleViewPhoto = async (photo) => {
