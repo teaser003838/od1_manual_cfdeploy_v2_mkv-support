@@ -60,6 +60,48 @@
   flex-wrap: wrap;
 }
 
+/* View Mode Controls in Filters */
+.view-mode-controls {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 120px;
+}
+
+.view-mode-controls label {
+  font-size: 14px;
+  font-weight: 500;
+  color: #ccc;
+  margin-bottom: 4px;
+}
+
+.view-buttons {
+  display: flex;
+  gap: 6px;
+}
+
+.view-buttons .view-button {
+  background: rgba(255, 255, 255, 0.1);
+  border: none;
+  color: #ccc;
+  padding: 8px 12px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  font-size: 12px;
+  white-space: nowrap;
+}
+
+.view-buttons .view-button:hover {
+  background: rgba(255, 255, 255, 0.2);
+  color: white;
+}
+
+.view-buttons .view-button.active {
+  background: #e50914;
+  color: white;
+}
+
 /* Mobile Search Section */
 .mobile-search-section {
   margin-bottom: 20px;
