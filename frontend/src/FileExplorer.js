@@ -3,7 +3,7 @@ import './FileExplorer.css';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL || (process.env.NODE_ENV === 'production' ? '' : 'http://localhost:8001');
 
-// Virtual scrolling component for performance with 10000+ items
+// Optimized virtual scrolling component for 60fps performance
 const VirtualizedList = ({ items, renderItem, itemHeight = 80, containerHeight = 600, overscan = 5 }) => {
   const [scrollTop, setScrollTop] = useState(0);
   const scrollElementRef = useRef(null);
@@ -17,22 +17,58 @@ const VirtualizedList = ({ items, renderItem, itemHeight = 80, containerHeight =
   
   const visibleItems = items.slice(startIndex, endIndex + 1);
   
+  // Optimized scroll handler with requestAnimationFrame
   const handleScroll = useCallback((e) => {
-    setScrollTop(e.target.scrollTop);
+    let ticking = false;
+    
+    const update = () => {
+      setScrollTop(e.target.scrollTop);
+      ticking = false;
+    };
+    
+    if (!ticking) {
+      requestAnimationFrame(update);
+      ticking = true;
+    }
   }, []);
   
   return (
     <div 
       ref={scrollElementRef}
       className="virtual-scroll-container"
-      style={{ height: containerHeight, overflowY: 'auto' }}
+      style={{ 
+        height: containerHeight, 
+        overflowY: 'auto',
+        // Hardware acceleration for smooth scrolling
+        willChange: 'scroll-position',
+        transform: 'translateZ(0)'
+      }}
       onScroll={handleScroll}
     >
-      <div style={{ height: totalHeight, position: 'relative' }}>
-        <div style={{ transform: `translateY(${startIndex * itemHeight}px)` }}>
-          {visibleItems.map((item, index) => 
-            renderItem(item, startIndex + index)
-          )}
+      <div style={{ 
+        height: totalHeight, 
+        position: 'relative',
+        // Hardware acceleration
+        transform: 'translateZ(0)'
+      }}>
+        <div style={{ 
+          transform: `translateY(${startIndex * itemHeight}px)`,
+          // Hardware acceleration
+          willChange: 'transform'
+        }}>
+          {visibleItems.map((item, index) => (
+            <div
+              key={item.id || startIndex + index}
+              style={{ 
+                height: itemHeight,
+                // Hardware acceleration for each item
+                transform: 'translateZ(0)',
+                willChange: 'transform'
+              }}
+            >
+              {renderItem(item, startIndex + index)}
+            </div>
+          ))}
         </div>
       </div>
     </div>
