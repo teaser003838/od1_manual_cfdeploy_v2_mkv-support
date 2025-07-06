@@ -47,7 +47,9 @@ const FileExplorer = ({
   onViewPhoto, 
   onPlayAudio,
   showSearch,
-  onSearchToggle
+  onSearchToggle,
+  showFilters,
+  onFiltersToggle
 }) => {
   const [currentFolder, setCurrentFolder] = useState(parentCurrentFolder || 'root');
   const [folderContents, setFolderContents] = useState(null);
