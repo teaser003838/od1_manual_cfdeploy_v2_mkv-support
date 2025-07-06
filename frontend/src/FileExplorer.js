@@ -494,61 +494,77 @@ const FileExplorer = ({
         </div>
       )}
 
-      {/* Advanced Controls - Only show when not in mobile search mode */}
+      {/* Hamburger Menu for Controls - Always visible when not in mobile search mode */}
       {!showSearch && (
-        <div className="controls-section">
-          {/* Filter Controls */}
-          <div className="filter-controls">
-            <label>Filter:</label>
-            <select 
-              value={fileTypeFilter} 
-              onChange={(e) => setFileTypeFilter(e.target.value)}
-              className="filter-select"
-            >
-              <option value="all">All Files</option>
-              <option value="folder">Folders</option>
-              <option value="video">Videos</option>
-              <option value="audio">Audio</option>
-              <option value="photo">Photos</option>
-            </select>
-          </div>
+        <div className="hamburger-menu-section">
+          <button 
+            className="hamburger-menu-toggle"
+            onClick={() => setShowControlsMenu(!showControlsMenu)}
+            title="Filters and Options"
+          >
+            <span className="hamburger-icon">☰</span>
+            <span className="menu-label">Filters</span>
+          </button>
+          
+          {/* Collapsible Controls Menu */}
+          {showControlsMenu && (
+            <div className="controls-dropdown">
+              <div className="controls-dropdown-inner">
+                {/* Filter Controls */}
+                <div className="filter-controls">
+                  <label>Filter:</label>
+                  <select 
+                    value={fileTypeFilter} 
+                    onChange={(e) => setFileTypeFilter(e.target.value)}
+                    className="filter-select"
+                  >
+                    <option value="all">All Files</option>
+                    <option value="folder">Folders</option>
+                    <option value="video">Videos</option>
+                    <option value="audio">Audio</option>
+                    <option value="photo">Photos</option>
+                  </select>
+                </div>
 
-          {/* Sort Controls */}
-          <div className="sort-controls">
-            <label>Sort by:</label>
-            <select 
-              value={sortBy} 
-              onChange={(e) => setSortBy(e.target.value)}
-              className="sort-select"
-            >
-              <option value="name">Name</option>
-              <option value="size">Size</option>
-              <option value="modified">Modified</option>
-              <option value="type">Type</option>
-              {searchResults && <option value="relevance">Relevance</option>}
-            </select>
-            <button 
-              onClick={() => setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc')}
-              className="sort-order-button"
-            >
-              {sortOrder === 'asc' ? '⬆️' : '⬇️'}
-            </button>
-          </div>
+                {/* Sort Controls */}
+                <div className="sort-controls">
+                  <label>Sort by:</label>
+                  <select 
+                    value={sortBy} 
+                    onChange={(e) => setSortBy(e.target.value)}
+                    className="sort-select"
+                  >
+                    <option value="name">Name</option>
+                    <option value="size">Size</option>
+                    <option value="modified">Modified</option>
+                    <option value="type">Type</option>
+                    {searchResults && <option value="relevance">Relevance</option>}
+                  </select>
+                  <button 
+                    onClick={() => setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc')}
+                    className="sort-order-button"
+                  >
+                    {sortOrder === 'asc' ? '⬆️' : '⬇️'}
+                  </button>
+                </div>
 
-          {/* Page Size Control */}
-          <div className="page-size-controls">
-            <label>Items per page:</label>
-            <select 
-              value={pageSize} 
-              onChange={(e) => setPageSize(Number(e.target.value))}
-              className="page-size-select"
-            >
-              <option value="100">100</option>
-              <option value="200">200</option>
-              <option value="500">500</option>
-              <option value="1000">1000</option>
-            </select>
-          </div>
+                {/* Page Size Control */}
+                <div className="page-size-controls">
+                  <label>Items per page:</label>
+                  <select 
+                    value={pageSize} 
+                    onChange={(e) => setPageSize(Number(e.target.value))}
+                    className="page-size-select"
+                  >
+                    <option value="100">100</option>
+                    <option value="200">200</option>
+                    <option value="500">500</option>
+                    <option value="1000">1000</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
       )}
 
