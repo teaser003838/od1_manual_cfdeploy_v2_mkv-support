@@ -214,6 +214,9 @@ function App() {
     setAllPhotos([photo]); // For now, just the single photo
     
     setCurrentView('photo');
+    
+    // Push state to browser history
+    pushHistoryState('photo', currentFolder, photo);
   };
 
   const handleFolderChange = (folderId) => {
