@@ -647,6 +647,9 @@ const FileExplorer = ({
           </>
         )}
       </div>
+      
+      {/* Performance Stats at Bottom */}
+      {!showSearch && performanceStats}
     </div>
   );
 };
