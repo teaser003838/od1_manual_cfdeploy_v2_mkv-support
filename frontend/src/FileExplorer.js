@@ -509,6 +509,31 @@ const FileExplorer = ({
     return [...(folderContents?.folders || []), ...(folderContents?.files || [])];
   }, [searchResults, folderContents]);
 
+  // Enhanced pagination info with folder stats for bottom of page
+  const enhancedPaginationInfo = useMemo(() => {
+    const displayData = searchResults || folderContents;
+    if (!displayData) return null;
+    
+    // Calculate totals
+    const folders = displayData.folders || [];
+    const files = displayData.files || [];
+    const totalItems = folders.length + files.length;
+    
+    return (
+      <div className="enhanced-pagination-info">
+        <span>
+          {displayData.pagination && (
+            `Page ${displayData.pagination.current_page} of ${displayData.pagination.total_pages}`
+          )}
+          {displayData.pagination && totalItems > 0 && ' | '}
+          {totalItems > 0 && `${totalItems} items`}
+          {displayData.folder_size && `, ${displayData.folder_size}`}
+          {displayData.total_size && !displayData.folder_size && `, ${formatFileSize(displayData.total_size)}`}
+        </span>
+      </div>
+    );
+  }, [searchResults, folderContents, formatFileSize]);
+
   // Bottom performance stats without pagination
   const bottomPerformanceStats = useMemo(() => {
     const displayData = searchResults || folderContents;
