@@ -31,6 +31,9 @@ function App() {
       setAccessToken(savedAccessToken);
       setIsOneDriveAuthenticated(true);
     }
+    
+    // Set website title
+    document.title = 'OneFlex | Fast Smooth Free Streaming';
   }, []);
 
   // Handle OAuth callback
