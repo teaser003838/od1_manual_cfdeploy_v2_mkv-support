@@ -221,7 +221,7 @@ async function handleAuthCallback(request, env, corsHeaders) {
     
     // Exchange code for token
     const tokenUrl = `https://login.microsoftonline.com/${env.AZURE_TENANT_ID}/oauth2/v2.0/token`;
-    const redirectUri = `${env.FRONTEND_URL}/api/auth/callback`;
+    const redirectUri = env.REDIRECT_URI || `https://onedrive-media-api.hul1hu.workers.dev/api/auth/callback`;
     
     const tokenData = new URLSearchParams({
       client_id: env.AZURE_CLIENT_ID,
