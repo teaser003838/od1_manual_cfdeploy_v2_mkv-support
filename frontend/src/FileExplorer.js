@@ -509,18 +509,6 @@ const FileExplorer = ({
     return [...(folderContents?.folders || []), ...(folderContents?.files || [])];
   }, [searchResults, folderContents]);
 
-  // Performance stats display - Top section (removed pagination completely)
-  const topPerformanceStats = useMemo(() => {
-    const displayData = searchResults || folderContents;
-    if (!displayData) return null;
-    
-    return (
-      <div className="performance-stats">
-        {/* Pagination removed completely as requested */}
-      </div>
-    );
-  }, [searchResults, folderContents]);
-
   // Bottom performance stats without pagination
   const bottomPerformanceStats = useMemo(() => {
     const displayData = searchResults || folderContents;
