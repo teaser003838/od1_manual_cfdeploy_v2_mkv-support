@@ -450,7 +450,8 @@ body {
   }
 
   .search-toggle-button,
-  .logout-button {
+  .logout-button,
+  .filters-button {
     width: 36px;
     height: 36px;
     font-size: 1rem;
