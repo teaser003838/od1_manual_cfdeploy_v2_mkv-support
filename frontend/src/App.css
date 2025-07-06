@@ -504,6 +504,14 @@ body {
   .main-content {
     padding: 0.25rem;
   }
+
+  .scroll-to-top-button {
+    width: 40px;
+    height: 40px;
+    bottom: 15px;
+    right: 15px;
+    font-size: 16px;
+  }
 }
 
 /* Scroll to Top Button */
