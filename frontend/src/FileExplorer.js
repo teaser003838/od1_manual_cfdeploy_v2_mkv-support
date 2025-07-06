@@ -279,7 +279,7 @@ const FileExplorer = ({
     }
   }, [hasMore, loadingMore, currentPage, searchResults, searchQuery, currentFolder, performSearch]);
 
-  // Infinite scroll handler for window scroll
+  // Optimized infinite scroll handler with throttling
   const handleScroll = useCallback(() => {
     const { scrollTop, scrollHeight, clientHeight } = document.documentElement;
     
@@ -289,11 +289,29 @@ const FileExplorer = ({
     }
   }, [loadMore]);
 
-  // Add window scroll listener for infinite scroll
-  useEffect(() => {
-    window.addEventListener('scroll', handleScroll);
-    return () => window.removeEventListener('scroll', handleScroll);
+  // Throttled scroll handler for better performance
+  const throttledScrollHandler = useCallback(() => {
+    let ticking = false;
+    
+    const update = () => {
+      handleScroll();
+      ticking = false;
+    };
+    
+    return () => {
+      if (!ticking) {
+        requestAnimationFrame(update);
+        ticking = true;
+      }
+    };
   }, [handleScroll]);
+
+  // Add window scroll listener for infinite scroll with throttling
+  useEffect(() => {
+    const handler = throttledScrollHandler();
+    window.addEventListener('scroll', handler, { passive: true });
+    return () => window.removeEventListener('scroll', handler);
+  }, [throttledScrollHandler]);
 
   const navigateToFolder = (folderId) => {
     setCurrentFolder(folderId);
