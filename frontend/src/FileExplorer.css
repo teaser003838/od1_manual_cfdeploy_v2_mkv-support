@@ -994,7 +994,6 @@
 /* Focus styles for keyboard navigation */
 .search-input:focus-visible,
 .breadcrumb-item:focus-visible,
-.view-button:focus-visible,
 .item-card:focus-visible {
   outline: 2px solid #e50914;
   outline-offset: 2px;
