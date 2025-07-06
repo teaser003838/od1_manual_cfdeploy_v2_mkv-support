@@ -588,6 +588,7 @@
   font-size: 1.2rem;
 }
 
+/* Media Overlay - Optimized */
 .media-overlay {
   position: absolute;
   top: 0;
@@ -599,8 +600,13 @@
   align-items: center;
   justify-content: center;
   opacity: 0;
-  transition: opacity 0.3s ease;
-  backdrop-filter: blur(2px);
+  /* Faster transition for better performance */
+  transition: opacity 0.2s ease;
+  /* Reduced backdrop-filter for better performance */
+  backdrop-filter: blur(1px);
+  /* Hardware acceleration */
+  transform: translateZ(0);
+  will-change: opacity;
 }
 
 .item-card:hover .media-overlay {
