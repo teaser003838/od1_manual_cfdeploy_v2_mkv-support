@@ -591,6 +591,25 @@ const FileExplorer = ({
           </div>
           
           <div className="filters-content">
+            {/* View Mode Controls */}
+            <div className="view-mode-controls">
+              <label>View Mode:</label>
+              <div className="view-buttons">
+                <button 
+                  className={`view-button ${viewMode === 'grid' ? 'active' : ''}`}
+                  onClick={() => setViewMode('grid')}
+                >
+                  ⊞ Grid
+                </button>
+                <button 
+                  className={`view-button ${viewMode === 'list' ? 'active' : ''}`}
+                  onClick={() => setViewMode('list')}
+                >
+                  ☰ List
+                </button>
+              </div>
+            </div>
+
             {/* Filter Controls */}
             <div className="filter-controls">
               <label>Filter:</label>
