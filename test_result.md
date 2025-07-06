@@ -486,7 +486,7 @@ frontend:
     status_history:
         - working: true
           agent: "main"
-          comment: "COMPLETED UI ENHANCEMENTS: 1) Added filters icon (🎛️) without text to header after logout button for quick access to filtering options, 2) Removed items count display from performance stats to clean up interface, 3) Reorganized performance stats to show folder size only at bottom section, removed from top section for better visual hierarchy, 4) Updated header branding to 'OneFlex | Fast Smooth Free Streaming' as per requirements. All changes are responsive and maintain existing dark theme design. Added proper CSS styling for the new filters button across all screen sizes."
+          comment: "COMPLETED UI ENHANCEMENTS: 1) Added filters icon (🎛️) without text to header after logout button for quick access to filtering options, 2) Removed items count display from performance stats to clean up interface, 3) Reorganized performance stats to show folder size only at bottom section, removed from top section for better visual hierarchy, 4) Updated header branding to 'OneFlex | Fast Smooth Free Streaming' as per requirements. All changes are responsive and maintain existing dark theme design. Added proper CSS styling for the new filters button across all screen sizes. FIXED: Removed duplicate filters - completely removed the original hamburger menu with 'Filters' text from FileExplorer component and moved all filter functionality to the header icon. The filters now properly toggle from the header button and show a clean dropdown with all filter controls (file type, sort options, page size)."
 
 metadata:
   created_by: "main_agent"
