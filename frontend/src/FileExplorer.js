@@ -525,6 +525,16 @@ const FileExplorer = ({
           {showControlsMenu && (
             <div className="controls-dropdown">
               <div className="controls-dropdown-inner">
+                <div className="controls-dropdown-header">
+                  <span className="dropdown-title">Filters & Options</span>
+                  <button 
+                    className="close-dropdown-button"
+                    onClick={() => setShowControlsMenu(false)}
+                    title="Close"
+                  >
+                    ✕
+                  </button>
+                </div>
                 {/* Filter Controls */}
                 <div className="filter-controls">
                   <label>Filter:</label>
