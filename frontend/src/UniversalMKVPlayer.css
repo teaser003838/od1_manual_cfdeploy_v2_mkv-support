@@ -1,0 +1,495 @@
+/* UniversalMKVPlayer.css - Styles for Advanced MKV Player */
+
+.universal-mkv-player {
+  position: relative;
+  background: #000;
+  overflow: hidden;
+  border-radius: 8px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+  user-select: none;
+  cursor: pointer;
+}
+
+.universal-mkv-player.fullscreen {
+  border-radius: 0;
+  width: 100vw !important;
+  height: 100vh !important;
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 9999;
+}
+
+.mkv-video-element {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  background: #000;
+}
+
+/* Loading State */
+.loading-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.8);
+  color: white;
+  font-family: 'Netflix Sans', Arial, sans-serif;
+  z-index: 10;
+}
+
+.loading-spinner {
+  font-size: 48px;
+  margin-bottom: 20px;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.loading-overlay p {
+  font-size: 16px;
+  margin: 0;
+  opacity: 0.8;
+}
+
+/* Error State */
+.universal-mkv-player.error-state {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 400px;
+  background: #1a1a1a;
+  color: white;
+  font-family: 'Netflix Sans', Arial, sans-serif;
+}
+
+.error-content {
+  text-align: center;
+  max-width: 500px;
+  padding: 40px;
+}
+
+.error-icon {
+  font-size: 64px;
+  margin-bottom: 20px;
+  opacity: 0.8;
+}
+
+.error-content h3 {
+  color: #ff6b6b;
+  margin: 0 0 15px 0;
+  font-size: 24px;
+  font-weight: 600;
+}
+
+.error-content p {
+  color: #ccc;
+  margin: 0 0 20px 0;
+  font-size: 16px;
+  line-height: 1.5;
+}
+
+.error-suggestions {
+  text-align: left;
+  background: rgba(255, 255, 255, 0.05);
+  padding: 20px;
+  border-radius: 8px;
+  margin-top: 20px;
+}
+
+.error-suggestions h4 {
+  color: #fff;
+  margin: 0 0 10px 0;
+  font-size: 16px;
+}
+
+.error-suggestions ul {
+  margin: 0;
+  padding-left: 20px;
+  color: #ccc;
+}
+
+.error-suggestions li {
+  margin-bottom: 8px;
+  font-size: 14px;
+  line-height: 1.4;
+}
+
+/* Controls */
+.mkv-controls {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: linear-gradient(transparent, rgba(0, 0, 0, 0.8));
+  padding: 20px;
+  transition: opacity 0.3s ease;
+  z-index: 5;
+}
+
+.universal-mkv-player.fullscreen .mkv-controls {
+  opacity: 1;
+}
+
+.progress-section {
+  margin-bottom: 15px;
+}
+
+.progress-bar {
+  position: relative;
+  height: 4px;
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 2px;
+  overflow: hidden;
+  cursor: pointer;
+}
+
+.progress-buffer {
+  position: absolute;
+  height: 100%;
+  background: rgba(255, 255, 255, 0.4);
+  border-radius: 2px;
+  transition: width 0.3s ease;
+}
+
+.progress-current {
+  position: absolute;
+  height: 100%;
+  background: #e50914;
+  border-radius: 2px;
+  transition: width 0.1s ease;
+}
+
+.progress-slider {
+  position: absolute;
+  top: -6px;
+  left: 0;
+  width: 100%;
+  height: 16px;
+  background: transparent;
+  cursor: pointer;
+  -webkit-appearance: none;
+  appearance: none;
+}
+
+.progress-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 16px;
+  height: 16px;
+  background: #e50914;
+  border-radius: 50%;
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+
+.progress-slider:hover::-webkit-slider-thumb {
+  opacity: 1;
+}
+
+.progress-slider::-moz-range-thumb {
+  width: 16px;
+  height: 16px;
+  background: #e50914;
+  border-radius: 50%;
+  cursor: pointer;
+  border: none;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+
+.progress-slider:hover::-moz-range-thumb {
+  opacity: 1;
+}
+
+.controls-section {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  color: white;
+  font-family: 'Netflix Sans', Arial, sans-serif;
+}
+
+.left-controls,
+.right-controls {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+}
+
+.control-btn {
+  background: none;
+  border: none;
+  color: white;
+  font-size: 24px;
+  cursor: pointer;
+  padding: 8px;
+  border-radius: 4px;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.control-btn:hover {
+  background: rgba(255, 255, 255, 0.1);
+  transform: scale(1.1);
+}
+
+.volume-controls {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.volume-btn {
+  font-size: 20px;
+}
+
+.volume-slider {
+  width: 80px;
+  height: 4px;
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 2px;
+  cursor: pointer;
+  -webkit-appearance: none;
+  appearance: none;
+}
+
+.volume-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 12px;
+  height: 12px;
+  background: #e50914;
+  border-radius: 50%;
+  cursor: pointer;
+}
+
+.volume-slider::-moz-range-thumb {
+  width: 12px;
+  height: 12px;
+  background: #e50914;
+  border-radius: 50%;
+  cursor: pointer;
+  border: none;
+}
+
+.time-display {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 14px;
+  color: #ccc;
+  font-family: 'Netflix Sans Mono', monospace;
+}
+
+.audio-track-selector,
+.playback-rate-selector {
+  position: relative;
+}
+
+.control-select {
+  background: rgba(0, 0, 0, 0.7);
+  color: white;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 4px;
+  padding: 6px 10px;
+  font-size: 12px;
+  cursor: pointer;
+  outline: none;
+  transition: border-color 0.2s ease;
+}
+
+.control-select:hover {
+  border-color: rgba(255, 255, 255, 0.4);
+}
+
+.control-select:focus {
+  border-color: #e50914;
+}
+
+.control-select option {
+  background: #000;
+  color: white;
+}
+
+.fullscreen-btn {
+  font-size: 20px;
+}
+
+/* Streaming Info */
+.streaming-info {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  background: rgba(0, 0, 0, 0.7);
+  color: white;
+  padding: 6px 12px;
+  border-radius: 4px;
+  font-size: 12px;
+  font-family: 'Netflix Sans Mono', monospace;
+  opacity: 0.7;
+  z-index: 3;
+}
+
+.streaming-info span {
+  margin-right: 10px;
+}
+
+.streaming-info span:last-child {
+  margin-right: 0;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .mkv-controls {
+    padding: 15px;
+  }
+  
+  .controls-section {
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+  
+  .left-controls,
+  .right-controls {
+    gap: 10px;
+  }
+  
+  .control-btn {
+    font-size: 20px;
+    padding: 6px;
+  }
+  
+  .volume-slider {
+    width: 60px;
+  }
+  
+  .time-display {
+    font-size: 12px;
+  }
+  
+  .control-select {
+    padding: 4px 8px;
+    font-size: 10px;
+  }
+  
+  .streaming-info {
+    font-size: 10px;
+    padding: 4px 8px;
+  }
+}
+
+@media (max-width: 480px) {
+  .mkv-controls {
+    padding: 10px;
+  }
+  
+  .controls-section {
+    flex-direction: column;
+    gap: 10px;
+  }
+  
+  .left-controls,
+  .right-controls {
+    justify-content: center;
+    width: 100%;
+  }
+  
+  .volume-controls {
+    order: 2;
+  }
+  
+  .time-display {
+    order: 1;
+  }
+  
+  .audio-track-selector,
+  .playback-rate-selector {
+    display: none;
+  }
+}
+
+/* Touch Optimizations */
+@media (hover: none) and (pointer: coarse) {
+  .control-btn {
+    font-size: 28px;
+    padding: 12px;
+  }
+  
+  .progress-slider {
+    height: 20px;
+    top: -8px;
+  }
+  
+  .progress-slider::-webkit-slider-thumb {
+    width: 20px;
+    height: 20px;
+    opacity: 1;
+  }
+  
+  .progress-slider::-moz-range-thumb {
+    width: 20px;
+    height: 20px;
+    opacity: 1;
+  }
+}
+
+/* High DPI Displays */
+@media (-webkit-min-device-pixel-ratio: 2), (min-resolution: 192dpi) {
+  .mkv-controls {
+    backdrop-filter: blur(10px);
+  }
+  
+  .error-suggestions {
+    backdrop-filter: blur(5px);
+  }
+}
+
+/* Accessibility */
+.control-btn:focus {
+  outline: 2px solid #e50914;
+  outline-offset: 2px;
+}
+
+.progress-slider:focus {
+  outline: 2px solid #e50914;
+  outline-offset: 2px;
+}
+
+.volume-slider:focus {
+  outline: 2px solid #e50914;
+  outline-offset: 2px;
+}
+
+.control-select:focus {
+  outline: 2px solid #e50914;
+  outline-offset: 2px;
+}
+
+/* Reduce motion for users who prefer it */
+@media (prefers-reduced-motion: reduce) {
+  .loading-spinner {
+    animation: none;
+  }
+  
+  .control-btn {
+    transition: none;
+  }
+  
+  .progress-current,
+  .progress-buffer {
+    transition: none;
+  }
+}
