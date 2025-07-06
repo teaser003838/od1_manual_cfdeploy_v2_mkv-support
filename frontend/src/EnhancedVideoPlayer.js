@@ -47,26 +47,56 @@ const EnhancedVideoPlayer = ({
   // Probe video information
   const probeVideoInfo = useCallback(async (streamingUrl) => {
     try {
-      // For now, we'll extract basic info from the file
-      // In a real implementation, you might want to call a backend endpoint
+      // Call the backend video probing API
+      const probeResponse = await fetch(`${backendUrl}/api/video/probe?source=${encodeURIComponent(streamingUrl)}`);
+      if (!probeResponse.ok) {
+        throw new Error(`Probing failed: ${probeResponse.status}`);
+      }
+      
+      const probeData = await probeResponse.json();
+      
       const videoInfo = {
+        streamingUrl,
+        fileName: file.name,
+        fileSize: file.size,
+        lastModified: file.lastModifiedDateTime,
+        format: probeData.format || file.name.split('.').pop().toLowerCase(),
+        container: probeData.container,
+        isMKV: file.name.toLowerCase().endsWith('.mkv'),
+        duration: null, // Will be set by the player
+        resolution: null, // Will be detected by the player
+        streamingMethod: probeData.streaming_method || 'direct',
+        browserCompatibility: probeData.browser_compatibility,
+        codecSupport: probeData.codec_support,
+        hasAudio: probeData.has_audio,
+        hasVideo: probeData.has_video,
+        audioTracks: probeData.audio_tracks || 1,
+        videoTracks: probeData.video_tracks || 1,
+        subtitleTracks: probeData.subtitle_tracks || 0
+      };
+      
+      return videoInfo;
+    } catch (error) {
+      console.error('Failed to probe video info:', error);
+      // Fallback to basic info
+      return {
         streamingUrl,
         fileName: file.name,
         fileSize: file.size,
         lastModified: file.lastModifiedDateTime,
         format: file.name.split('.').pop().toLowerCase(),
         isMKV: file.name.toLowerCase().endsWith('.mkv'),
-        duration: null, // Will be set by the player
-        resolution: null, // Will be detected by the player
-        streamingMethod: file.name.toLowerCase().endsWith('.mkv') ? 'mkv-native' : 'direct'
+        duration: null,
+        resolution: null,
+        streamingMethod: file.name.toLowerCase().endsWith('.mkv') ? 'mkv-native' : 'direct',
+        hasAudio: true,
+        hasVideo: true,
+        audioTracks: 1,
+        videoTracks: 1,
+        subtitleTracks: 0
       };
-      
-      return videoInfo;
-    } catch (error) {
-      console.error('Failed to probe video info:', error);
-      throw error;
     }
-  }, [file]);
+  }, [file, backendUrl]);
 
   // Load video information
   useEffect(() => {
