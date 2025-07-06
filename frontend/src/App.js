@@ -239,7 +239,7 @@ function App() {
     <div className="app">
       <header className="app-header">
         <div className="header-content">
-          <h1>📱 OneFlex</h1>
+          <h1>OneFlex | Fast Smooth Free Streaming</h1>
           <div className="header-actions">
             <button 
               onClick={toggleSearch} 
