@@ -18,6 +18,10 @@ function App() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [showSearch, setShowSearch] = useState(false); // For mobile search toggle
+  
+  // Navigation history management
+  const [navigationHistory, setNavigationHistory] = useState([]);
+  const isNavigatingBack = useRef(false);
 
   useEffect(() => {
     // Check for existing OneDrive access token
