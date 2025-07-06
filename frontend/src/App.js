@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import NetflixVideoPlayer from './NetflixVideoPlayer';
 import AudioPlayer from './AudioPlayer';
 import FileExplorer from './FileExplorer';
