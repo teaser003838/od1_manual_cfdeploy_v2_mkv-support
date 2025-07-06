@@ -1359,6 +1359,117 @@ async def stream_media(item_id: str, request: Request, authorization: str = Head
         logger.error(f"Traceback: {traceback.format_exc()}")
         raise HTTPException(status_code=500, detail=f"Failed to stream media: {str(e)}")
 
+    @app.get("/api/video/probe")
+    async def probe_video(source: str = Query(...)):
+        """
+        Probe video file to get metadata information for MKV and other formats
+        """
+        try:
+            # For now, we'll extract basic information from the URL
+            # In a real implementation, you might want to use ffprobe or similar
+            import urllib.parse
+            
+            decoded_source = urllib.parse.unquote(source)
+            
+            # Extract file extension
+            if '.' in decoded_source:
+                extension = decoded_source.split('.')[-1].lower()
+            else:
+                extension = 'unknown'
+            
+            # Basic video info based on extension
+            video_info = {
+                "format": extension,
+                "container": extension,
+                "duration": None,  # Will be determined by the client
+                "resolution": None,  # Will be determined by the client
+                "video_codec": "unknown",
+                "audio_codec": "unknown",
+                "has_audio": True,  # Assume true unless proven otherwise
+                "has_video": True,
+                "file_size": None,
+                "bitrate": None,
+                "frame_rate": None,
+                "audio_tracks": 1,  # Default assumption
+                "video_tracks": 1,  # Default assumption
+                "subtitle_tracks": 0,  # Default assumption
+                "streaming_method": "native"
+            }
+            
+            # MKV specific handling
+            if extension == 'mkv':
+                video_info.update({
+                    "container": "matroska",
+                    "streaming_method": "mkv-native",
+                    "browser_compatibility": {
+                        "chrome": True,
+                        "firefox": True,
+                        "safari": False,
+                        "edge": True,
+                        "notes": "MKV support varies by browser and codec"
+                    },
+                    "codec_support": {
+                        "h264": True,
+                        "h265": "limited",
+                        "vp9": True,
+                        "av1": "limited",
+                        "aac": True,
+                        "ac3": "limited",
+                        "dts": False,
+                        "flac": True,
+                        "vorbis": True
+                    }
+                })
+            
+            # Other format specific handling
+            elif extension in ['mp4', 'm4v']:
+                video_info.update({
+                    "container": "mp4",
+                    "streaming_method": "native",
+                    "browser_compatibility": {
+                        "chrome": True,
+                        "firefox": True,
+                        "safari": True,
+                        "edge": True,
+                        "notes": "Universal browser support"
+                    }
+                })
+            
+            elif extension == 'webm':
+                video_info.update({
+                    "container": "webm",
+                    "streaming_method": "native",
+                    "browser_compatibility": {
+                        "chrome": True,
+                        "firefox": True,
+                        "safari": "limited",
+                        "edge": True,
+                        "notes": "Good browser support"
+                    }
+                })
+            
+            elif extension == 'avi':
+                video_info.update({
+                    "container": "avi",
+                    "streaming_method": "native",
+                    "browser_compatibility": {
+                        "chrome": "limited",
+                        "firefox": "limited",
+                        "safari": False,
+                        "edge": "limited",
+                        "notes": "Limited browser support"
+                    }
+                })
+            
+            return JSONResponse(content=video_info)
+            
+        except Exception as e:
+            logger.error(f"Error probing video: {str(e)}")
+            return JSONResponse(
+                status_code=500,
+                content={"error": f"Video probing failed: {str(e)}"}
+            )
+
 # User data endpoints
 @app.post("/api/watch-history")
 async def add_watch_history(
