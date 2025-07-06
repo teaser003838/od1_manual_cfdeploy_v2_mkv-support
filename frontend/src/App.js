@@ -19,6 +19,7 @@ function App() {
   const [error, setError] = useState('');
   const [showSearch, setShowSearch] = useState(false); // For mobile search toggle
   const [showFilters, setShowFilters] = useState(false); // For filters dropdown
+  const [showScrollToTop, setShowScrollToTop] = useState(false); // For scroll to top button
   
   // Navigation history management
   const [navigationHistory, setNavigationHistory] = useState([]);
