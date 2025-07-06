@@ -214,6 +214,16 @@ function App() {
     }
   };
 
+  const handlePreviousVideo = () => {
+    if (videoPlaylist.length > 0) {
+      const currentIndex = videoPlaylist.findIndex(v => v.id === selectedItem.id);
+      if (currentIndex > 0) {
+        const previousVideo = videoPlaylist[currentIndex - 1];
+        setSelectedItem(previousVideo);
+      }
+    }
+  };
+
   const handlePlayAudio = (audio) => {
     setSelectedItem(audio);
     setCurrentView('audio');
