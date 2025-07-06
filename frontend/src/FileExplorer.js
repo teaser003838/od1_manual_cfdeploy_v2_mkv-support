@@ -507,24 +507,10 @@ const FileExplorer = ({
         </div>
       )}
 
-      {/* Navigation and View Controls */}
+      {/* Navigation Section */}
       {!searchResults && !showSearch && (
         <div className="navigation-section">
           {renderBreadcrumbs}
-          <div className="view-controls">
-            <button 
-              className={`view-button ${viewMode === 'grid' ? 'active' : ''}`}
-              onClick={() => setViewMode('grid')}
-            >
-              ⊞ Grid
-            </button>
-            <button 
-              className={`view-button ${viewMode === 'list' ? 'active' : ''}`}
-              onClick={() => setViewMode('list')}
-            >
-              ☰ List
-            </button>
-          </div>
         </div>
       )}
 
