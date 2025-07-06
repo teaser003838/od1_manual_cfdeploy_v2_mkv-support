@@ -339,6 +339,13 @@ function App() {
             >
               🚪
             </button>
+            <button 
+              onClick={() => {/* TODO: Add filter functionality */}} 
+              className="filters-button"
+              title="Filters"
+            >
+              🎛️
+            </button>
           </div>
         </div>
       </header>
