@@ -102,7 +102,14 @@
 # Testing Data - Main Agent and testing sub agent both should log testing data below this section
 #====================================================================================================
 
-user_problem_statement: "remove pass auth completely, rest remain same"
+user_problem_statement: "understand the repo structure & made the below changes ui:
+
+change the header of the app to "OneFLex | Fast Smooth Free Streaming"
+change "flter sortby items per page" section into an icon, that icon will show the full menu with responsive ui design
+the 16 items all folder fies count size will be bottom section of the page
+the back button when pressing on browser redirects to "sign in page" but i need back button just goes to back folder previous, if in video player the back actions will do "go to previous folder it was before playing video"
+
+all these should be responsive full support"
 
   - task: "Password Authentication Removal"
     implemented: true
