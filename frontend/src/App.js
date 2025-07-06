@@ -55,6 +55,65 @@ function App() {
     }
   }, [isOneDriveAuthenticated]);
 
+  // Browser history management for back button support
+  useEffect(() => {
+    const handlePopState = (event) => {
+      if (event.state) {
+        isNavigatingBack.current = true;
+        const { view, folder, item } = event.state;
+        
+        // Restore the state from browser history
+        setCurrentView(view);
+        setCurrentFolder(folder);
+        
+        if (item) {
+          setSelectedItem(item);
+        } else {
+          setSelectedItem(null);
+          setAllPhotos([]);
+          setVideoPlaylist([]);
+        }
+        
+        setShowSearch(false);
+        
+        // Reset navigation flag after state update
+        setTimeout(() => {
+          isNavigatingBack.current = false;
+        }, 100);
+      }
+    };
+
+    window.addEventListener('popstate', handlePopState);
+    
+    // Set initial state
+    if (isOneDriveAuthenticated && currentView === 'explorer') {
+      const initialState = {
+        view: 'explorer',
+        folder: currentFolder,
+        item: null
+      };
+      window.history.replaceState(initialState, '', window.location.pathname);
+    }
+
+    return () => {
+      window.removeEventListener('popstate', handlePopState);
+    };
+  }, [isOneDriveAuthenticated, currentView, currentFolder]);
+
+  // Push state to history when navigation occurs
+  const pushHistoryState = (view, folder, item = null) => {
+    if (isNavigatingBack.current) return; // Don't push state during back navigation
+    
+    const state = { view, folder, item };
+    const url = window.location.pathname;
+    
+    // Update navigation history for internal tracking
+    setNavigationHistory(prev => [...prev, { view, folder, item, timestamp: Date.now() }]);
+    
+    // Push to browser history
+    window.history.pushState(state, '', url);
+  };
+
   const handleOneDriveLogin = async () => {
     try {
       console.log('Attempting to login with backend URL:', BACKEND_URL);
