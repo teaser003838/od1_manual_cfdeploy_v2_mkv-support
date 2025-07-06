@@ -151,7 +151,8 @@ body {
 }
 
 .search-toggle-button,
-.logout-button {
+.logout-button,
+.filters-button {
   background: rgba(255, 255, 255, 0.1);
   color: white;
   border: none;
@@ -168,13 +169,15 @@ body {
 }
 
 .search-toggle-button:hover,
-.logout-button:hover {
+.logout-button:hover,
+.filters-button:hover {
   background: rgba(255, 255, 255, 0.2);
   transform: translateY(-1px);
 }
 
 .search-toggle-button:active,
-.logout-button:active {
+.logout-button:active,
+.filters-button:active {
   transform: translateY(0);
 }
 
